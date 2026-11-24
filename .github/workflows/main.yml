@@ -1,51 +1,85 @@
 name: Release Creation
 
-on: 
-  release:
-    types: [published]
+on:
+  # A version tag (vX.Y.Z) builds and publishes the release with module.json + module.zip.
+  # The tag is made on the Gitea side by `npm run release X.Y.Z` and reaches GitHub through the
+  # push mirror, which would delete a tag made on GitHub itself. So there is deliberately no
+  # `release: [published]` trigger: a release made in GitHub's UI makes a GitHub-only tag, and
+  # building it would only hide that the next mirror sync is about to prune it.
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  # Rebuild and re-attach the assets of an existing tag, from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to (re)build, e.g. v0.14.0"
+        required: true
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 23
-    - run: npm install
-    - run: npm run build
+      # The tag's own commit on both triggers, with history, so the annotated tag's body is readable.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
 
-    # get part of the tag after the `v`
-    - name: Extract tag version number
-      id: get_version
-      uses: battila7/get-version-action@v2
+      - name: Fetch the tag object (checkout can leave an annotated tag lightweight)
+        run: git fetch --force origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
 
-    # Substitute the Manifest and Download URLs in the module.json
-    - name: Substitute Manifest and Download Links For Versioned Ones
-      id: sub_manifest_link_version
-      uses: microsoft/variable-substitution@v1
-      with:
-        files: 'module.json'
-      env:
-        version: ${{steps.get_version.outputs.version-without-v}}
-        url: https://github.com/${{github.repository}}
-        manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
-        download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run build
 
-    # Create a zip file with all files required by the module to add to the release
-    - run: cd dist && zip -r ./module.zip module.json README.md LICENSE assets/ lang/ module/ styles/ templates/ && cd .. && mv dist/module.zip .
+      - name: Versioned manifest in the build
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const tag = process.env.RELEASE_TAG, version = tag.replace(/^v/, "");
+            const m = JSON.parse(fs.readFileSync("dist/module.json", "utf8"));
+            if (m.version !== version) {
+              console.error(`::error::module.json says ${m.version} but the tag is ${tag}; release with npm run release`);
+              process.exit(1);
+            }
+            m.manifest = `https://github.com/${process.env.REPO}/releases/latest/download/module.json`;
+            m.download = `https://github.com/${process.env.REPO}/releases/download/${tag}/module.zip`;
+            fs.writeFileSync("dist/module.json", JSON.stringify(m, null, 4) + "\n");
+            console.log(`module.json: version ${m.version}, download ${m.download}`);
+          '
+          cp dist/module.json ./module.json
 
-    # Create a release for this specific version
-    - name: Update Release with Files
-      id: create_version_release
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true # Set this to false if you want to prevent updating existing releases
-        name: ${{ github.event.release.name }}
-        draft: ${{ github.event.release.unpublished }}
-        prerelease: ${{ github.event.release.prerelease }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: './module.json, ./module.zip'
-        tag: ${{ github.event.release.tag_name }}
-        body: ${{ github.event.release.body }}
+      - name: Zip the build
+        run: cd dist && zip -r ../module.zip . && cd .. && unzip -l module.zip | tail -1
+
+      - name: Read the release notes from the tag
+        run: |
+          git tag -l --format='%(contents:body)' "$RELEASE_TAG" > release-notes.md
+          if grep -q '[^[:space:]]' release-notes.md; then
+            echo "release notes: $(wc -l < release-notes.md) lines from tag $RELEASE_TAG"
+          else
+            echo "::warning::tag $RELEASE_TAG carries no notes"
+          fi
+
+      - name: Publish the release with its files
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          omitNameDuringUpdate: true
+          bodyFile: release-notes.md
+          omitBodyDuringUpdate: true
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "./module.json, ./module.zip"
+          tag: ${{ env.RELEASE_TAG }}

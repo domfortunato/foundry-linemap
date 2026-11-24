@@ -4,7 +4,8 @@
     "description": "Build tools for the Line Map module",
     "scripts": {
         "build": "gulp build",
-        "watch": "gulp watch"
+        "watch": "gulp watch",
+        "release": "node tools/release.mjs"
     },
     "private": true,
     "devDependencies": {

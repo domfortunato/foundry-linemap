@@ -10,7 +10,7 @@
     "version": "0.13.0",
     "compatibility": {
         "minimum": 13,
-        "verified": 13
+        "verified": 14
     },
     "esmodules": [
         "module/linemap.js"
@@ -25,8 +25,8 @@
             "path": "lang/en.json"
         }
     ],
-    "url": "https://github.com/teroparvinen/foundry-linemap",
-    "bugs": "https://github.com/teroparvinen/foundry-linemap/issues",
-    "manifest": "https://github.com/teroparvinen/foundry-linemap/releases/latest/download/module.json",
-    "download": "https://github.com/teroparvinen/foundry-linemap/releases/latest/download/module.zip"
+    "url": "https://github.com/domfortunato/foundry-linemap",
+    "bugs": "https://github.com/domfortunato/foundry-linemap/issues",
+    "manifest": "https://github.com/domfortunato/foundry-linemap/releases/latest/download/module.json",
+    "download": "https://github.com/domfortunato/foundry-linemap/releases/latest/download/module.zip"
 }
