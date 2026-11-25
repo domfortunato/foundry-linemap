@@ -5,7 +5,12 @@
     "scripts": {
         "build": "gulp build",
         "watch": "gulp watch",
-        "release": "node tools/release.mjs"
+        "release": "node tools/release.mjs",
+        "dev:setup": "node tools/dev/e2e-setup.mjs",
+        "dev:draw": "node tools/dev/e2e-draw.mjs",
+        "dev:hidden": "node tools/dev/e2e-hidden.mjs",
+        "dev:lifecycle": "node tools/dev/e2e-lifecycle.mjs",
+        "dev:settings": "node tools/dev/e2e-settings.mjs"
     },
     "private": true,
     "devDependencies": {
@@ -14,6 +19,7 @@
         "gulp-sass": "^6.0.1",
         "gulp-sourcemaps": "^3.0.0",
         "gulp-typescript": "^6.0.0-alpha.1",
+        "playwright": "1.61.1",
         "sass": "^1.85.1",
         "typescript": "^5.8.2"
     }
