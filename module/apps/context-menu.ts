@@ -49,7 +49,11 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
     }
 
     _prepareContext(options) {
-        return { menuOptions: this.menuOptions, size: this.sizeOption };
+        // Left and right are the two big buttons; any others go in a row of small ones above them.
+        const extras = Object.entries(this.menuOptions)
+            .filter(([key]) => key !== 'left' && key !== 'right')
+            .map(([key, option]) => ({ key, ...option }));
+        return { menuOptions: this.menuOptions, extras, size: this.sizeOption };
     }
 
     _onRender(context, options) {

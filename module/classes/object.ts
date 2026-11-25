@@ -11,6 +11,8 @@ export interface ObjectData {
 }
 
 export interface ObjectDrawLayers {
+    // Pictures, untinted, under everything else.
+    images?: any;
     areas?: any;
     lines?: any;
     footprints?: any;

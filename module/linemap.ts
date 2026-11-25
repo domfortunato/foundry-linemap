@@ -10,6 +10,7 @@ import { BarrierLine } from "./objects/line-styles/barrier-line.js";
 import { DotLine } from "./objects/line-styles/dot-line.js";
 import { ToolHotkey } from "./classes/tool.js";
 import { Waypoint } from "./objects/waypoint.js";
+import { MapImage } from "./objects/image.js";
 
 // Every keybinding is restricted: each is a Gamemaster's action, and players have no Line Map control.
 Hooks.on("init", () => {
@@ -103,6 +104,17 @@ Hooks.on("init", () => {
         ],
         onDown: () => {
             return selectTool("drawText");
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+    });
+    game.keybindings.register("linemap", "drawImageTool", {
+        restricted: true,
+        name: "linemap.keybindings.drawImageTool",
+        editable: [
+            { key: "KeyG" }
+        ],
+        onDown: () => {
+            return selectTool("drawImage");
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
@@ -260,7 +272,8 @@ Hooks.on("init", () => {
             symbol: Symbol,
             waypoint: Waypoint,
             area: Area,
-            text: Text
+            text: Text,
+            image: MapImage
         },
         lineStyles: {
             major: {

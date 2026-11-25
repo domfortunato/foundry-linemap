@@ -8,6 +8,16 @@ import { ConstrainedPoint } from "../classes/constrained-point.js";
 import { Waypoint } from "../objects/waypoint.js";
 import { Text } from "../objects/text.js";
 import { DrawTextTool } from "./draw-text.js";
+import { MapImage } from "../objects/image.js";
+
+/**
+ * Which of the objects under a click is picked first: symbols, then lines, labels and areas, then
+ * images, the topmost image first. An image is under everything else, and may cover the Scene.
+ */
+function pickOrder(a: ObjectType, b: ObjectType): number {
+    const rank = (o: ObjectType) => o instanceof Symbol ? 0 : o instanceof MapImage ? 2 : 1;
+    return (rank(a) - rank(b)) || (a instanceof MapImage && b instanceof MapImage ? b.sort - a.sort : 0);
+}
 
 enum DragOperation {
     move,
@@ -38,7 +48,7 @@ export class SelectTool extends Tool {
             this.layer.setSelection(...selection, ...selected);
         } else {
             const selected: ObjectType[] = this.layer.objects.filter(obj => obj.testSelection([pt1[0], pt1[1]]));
-            selected.sort((a, b) => a instanceof Symbol ? -1 : b instanceof Symbol ? 1 : 0);
+            selected.sort(pickOrder);
             const target = selected[0];
             if (preserve) {
                 if (selection.includes(target)) {
@@ -88,7 +98,26 @@ export class SelectTool extends Tool {
             this.closeMenu();
             const { x, y } = event.interactionData.origin;
             const screenCoords = this.layer.worldTransform.apply({ x, y });
+            const images = this.layer.selection.filter(o => o instanceof MapImage) as MapImage[];
+            const imageOptions = images.length ? {
+                fitToScene: {
+                    icon: 'fa-expand',
+                    label: 'linemap.menu.fitToScene',
+                    handler: () => this.layer.fitImagesToScene(images)
+                },
+                bringForward: {
+                    icon: 'fa-arrow-up',
+                    label: 'linemap.menu.bringForward',
+                    handler: () => this.layer.reorderImages(images, 1)
+                },
+                sendBack: {
+                    icon: 'fa-arrow-down',
+                    label: 'linemap.menu.sendBack',
+                    handler: () => this.layer.reorderImages(images, -1)
+                }
+            } : {};
             const menu = new ContextMenu({
+                ...imageOptions,
                 left: {
                     icon: 'fa-eye-slash',
                     label: 'linemap.menu.hide',
@@ -151,7 +180,7 @@ export class SelectTool extends Tool {
     onDragLeftStart(event: any): void {
         const pt: Vec2 = [event.interactionData.origin.x, event.interactionData.origin.y];
         const objects = this.layer.objects.filter(obj => obj.testSelection(pt));
-        objects.sort((a, b) => a instanceof Symbol ? -1 : b instanceof Symbol ? 1 : 0);
+        objects.sort(pickOrder);
         const target = objects[0];
         const selection = this.layer.selection;
         const selected = selection.includes(target);

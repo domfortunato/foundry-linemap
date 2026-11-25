@@ -7,10 +7,12 @@ import { DrawSymbolTool } from "./tools/draw-symbol.js";
 import { DrawWaypointTool } from "./tools/draw-waypoint.js";
 import { DrawAreaTool } from "./tools/draw-area.js";
 import { DrawTextTool } from "./tools/draw-text.js";
+import { DrawImageTool } from "./tools/draw-image.js";
 import { SelectTool } from "./tools/select-tool.js";
 import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { Text } from "./objects/text.js";
+import { MapImage } from "./objects/image.js";
 
 const { layers } = foundry.canvas;
 
@@ -70,6 +72,8 @@ export class LineMapLayer extends layers.InteractionLayer {
     patternTextures: TextureCollection = {};
     /** Symbol and waypoint art rasterised above its native size, made on first use (see texturesAt). */
     sharpTextures = new Map<string, { icon: any, footprint: any }>();
+    /** Images' textures by path: a texture, null while loading, false when it could not be loaded. */
+    imageTextures = new Map<string, any>();
 
     color = LineMapLayer.defaultColor;
     symbolScale = 1.0;
@@ -144,7 +148,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             drawSymbol: new DrawSymbolTool(this),
             drawWaypoint: new DrawWaypointTool(this),
             drawArea: new DrawAreaTool(this),
-            drawText: new DrawTextTool(this)
+            drawText: new DrawTextTool(this),
+            drawImage: new DrawImageTool(this)
         };
         this.activeTool = this.tools['selectObject'];
         this.stageHandlers = {
@@ -429,6 +434,57 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     /**
+     * An image's texture, through Foundry's texture loader (which caches it), or null while it loads
+     * and false when it cannot be loaded; the map is redrawn when the load ends. A texture the loader
+     * has since freed is loaded again.
+     */
+    imageTexture(src: string): any {
+        const known = this.imageTextures.get(src);
+        if (known === null || known === false) return known;
+        if (known && known.baseTexture && !known.baseTexture.destroyed && known.valid) return known;
+        this.imageTextures.set(src, null);
+        foundry.canvas.loadTexture(src).then((texture: any) => {
+            this.imageTextures.set(src, texture ?? false);
+            this.redraw();
+        });
+        return null;
+    }
+
+    /**
+     * Move images one place up (1) or down (-1) among the map's images, as one edit: each swaps its
+     * drawing order with the next image that way. Other objects are drawn above every image anyway.
+     */
+    reorderImages(images: MapImage[], direction: 1 | -1) {
+        const all = this.objects.filter(o => o instanceof MapImage).sort(LineMapLayer.compareSort) as MapImage[];
+        const moving = new Set(images);
+        const order = direction > 0 ? [...all].reverse() : all;
+        let changed = false;
+        for (const image of order) {
+            if (!moving.has(image)) continue;
+            const i = all.indexOf(image);
+            const other = all[i + direction];
+            if (!other || moving.has(other)) continue;
+            [image.sort, other.sort] = [other.sort, image.sort];
+            [all[i], all[i + direction]] = [other, image];
+            changed = true;
+        }
+        if (!changed) return;
+        this.objects.sort(LineMapLayer.compareSort);
+        this.registerHistory();
+        this.redraw();
+    }
+
+    /** Make each image cover the Scene, so one can be the map's background. */
+    fitImagesToScene(images: MapImage[]) {
+        const r = canvas.dimensions.sceneRect;
+        for (const image of images) image.rect = [r.x, r.y, r.width, r.height];
+        if (images.length) {
+            this.registerHistory();
+            this.redraw();
+        }
+    }
+
+    /**
      * Resize every object in the list that has a size, each kept within its own range. A label linked
      * to a symbol that grows moves out with the symbol's edge, and a linked label that grows moves out
      * by half its own growth, so neither ends up over the other. Not recorded: the caller records it.
@@ -629,6 +685,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         this._disposeDrawn();
 
         const layers = {
+            images: new PIXI.Container(),
             areas: new PIXI.Container(),
             lines: new PIXI.Container(),
             footprints: new PIXI.Container(),
@@ -651,9 +708,11 @@ export class LineMapLayer extends layers.InteractionLayer {
         const symbols = new PIXI.Container();
         symbols.addChild(layers.symbols, layers.selectedSymbols, layers.labels);
 
-        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols];
+        // Areas first: a probe counts a redraw's area outlines in its first container.
+        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images];
 
         if (!highQuality) {
+            this.objectContainer.addChild(layers.images);
             this.objectContainer.addChild(layers.areas);
             this.objectContainer.addChild(layers.lines);
             this.objectContainer.addChild(symbols);
@@ -673,7 +732,8 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.lineFilter.uniforms.maskTexture = this.maskTexture;
         this.drawn.push(lineContainer);
 
-        canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: true });
+        canvas.app.renderer.render(layers.images, { renderTexture: this.renderTexture, clear: true });
+        canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: false });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
         canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
     }
@@ -688,6 +748,8 @@ export class LineMapLayer extends layers.InteractionLayer {
         await super._tearDown(options);
         for (const texture of [this.renderTexture, this.lineTexture, this.maskTexture]) texture?.destroy(true);
         this.renderTexture = this.lineTexture = this.maskTexture = undefined;
+        // Asked for again through the loader on the next draw, which may have freed them meanwhile.
+        this.imageTextures.clear();
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]): SnapPoint[] {
@@ -1190,8 +1252,16 @@ export class LineMapLayer extends layers.InteractionLayer {
                         visible: true,
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawText"); }
                     },
-                    clearObjects: {
+                    drawImage: {
                         order: 8,
+                        name: "drawImage",
+                        title: "linemap.tools.drawImage",
+                        icon: "fas fa-image",
+                        visible: true,
+                        onChange: (event, active) => { active && canvas.linemap.activateTool("drawImage"); }
+                    },
+                    clearObjects: {
+                        order: 9,
                         name: "clearObjects",
                         title: "linemap.tools.trash",
                         icon: "fas fa-trash",
@@ -1213,7 +1283,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     newObjectsRevealed: {
-                        order: 9,
+                        order: 10,
                         name: "newObjectsRevealed",
                         title: "linemap.tools.newObjectsRevealed",
                         icon: "fas fa-eye",
@@ -1225,7 +1295,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     adjustLinked: {
-                        order: 10,
+                        order: 11,
                         name: "adjustLinked",
                         title: "linemap.tools.adjustLinked",
                         icon: "fas fa-arrows-left-right",
@@ -1238,7 +1308,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     linemapSettings: {
-                        order: 11,
+                        order: 12,
                         name: "linemapSettings",
                         title: "linemap.tools.settings",
                         icon: "fas fa-cog",

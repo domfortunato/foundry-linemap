@@ -67,8 +67,8 @@ try {
   }))
   p.check(c.onScene?.startsWith(PROBE_TAG), "the probe's own Scene is on the canvas", c.onScene)
   p.check(c.control, 'the Line Map scene control is there for the Gamemaster')
-  p.check(['selectObject', 'adjustObject', 'drawLine', 'drawSymbol', 'drawWaypoint', 'drawArea', 'drawText', 'clearObjects', 'newObjectsRevealed', 'adjustLinked', 'linemapSettings']
-    .every(t => c.tools.includes(t)), 'the control has all eleven tools', c.tools)
+  p.check(['selectObject', 'adjustObject', 'drawLine', 'drawSymbol', 'drawWaypoint', 'drawArea', 'drawText', 'drawImage', 'clearObjects', 'newObjectsRevealed', 'adjustLinked', 'linemapSettings']
+    .every(t => c.tools.includes(t)), 'the control has all twelve tools', c.tools)
   p.check(c.layer === 'LineMapLayer', 'canvas.linemap is drawn', c.layer)
   // The art is there to load (the init hook no longer reads it into CONFIG, which nothing used).
   const icons = await page.evaluate(async () => {

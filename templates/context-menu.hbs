@@ -1,4 +1,11 @@
 <div>
+    {{#if extras.length}}
+        <div class="linemap-menu-extras">
+            {{#each extras}}
+                <a class="linemap-menu-extra" data-action="selectOption" data-option="{{key}}" data-tooltip="{{label}}" aria-label="{{localize label}}"><i class="fas {{icon}}" aria-hidden="true"></i></a>
+            {{/each}}
+        </div>
+    {{/if}}
     {{#if menuOptions.left}}
         <a class="linemap-menu-item linemap-menu-item-left" data-action="selectOption" data-option="left" data-tooltip="{{menuOptions.left.label}}" aria-label="{{localize menuOptions.left.label}}"><i class="fas {{menuOptions.left.icon}}" aria-hidden="true"></i></a>
     {{/if}}

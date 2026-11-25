@@ -8,6 +8,7 @@
             "drawWaypoint": "Draw waypoints",
             "drawArea": "Draw areas",
             "drawText": "Draw text",
+            "drawImage": "Place images",
             "trash": "Delete all objects",
             "newObjectsRevealed": "Created objects are revealed",
             "adjustLinked": "Adjusting linked points preserves links",
@@ -22,6 +23,7 @@
             "drawWaypointTool": "Activate the draw waypoints tool",
             "drawAreaTool": "Activate the draw areas tool",
             "drawTextTool": "Activate the draw text tool",
+            "drawImageTool": "Activate the place images tool",
             "revealObjects": "Reveal selected objects (select tool)",
             "hideObjects": "Hide selected objects (select tool)",
             "reverseWaypointDirection": "Reverse waypoint direction (select tool)",
@@ -34,6 +36,7 @@
         },
         "ui": {
             "enterTextTitle": "Text",
+            "imageNotLoaded": "Line Map could not load the image {path}.",
             "enterTextButton": "Create text",
             "updateTextButton": "Update text",
             "propertiesTitle": "Line map settings",
@@ -51,7 +54,10 @@
         "menu": {
             "reveal": "Reveal objects",
             "hide": "Hide objects",
-            "size": "Size"
+            "size": "Size",
+            "fitToScene": "Fit to scene",
+            "bringForward": "Bring forward",
+            "sendBack": "Send back"
         },
         "lineStyles": {
             "major": "Major path",

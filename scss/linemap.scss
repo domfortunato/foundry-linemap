@@ -101,6 +101,28 @@
         }
     }
 
+    // Above the two buttons, centred on the click like them.
+    .linemap-menu-extras {
+        position: absolute;
+        top: -22px;
+        left: -30px;
+        width: 160px;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .linemap-menu-extra {
+        background: rgba(0, 0, 0, .8);
+        border-radius: 50%;
+        color: white;
+        width: 36px;
+        height: 36px;
+        text-align: center;
+        line-height: 37px;
+        font-size: 15px;
+    }
+
     // Under the two buttons, centred on the click and well inside the 110 px the menu is kept open for.
     .linemap-menu-size {
         position: absolute;
