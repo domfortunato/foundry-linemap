@@ -123,21 +123,28 @@ try {
   const esc = { menu: await menuOpen(gm), mainMenu: await gm.evaluate(() => !!ui.menu?.rendered) }
   p.check(opened && !esc.menu && !esc.mainMenu, 'Escape closes the right-click menu, and does not open the main menu', { opened, ...esc })
   if (esc.mainMenu) await gm.evaluate(() => ui.menu.close())
-  await clickAt(gm, S, { button: 'right' })
-  await until(gm, () => !!document.querySelector('#linemap-context-menu'), null, { timeout: 5000 })
-  const menuInfo = () => gm.evaluate(() => {
-    const t = canvas.linemap.tools.selectObject
-    const app = foundry.applications.instances.get('linemap-context-menu')
-    return { held: !!t.menu, heldRendered: t.menu?.rendered, same: t.menu === app, app: !!app, appState: app?.state, menuAt: t.menuAt, active: game.activeTool, dom: document.querySelectorAll('#linemap-context-menu').length }
-  })
-  const m0 = await menuInfo()
-  // A raw screen point: clickAt pans its target to the middle of the screen, where the menu is.
-  await gm.mouse.move(m0.menuAt.x - 300, m0.menuAt.y - 200, { steps: 8 })
+  // A menu that appears where the pointer is not (the pointer moved on while its template loaded)
+  // gets no mouseleave: it must close some other way.
+  const openAway = async () => {
+    const far = await gm.evaluate((pt) => {
+      const s = canvas.clientCoordinatesFromCanvas(pt)
+      return { x: s.x - 350, y: s.y - 250 }
+    }, S)
+    await gm.mouse.move(far.x, far.y, { steps: 8 })
+    await gm.evaluate((pt) => canvas.linemap.tools.selectObject.onClickRight({ interactionData: { origin: pt } }), S)
+    await until(gm, () => !!document.querySelector('#linemap-context-menu'), null, { timeout: 5000 })
+    return far
+  }
+  const far = await openAway()
+  await gm.mouse.move(far.x + 20, far.y + 10, { steps: 4 })
+  await gm.waitForTimeout(scaled(500))
+  p.check(!(await menuOpen(gm)), 'a menu that appeared away from the pointer closes as the pointer moves on the canvas', await menuOpen(gm))
+  await gm.evaluate(async () => { for (const app of [...foundry.applications.instances.values()]) if (app.id === 'linemap-context-menu') await app.close({ animate: false }) })
+  const far2 = await openAway()
   await gm.mouse.down()
   await gm.mouse.up()
   await gm.waitForTimeout(scaled(500))
-  const m1 = await menuInfo()
-  p.check(!(await menuOpen(gm)), 'a click elsewhere on the canvas closes it', { before: m0, after: m1 })
+  p.check(!(await menuOpen(gm)), 'and a click on the canvas closes it', { at: far2, open: await menuOpen(gm) })
   await gm.evaluate(async () => { for (const app of [...foundry.applications.instances.values()]) if (app.id === 'linemap-context-menu') await app.close({ animate: false }) })
 
   // 6. A label edit while another Gamemaster saves.
