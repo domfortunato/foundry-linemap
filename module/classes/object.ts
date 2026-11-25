@@ -145,4 +145,9 @@ export class UnknownObject extends ObjectType {
     get serialized(): ObjectData {
         return { ...structuredClone(this.raw), sort: this.sort };
     }
+
+    /** No point of its own: a point linked to it stays at the point saved with the link. */
+    getParametricPoint(t: number, type: PointType): Vec2 {
+        return undefined;
+    }
 }

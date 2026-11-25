@@ -40,7 +40,8 @@
             "confirmDelete": "Delete all scene content?"
         },
         "error": {
-            "cyclicConstraint": "Attempted to make a cyclic link. The point was not linked."
+            "cyclicConstraint": "Attempted to make a cyclic link. The point was not linked.",
+            "saveFailed": "Line Map could not save the last change. The map now shows what the scene holds."
         },
         "menu": {
             "reveal": "Reveal objects",

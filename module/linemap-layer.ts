@@ -53,6 +53,9 @@ export class LineMapLayer extends layers.InteractionLayer {
     undoHistory: HistoryEntry[] = [];
     // The map as last saved or loaded, deep-copied: an edit is the difference from it.
     baseline: LayerData;
+    /** The save running or last run, which the next one waits for, and how many are queued or running. */
+    saveQueue: Promise<void> = Promise.resolve();
+    pendingSaves = 0;
 
     tools: Record<string, Tool> = {};
     activeTool: Tool;
@@ -85,7 +88,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     /** The settings part of a map, as it is saved in flags.linemap.map. */
     static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string }): Omit<LayerData, "objects"> {
         const color = LineMapLayer.colorOf(data);
-        return { color, isLightMode: LineMapLayer.isLight(color), symbolScale: data.symbolScale, labelFont: data.labelFont };
+        return { color, isLightMode: LineMapLayer.isLight(color), symbolScale: data?.symbolScale, labelFont: data?.labelFont };
     }
 
     get isLightMode(): boolean {
@@ -232,18 +235,38 @@ export class LineMapLayer extends layers.InteractionLayer {
      * - before, `flags.linemap.serialized` held the settings and an array of every object, so of two
      *   saves at once the later replaced the earlier whole. Still read; a map is moved to the new
      *   format, all at once, the first time it is saved.
+     * Settings saved before anything is drawn leave `map` alone, which is the new format too.
      */
     static readFlag(scene: any): LayerData | undefined {
         const flag = scene?.flags?.linemap;
-        if (flag?.objects) {
-            const objects = Object.values(flag.objects as Record<string, ObjectData>)
-                .filter(o => o && typeof o === "object")
+        if (flag?.objects || (flag?.map && !flag?.serialized)) {
+            const objects = Object.entries((flag.objects ?? {}) as Record<string, ObjectData>)
+                .filter(([key, o]) => LineMapLayer.isObjectEntry(key, o))
+                .map(([, o]) => o)
                 .sort(LineMapLayer.compareSort);
             return { ...(flag.map ?? {}), objects };
         }
         const old = flag?.serialized;
         if (!old) return undefined;
         return { ...old, objects: (old.objects ?? []).map((o, i) => ({ ...o, sort: o?.sort ?? i })) };
+    }
+
+    /**
+     * Whether an entry of `flags.linemap.objects` is an object: it has a type and is filed under its
+     * own id. An edit merged into a key another Gamemaster's save had just deleted leaves only the
+     * edited keys there, with neither.
+     */
+    static isObjectEntry(key: string, o: any): boolean {
+        return !!o && typeof o === "object" && typeof o.type === "string" && o.id === key;
+    }
+
+    /** Deletions for every entry of a Scene's `flags.linemap.objects` that is not an object. */
+    static strayDeletions(scene: any): Record<string, any> {
+        const update: Record<string, any> = {};
+        for (const [key, o] of Object.entries(scene?.flags?.linemap?.objects ?? {})) {
+            if (!LineMapLayer.isObjectEntry(key, o)) Object.assign(update, LineMapLayer._deletion("flags.linemap.objects", key));
+        }
+        return update;
     }
 
     static compareSort(a: { sort?: number, id: string }, b: { sort?: number, id: string }): number {
@@ -805,15 +828,61 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.baseline = structuredClone(this.serialized);
     }
 
-    /** Save what changed since the last save or load: only those objects, unless the map is still in the old format. */
+    /**
+     * Save what changed since the last save or load: only those objects, unless the map is still in
+     * the old format.
+     * - Saves go one at a time, each after the server has answered the one before. Foundry's client
+     *   compares an update with its copy of the Scene, which an unanswered save has not reached yet,
+     *   so an undo sent straight after its edit matched that copy and was never sent.
+     * - Each changed object is sent whole (`diff: false`), not as its changed keys: a few keys
+     *   merged into an object another Gamemaster had just deleted left a fragment of it.
+     * - A save goes to the Scene it was made on, even if the canvas has moved on by the time it is
+     *   sent.
+     */
     async _saveData() {
+        const scene = canvas.scene;
         const data = structuredClone(this.serialized);
         const from = this.baseline;
         this.baseline = structuredClone(data);
-        const flag = canvas.scene.flags?.linemap;
-        const migrate = !flag?.objects && !!flag?.serialized;
-        const update = LineMapLayer.flagUpdate(from, data, migrate);
-        if (update) await canvas.scene.update(update);
+        this.pendingSaves++;
+        const run = async () => {
+            try {
+                const flag = scene.flags?.linemap;
+                const migrate = !flag?.objects && !!flag?.serialized;
+                const update = { ...(LineMapLayer.flagUpdate(from, data, migrate) ?? {}), ...LineMapLayer.strayDeletions(scene) };
+                if (!Object.keys(update).length) return;
+                await scene.update(update, { diff: false });
+                if (this.pendingSaves === 1 && scene === canvas.scene) this._takeSavedVersions(update);
+            } catch (err) {
+                // The edit never reached the Scene: show the map as the Scene holds it.
+                console.error(err);
+                ui.notifications.error(game.i18n.localize("linemap.error.saveFailed"));
+                if (scene === canvas.scene) {
+                    this.fetchData();
+                    this.redraw();
+                }
+            } finally {
+                this.pendingSaves--;
+            }
+        };
+        const done = this.saveQueue.then(run);
+        this.saveQueue = done;
+        await done;
+    }
+
+    /**
+     * After this client's last pending save is answered: an object it saved that the Scene now holds
+     * differently was edited by another Gamemaster at the same moment, and the server merged the two.
+     * Their save reached this canvas first and this one's was put on top of it, so take the Scene's.
+     */
+    _takeSavedVersions(update: Record<string, any>) {
+        const prefix = "flags.linemap.objects.";
+        const ids = Object.keys(update).filter(k => k.startsWith(prefix)).map(k => k.slice(prefix.length));
+        if (!ids.length) return;
+        const saved = new Map((LineMapLayer.readFlag(canvas.scene)?.objects ?? []).map(o => [o.id, o]));
+        const shown = new Map(this.serialized.objects.map(o => [o.id, o]));
+        const differ = ids.filter(id => JSON.stringify(saved.get(id) ?? null) !== JSON.stringify(shown.get(id) ?? null));
+        if (differ.length) this._mergeRemote({ objects: Object.fromEntries(differ.map(id => [id, true])) });
     }
 
     /**
@@ -831,15 +900,17 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.applyData(saved);
             this.baseline = structuredClone(this.serialized);
         } else {
-            const byId = new Map((saved?.objects ?? []).map(o => [o.id, o]));
-            const merge = (data: LayerData): LayerData => {
+            const merge = (data: LayerData, byId: Map<string, ObjectData>): LayerData => {
                 const objects = data.objects.filter(o => !named.includes(o.id));
                 for (const id of named) if (byId.has(id)) objects.push(structuredClone(byId.get(id)));
                 const settings = changes.map ? LineMapLayer.settingsOf(saved) : {};
                 return { ...data, ...settings, objects };
             };
-            this.baseline = merge(this.baseline ?? { objects: [], color: LineMapLayer.defaultColor, isLightMode: false, symbolScale: 1 });
-            this.applyData(merge(structuredClone(this.serialized)));
+            this.applyData(merge(structuredClone(this.serialized), new Map((saved?.objects ?? []).map(o => [o.id, o]))));
+            // The baseline takes the objects as the canvas now serialises them, not as saved: the two
+            // can differ in form, and a difference would be saved back by the next edit as this user's.
+            const loaded = new Map(this.serialized.objects.map(o => [o.id, o]));
+            this.baseline = merge(this.baseline ?? { objects: [], color: LineMapLayer.defaultColor, isLightMode: false, symbolScale: 1 }, loaded);
         }
         this.redraw();
         this._stateInvalidated(state);
@@ -852,10 +923,10 @@ export class LineMapLayer extends layers.InteractionLayer {
                 .map((o, i) => ({ ...o, sort: o?.sort ?? i }))
                 .sort(LineMapLayer.compareSort);
             const objectEntries: [ObjectType, ObjectData][] = sorted.map(o => [ObjectType.create(o), o]);
-            // Links resolve only to objects this build can draw; a link to an unknown one falls
-            // back to the point saved with it.
+            // A link to an object of a type this build does not know is kept, and drawn at the point
+            // saved with it (UnknownObject gives no point of its own).
             const objectMap = objectEntries?.reduce((acc, obj) => {
-                if (!(obj[0] instanceof UnknownObject)) acc[obj[0].id] = obj[0];
+                acc[obj[0].id] = obj[0];
                 return acc;
             }, {}) ?? {};
             objectEntries?.forEach(([obj, data]: [ObjectType, ObjectData]) => obj.deserialize(data, objectMap));

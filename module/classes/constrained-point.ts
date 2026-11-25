@@ -32,10 +32,9 @@ export class ConstrainedPoint {
     }
 
     get point(): Vec2 {
-        if (this.sourceObject) {
-            return this.sourceObject?.getParametricPoint(this.sourceT!, this.type);
-        }
-        return this.unconstrainedPoint;
+        // An object that gives no point (one of a type this build does not know) leaves the point saved.
+        const linked = this.sourceObject?.getParametricPoint(this.sourceT!, this.type);
+        return linked ?? this.unconstrainedPoint;
     }
 
     /** Drop the link, keeping the point where the linked object puts it now. */
