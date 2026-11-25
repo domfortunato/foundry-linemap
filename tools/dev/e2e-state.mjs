@@ -125,8 +125,15 @@ try {
   if (esc.mainMenu) await gm.evaluate(() => ui.menu.close())
   await clickAt(gm, S, { button: 'right' })
   await until(gm, () => !!document.querySelector('#linemap-context-menu'), null, { timeout: 5000 })
+  const menuInfo = () => gm.evaluate(() => {
+    const t = canvas.linemap.tools.selectObject
+    const app = foundry.applications.instances.get('linemap-context-menu')
+    return { held: !!t.menu, heldRendered: t.menu?.rendered, same: t.menu === app, app: !!app, appState: app?.state, menuAt: t.menuAt, active: game.activeTool, dom: document.querySelectorAll('#linemap-context-menu').length }
+  })
+  const m0 = await menuInfo()
   await clickAt(gm, await at(gm, 0.8, 0.8))
-  p.check(!(await menuOpen(gm)), 'a click elsewhere on the canvas closes it', await menuOpen(gm))
+  const m1 = await menuInfo()
+  p.check(!(await menuOpen(gm)), 'a click elsewhere on the canvas closes it', { before: m0, after: m1 })
   await gm.evaluate(async () => { for (const app of [...foundry.applications.instances.values()]) if (app.id === 'linemap-context-menu') await app.close({ animate: false }) })
 
   // 6. A label edit while another Gamemaster saves.
