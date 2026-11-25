@@ -8,6 +8,9 @@
 // - A broken entry in the Scene's flag (no type, or an id that is not its key, as a delete crossing
 //   an edit can leave) is not loaded as an object, and the next save removes it.
 // - A line linked to an object this build does not know keeps that link when it is edited.
+// - A map saved in the old format (one array) is moved to the new one when a Gamemaster views it, so
+//   two Gamemasters' first edits, made at the same moment, are both kept: before, each first edit
+//   wrote the whole map, and the later one put back what the earlier one had deleted.
 import { PROBE_TAG, probe, probeScene, reload, sweep, until, viewScene } from './lib.mjs'
 
 const GM2 = `${PROBE_TAG} GM2`
@@ -146,6 +149,45 @@ try {
   await settle(gm)
   const link = await gm.evaluate(() => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).find(o => o.id === 'linkedLine000001')?.points?.[0])
   p.check(link?.sourceId === 'unknownType00001', 'a line linked to an unknown object keeps the link through edits by both Gamemasters', link)
+
+  // 6. An old-format map, viewed by both, then edited by both at once.
+  await gm.evaluate(async () => {
+    const r = canvas.dimensions.sceneRect
+    const pt = (fx, fy) => [r.x + r.width * fx, r.y + r.height * fy]
+    await canvas.scene.update({ 'flags.linemap': new foundry.data.operators.ForcedDeletion() })
+    await canvas.scene.update({
+      'flags.linemap.serialized': {
+        isLightMode: false,
+        symbolScale: 1,
+        objects: [
+          { id: 'oldFormatSym0001', type: 'symbol', isRevealed: true, point: { point: pt(0.2, 0.6) }, symbol: 'curiosity' },
+          { id: 'oldFormatSym0002', type: 'symbol', isRevealed: true, point: { point: pt(0.4, 0.6) }, symbol: 'curiosity' }
+        ]
+      }
+    })
+  })
+  await reload(gm)
+  await viewScene(gm, sceneId)
+  await reload(gm2)
+  await viewScene(gm2, sceneId)
+  await settle(gm, 1500)
+  const format = await gm.evaluate(() => {
+    const f = canvas.scene.flags.linemap ?? {}
+    return { objects: Object.keys(f.objects ?? {}), serialized: 'serialized' in f }
+  })
+  p.check(format.objects.length === 2 && !format.serialized, 'an old-format map is moved to the new format once a Gamemaster views it, before any edit', format)
+  const [, added] = await Promise.all([
+    gm.evaluate(() => {
+      const L = canvas.linemap
+      L.deleteObjects(L.objects.find(o => o.id === 'oldFormatSym0001'))
+    }),
+    addSymbol(gm2, 0.6, 0.6)
+  ])
+  await settle(gm, 3000)
+  const after = { saved: (await savedIds(gm)).sort(), gm: (await canvasIds(gm)).sort(), gm2: (await canvasIds(gm2)).sort() }
+  const want = ['oldFormatSym0002', added].sort()
+  p.check(JSON.stringify(after.saved) === JSON.stringify(want) && JSON.stringify(after.gm) === JSON.stringify(want) && JSON.stringify(after.gm2) === JSON.stringify(want),
+    "then a delete and an add made at the same moment by two Gamemasters are both kept, in the Scene and on both canvases", { want, ...after })
 } catch (err) {
   await p.threw(err)
 }
