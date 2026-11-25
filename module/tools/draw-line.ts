@@ -25,7 +25,10 @@ export class DrawLineTool extends Tool {
     }
 
     async _setupOptionsElement() {
+        const activation = this.activation;
         this.optionsTemplate = await getTemplate("modules/linemap/templates/draw-line-tool-options.hbs");
+        // Deactivated (or activated again) while the template loaded: the bar is not this activation's.
+        if (!activation || this.activation !== activation) return;
         this.optionsElement = $('<div class="linemap-tool-ui"></div>');
         $("#ui-top").append(this.optionsElement);
 

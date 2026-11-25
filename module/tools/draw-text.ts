@@ -60,13 +60,17 @@ export class DrawTextTool extends Tool {
         if (text) {
             this.layer.setSelection(text);
         } else {
+            const scene = canvas.scene;
             const content = await DrawTextTool.promptText();
-            if (content) {
+            // Another user's save while the dialog was open rebuilt the objects: link to the live one.
+            const source = snapPoint && this.layer.objects.find(o => o.id === snapPoint.object.id);
+            const snap = source ? { ...snapPoint, object: source } : undefined;
+            if (content && scene === canvas.scene) {
                 const height = Text.calculateHeight(content);
-                const offset: Vec2 = [0, snapPoint ? -(snapPoint.object.textAscent + height / 2) : 0]
+                const offset: Vec2 = [0, snap ? -(snap.object.textAscent + height / 2) : 0]
     
                 const text = new Text();
-                text.construct(ConstrainedPoint.fromSnapOrPoint(PointType.point, pt, snapPoint), offset, content);
+                text.construct(ConstrainedPoint.fromSnapOrPoint(PointType.point, pt, snap), offset, content);
                 // addObject saves and records the edit; a second record here made undo take two presses.
                 this.layer.addObject(text);
                 this.layer.setSelection(text);
@@ -79,15 +83,25 @@ export class DrawTextTool extends Tool {
     }
 
     async onDoubleClick(event: any) {
-        const eventPt: Vec2 = [event.interactionData.destination.x, event.interactionData.destination.y];
-        const text = this.layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
+        await DrawTextTool.editTextAt(this.layer, [event.interactionData.destination.x, event.interactionData.destination.y]);
+    }
+
+    /**
+     * Edit the label at a point (a double-click with the select or text tool). Another user's save
+     * while the dialog is open rebuilds the map's objects, so the label is found again by its id.
+     */
+    static async editTextAt(layer: any, eventPt: Vec2) {
+        const text = layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
         // Only a double-click on a text edits it; anywhere else there is nothing to do.
         if (!text) return;
+        const { id } = text;
+        const scene = canvas.scene;
         const content = await DrawTextTool.promptText(text.text);
-        if (content) {
-            text.text = content;
-            this.layer.registerHistory();
-            this.layer.redraw();
+        const live = scene === canvas.scene && layer.objects.find(o => o.id === id) as Text;
+        if (content && live) {
+            live.text = content;
+            layer.registerHistory();
+            layer.redraw();
         }
     }
 

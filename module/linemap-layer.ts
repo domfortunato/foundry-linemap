@@ -56,6 +56,8 @@ export class LineMapLayer extends layers.InteractionLayer {
     /** The save running or last run, which the next one waits for, and how many are queued or running. */
     saveQueue: Promise<void> = Promise.resolve();
     pendingSaves = 0;
+    /** Other users' saves that came in during a drag, taken in after it. */
+    deferredMerges: any[] = [];
 
     tools: Record<string, Tool> = {};
     activeTool: Tool;
@@ -185,8 +187,14 @@ export class LineMapLayer extends layers.InteractionLayer {
         // A canvas draw restores the active layer (layerOptions.name) and only afterwards clears every
         // stage listener (Canvas#addListeners: stage.removeAllListeners()), then fires canvasReady. So
         // when this layer is the one restored, its handlers are put back here.
+        // The tool too: Canvas#tearDown deactivated the layer (clearTool), and activating it again with
+        // the same control and tool calls no tool's onChange, so nothing else would bring it back.
         Hooks.on("canvasReady", () => {
-            if (this.active) this._attachStageHandlers();
+            if (this.active) {
+                this._attachStageHandlers();
+                if (!this.activeTool && this.tools[game.activeTool]) this.activateTool(game.activeTool);
+            }
+            ScenePropertiesApp.refresh();
         });
     }
 
@@ -328,14 +336,18 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     activateTool(tool: string) {
+        // A drag the old tool began is not the new one's to finish.
+        this.cancelDrag();
         this.clearTool();
         this.activeTool = this.tools[tool];
+        if (this.activeTool) this.activeTool.activation = {};
         this.activeTool?.activate();
         this.redraw();
     }
 
     clearTool() {
         this.activeTool?.deactivate();
+        if (this.activeTool) this.activeTool.activation = null;
         this.activeTool = null;
         this.clearPreview();
     }
@@ -631,7 +643,33 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.redraw();
     }
 
+    /**
+     * End a drag without dropping it. The tools change the objects as the pointer moves and save on
+     * the drop, so the objects go back to the saved state (the baseline). Before, a tool change or a
+     * release off the canvas left them half-moved and unsaved, until the next edit saved them as its own.
+     */
+    cancelDrag() {
+        const dragging = this.interactionData?.isDragging;
+        this.interactionData = undefined;
+        this.interactionDataRight = undefined;
+        if (dragging && this.baseline) {
+            const state = this._captureState();
+            this.clearPreview();
+            this.applyData(structuredClone(this.baseline));
+            this.redraw();
+            this._stateInvalidated(state);
+        }
+        this._flushMerges();
+    }
+
+    /** Escape closes the right-click menu (core's Escape closes framed windows only). */
+    _onDismissKey(event) {
+        if ((this.tools.selectObject as SelectTool)?.closeMenu()) return true;
+        return super._onDismissKey(event);
+    }
+
     _leftMouseDown(event) {
+        (this.tools.selectObject as SelectTool)?.closeMenu();
         const pt = event.data.getLocalPosition(canvas.app.stage);
         this.interactionData = {
             screenOrigin: { x: event.global.x, y: event.global.y },
@@ -663,7 +701,8 @@ export class LineMapLayer extends layers.InteractionLayer {
                 if (!this.interactionData.isDragging) {
                     this.tools[game.activeTool]?.onClickLeft(event);     
                 } else {
-                    this.tools[game.activeTool]?.onDragLeftDrop(event);
+                    // Saves that came in during the drag are taken in once it is dropped.
+                    Promise.resolve(this.tools[game.activeTool]?.onDragLeftDrop(event)).finally(() => this._flushMerges());
                 }
     
                 this.interactionData.timer = setTimeout(() => {
@@ -679,6 +718,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     _rightMouseDown(event) {
+        (this.tools.selectObject as SelectTool)?.closeMenu();
         const pt = event.data.getLocalPosition(canvas.app.stage);
         this.interactionDataRight = {
             screenOrigin: { x: event.global.x, y: event.global.y },
@@ -696,6 +736,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     _pointerMove(event) {
+        (this.tools.selectObject as SelectTool)?.closeMenuIfAway(event.global);
         if (this.interactionData) {
             const pt = event.data.getLocalPosition(canvas.app.stage);
             this.interactionData.destination = pt;
@@ -738,8 +779,8 @@ export class LineMapLayer extends layers.InteractionLayer {
     _pointerOut(event) {
         event.interactionData = this.interactionData;
         this.tools[game.activeTool]?.onMouseOut(event);
-        this.interactionData = undefined;
-        this.interactionDataRight = undefined;
+        // The release will not reach the canvas, so the drag will never be dropped.
+        this.cancelDrag();
     }
 
     async _onDeleteKey(event) {
@@ -891,6 +932,12 @@ export class LineMapLayer extends layers.InteractionLayer {
      * them too, so the next save here does not send them back as this user's own.
      */
     _mergeRemote(changes: any) {
+        // During a drag the tool holds the objects it moves; rebuilding them would leave it moving
+        // copies no longer on the map, and the drop would save nothing. Take the save in after the drop.
+        if (this.interactionData?.isDragging) {
+            this.deferredMerges.push(changes);
+            return;
+        }
         const saved = LineMapLayer.readFlag(canvas.scene);
         const named = Object.keys(changes.objects ?? {}).map(k => k.replace(/^-=/, ""));
         // A save in the old format (an older build) or the move to the new one replaces the whole map.
@@ -914,6 +961,13 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
         this.redraw();
         this._stateInvalidated(state);
+        if (whole || changes.map) ScenePropertiesApp.refresh();
+    }
+
+    /** Take in the saves that came in during a drag. */
+    _flushMerges() {
+        const merges = this.deferredMerges.splice(0);
+        for (const changes of merges) this._mergeRemote(changes);
     }
 
     applyData(data: LayerData) {

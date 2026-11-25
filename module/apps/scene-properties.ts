@@ -48,6 +48,15 @@ export class ScenePropertiesApp extends api.HandlebarsApplicationMixin(
 
     static instance: ScenePropertiesApp;
 
+    /**
+     * Show the viewed Scene's settings again: after a canvas draw (another Scene, maybe) or another
+     * user's save of them. Each change saves every field, so a window left showing a Scene's old
+     * values wrote them into the Scene now viewed, or over another Gamemaster's change.
+     */
+    static refresh() {
+        if (this.instance?.rendered) this.instance.render();
+    }
+
     static activate() {
         this.instance = this.instance ?? new ScenePropertiesApp();
         this.instance.render(true);

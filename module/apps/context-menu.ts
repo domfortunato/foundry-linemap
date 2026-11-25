@@ -16,8 +16,7 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
             frame: false
         },
 		actions: {
-			selectOption: ContextMenu.selectOption,
-            closeMenu: ContextMenu.closeMenu
+			selectOption: ContextMenu.selectOption
 		}
 	};
 
@@ -51,7 +50,4 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
         this.menuOptions[target.dataset.option]?.handler();
     }
 
-    static closeMenu() {
-
-    }
 }

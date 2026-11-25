@@ -10,6 +10,12 @@ export enum ToolHotkey {
 }
 
 export class Tool {
+    /**
+     * Set by the layer when it activates this tool, cleared when it deactivates it. Work a tool
+     * awaits in activate() checks it is still the same activation before it puts anything on screen.
+     */
+    activation: object | null = null;
+
     constructor(public layer: LineMapLayer) {}
 
     activate() {}

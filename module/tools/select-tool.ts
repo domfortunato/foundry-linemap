@@ -19,6 +19,8 @@ export class SelectTool extends Tool {
     snapPoint: SnapPoint;
 
     menu: ContextMenu;
+    /** Where the menu is centred, in the canvas view's pixels. */
+    menuAt: { x: number, y: number };
 
     dragOperation: DragOperation;
     adjustmentPoints: AdjustmentPoint[];
@@ -56,20 +58,34 @@ export class SelectTool extends Tool {
     }
 
     async onDoubleClick(event: any) {
-        const eventPt: Vec2 = [event.interactionData.destination.x, event.interactionData.destination.y];
-        const text = this.layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
-        // Only a double-click on a text edits it; anywhere else there is nothing to do.
-        if (!text) return;
-        const content = await DrawTextTool.promptText(text.text);
-        if (content) {
-            text.text = content;
-            this.layer.registerHistory();
-            this.layer.redraw();
-        }
+        await DrawTextTool.editTextAt(this.layer, [event.interactionData.destination.x, event.interactionData.destination.y]);
+    }
+
+    deactivate() {
+        this.closeMenu();
+    }
+
+    /**
+     * The menu closes when the pointer leaves it. A pointer that had left before the menu appeared
+     * (its template loads first) never left it, and the menu stayed on screen: a pointer moving on
+     * the canvas well away from it closes it too. The menu reaches 80 px either side of its centre.
+     */
+    closeMenuIfAway(pt: { x: number, y: number }) {
+        if (this.menu && this.menuAt && Math.hypot(pt.x - this.menuAt.x, pt.y - this.menuAt.y) > 110) this.closeMenu();
+    }
+
+    /** Close the right-click menu; whether one was open. */
+    closeMenu(): boolean {
+        const menu = this.menu;
+        this.menu = undefined;
+        if (!menu?.rendered) return false;
+        menu.close({ animate: false });
+        return true;
     }
 
     onClickRight(event: any): void {
         if (this.layer.selection.length) {
+            this.closeMenu();
             const { x, y } = event.interactionData.origin;
             const screenCoords = this.layer.worldTransform.apply({ x, y });
             const menu = new ContextMenu({
@@ -100,6 +116,7 @@ export class SelectTool extends Tool {
             });
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
+            this.menuAt = { x: screenCoords.x, y: screenCoords.y };
         }
     }
 
