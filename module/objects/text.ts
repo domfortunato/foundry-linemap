@@ -17,6 +17,8 @@ export interface TextData extends ObjectData {
     offset: Vec2;
     text: string;
     style: TextStyle;
+    /** 0.5 to 4, multiplying the font size; null at 1. */
+    size?: number | null;
 }
 
 export class Text extends ObjectType {
@@ -26,6 +28,7 @@ export class Text extends ObjectType {
     offset: Vec2;
     text: string;
     style: TextStyle;
+    size = 1;
 
     sprite: any;
 
@@ -44,6 +47,7 @@ export class Text extends ObjectType {
             data.text,
             data.style
         );
+        this.size = this.clampSize(data.size);
     }
 
     static moveData(data: TextData, move: PointMover): TextData {
@@ -59,8 +63,13 @@ export class Text extends ObjectType {
             point: this.point.serialized,
             offset: this.offset,
             text: this.text,
-            style: this.style
+            style: this.style,
+            size: this.size === 1 ? null : this.size
         }};
+    }
+
+    get sizeRange(): [number, number] {
+        return [0.5, 4];
     }
 
     get _transform(): any {
@@ -97,6 +106,7 @@ export class Text extends ObjectType {
     get _pixiOptions(): any {
         return {
             ...Text._staticPixiOptions,
+            fontSize: Text._staticPixiOptions.fontSize * this.size,
             fontStyle: this.style === TextStyle.italic || this.style === TextStyle.bolditalic ? 'italic' : 'normal',
             fontWeight: this.style === TextStyle.bold || this.style === TextStyle.bolditalic ? 'bold': 'normal',
             fill: this._currentColorHex,
@@ -152,7 +162,7 @@ export class Text extends ObjectType {
         // The sprite is the layer's, kept across redraws while the label looks the same: rasterising
         // every label on every mouse move of a drag was most of a big map's redraw.
         const options = this._pixiOptions;
-        const key = JSON.stringify([this.text, options.fontFamily, options.fontStyle, options.fontWeight, options.fill]);
+        const key = JSON.stringify([this.text, options.fontFamily, options.fontSize, options.fontStyle, options.fontWeight, options.fill]);
         const text = canvas.linemap.cachedDisplay(this.id, key, () => {
             const t = new PreciseText(this.text, options);
             t.anchor.set(0.5);
@@ -247,6 +257,14 @@ export class Text extends ObjectType {
 
     hasConstraintTo(object: ObjectType): boolean {
         return this.point.sourceObject === object || this.point.sourceObject?.hasConstraintTo(object);
+    }
+
+    /** Move a label along its offset, away from what it is linked to (or towards it, by a negative distance). */
+    static pushOut(label: Text, distance: number) {
+        const length = length2(label.offset);
+        if (!length || !distance) return;
+        const k = Math.max(length + distance, 0) / length;
+        label.offset = [label.offset[0] * k, label.offset[1] * k];
     }
 
     static calculateHeight(content: string): number {

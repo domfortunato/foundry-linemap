@@ -5,4 +5,9 @@
     {{#if menuOptions.right}}
         <a class="linemap-menu-item linemap-menu-item-right" data-action="selectOption" data-option="right" data-tooltip="{{menuOptions.right.label}}" aria-label="{{localize menuOptions.right.label}}"><i class="fas {{menuOptions.right.icon}}" aria-hidden="true"></i></a>
     {{/if}}
+    {{#if size}}
+        <label class="linemap-menu-size" data-tooltip="{{size.label}}">
+            <input type="range" name="size" min="{{size.min}}" max="{{size.max}}" step="{{size.step}}" value="{{size.value}}" aria-label="{{localize size.label}}">
+        </label>
+    {{/if}}
 </div>

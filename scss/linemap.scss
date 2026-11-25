@@ -100,6 +100,23 @@
             margin-left: 50px;
         }
     }
+
+    // Under the two buttons, centred on the click and well inside the 110 px the menu is kept open for.
+    .linemap-menu-size {
+        position: absolute;
+        top: 86px;
+        left: -20px;
+        width: 140px;
+        padding: 4px 10px;
+        background: rgba(0, 0, 0, .8);
+        border-radius: 14px;
+        display: flex;
+
+        input[type="range"] {
+            flex: 1;
+            margin: 0;
+        }
+    }
 }
 
 textarea.linemap-text-content {

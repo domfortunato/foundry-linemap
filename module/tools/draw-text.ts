@@ -111,6 +111,8 @@ export class DrawTextTool extends Tool {
     }
 
     hotkeyPressed(key: ToolHotkey): void {
+        if (key === ToolHotkey.grow) this.layer.stepSizes(0.5);
+        if (key === ToolHotkey.shrink) this.layer.stepSizes(-0.5);
         const text = this.layer.selection.filter(o => o instanceof Text)?.[0];
         if (text) {
             if (key === ToolHotkey.bold) {

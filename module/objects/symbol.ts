@@ -7,6 +7,8 @@ import { TextureCollection } from "../linemap-layer.js";
 export interface SymbolData extends ObjectData {
     point: ConstrainedPointData;
     symbol: string;
+    /** 1 to 4, multiplying the scene's symbol scale; null at 1. */
+    size?: number | null;
 }
 
 export class Symbol extends ObjectType {
@@ -14,6 +16,7 @@ export class Symbol extends ObjectType {
 
     point: ConstrainedPoint;
     symbol: string;
+    size = 1;
 
     sprite: any;
 
@@ -28,6 +31,7 @@ export class Symbol extends ObjectType {
             new ConstrainedPoint(this.pointType, data.point.point, objectMap[data.point.sourceId], data.point.sourceT),
             data.symbol
         );
+        this.size = this.clampSize(data.size);
     }
 
     static moveData(data: SymbolData, move: PointMover): SymbolData {
@@ -41,7 +45,8 @@ export class Symbol extends ObjectType {
     get serialized(): SymbolData {
         return { ...super.serialized, ...{
             point: this.point.serialized,
-            symbol: this.symbol
+            symbol: this.symbol,
+            size: this.size === 1 ? null : this.size
         }};
     }
 
@@ -49,12 +54,26 @@ export class Symbol extends ObjectType {
         return canvas.linemap.symbolTextures;
     }
 
+    /** Where this type's art is configured: CONFIG.linemap.symbols or .waypoints. */
+    get artConfig(): "symbols" | "waypoints" {
+        return "symbols";
+    }
+
+    get sizeRange(): [number, number] {
+        return [1, 4];
+    }
+
     get orientation(): number {
         return 0;
     }
 
-    get scale(): number {
+    /** The scale of the art at size 1. */
+    get baseScale(): number {
         return 0.5 * canvas.linemap.symbolScale;
+    }
+
+    get scale(): number {
+        return this.baseScale * this.size;
     }
 
     get textAscent(): number {
@@ -66,10 +85,11 @@ export class Symbol extends ObjectType {
         this.sprite = undefined;
         const pt = this.point.point;
         // A symbol this build does not know is drawn as the collection's first, and keeps its own key.
-        const textures = this.textureCollection[this.symbol] ?? Object.values(this.textureCollection)[0];
+        // Rasterised for the scale it is drawn at, so a big symbol stays sharp.
+        const scale = this.scale;
+        const textures = canvas.linemap.texturesAt(this.artConfig, this.textureCollection, this.symbol, scale);
         const icon = textures?.icon;
         const footprint = textures?.footprint;
-        const scale = this.scale;
         if (this.isVisible && icon) {
             const sprite = new PIXI.Sprite(icon);
             sprite.anchor.set(0.5);
@@ -102,7 +122,8 @@ export class Symbol extends ObjectType {
 
         if (types.includes(SnapType.symbol)) {
             const d = length2(sub2(pt, this.point.point));
-            if (d <= config.symbol) {
+            // The radius grows with the symbol, so a big one is as easy to link to.
+            if (d <= config.symbol * this.size) {
                 result.push(new SnapPoint(this.point.point, this, 0, SnapType.symbol));
             }
         }

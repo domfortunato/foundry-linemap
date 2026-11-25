@@ -28,6 +28,8 @@
             "deleteSelected": "Delete selected objects",
             "boldText": "Bold text",
             "italicText": "Italic text",
+            "growObjects": "Make selected symbols, waypoints and labels bigger (select and text tools)",
+            "shrinkObjects": "Make selected symbols, waypoints and labels smaller (select and text tools)",
             "toggleLinked": "Toggle whether adjusting linked points preserves links"
         },
         "ui": {
@@ -48,7 +50,8 @@
         },
         "menu": {
             "reveal": "Reveal objects",
-            "hide": "Hide objects"
+            "hide": "Hide objects",
+            "size": "Size"
         },
         "lineStyles": {
             "major": "Major path",

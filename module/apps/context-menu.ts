@@ -6,6 +6,17 @@ export interface MenuOption {
     handler: () => void
 }
 
+/** A slider under the menu's two buttons: input() on each step, commit() once, when let go or closed. */
+export interface SizeOption {
+    label: string,
+    min: number,
+    max: number,
+    step: number,
+    value: number,
+    input: (size: number) => void,
+    commit: () => void
+}
+
 export class ContextMenu extends api.HandlebarsApplicationMixin(
 	api.ApplicationV2
 ) {
@@ -28,14 +39,31 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
 
     menuOptions: Record<string, MenuOption>;
 
-    constructor(menuOptions: Record<string, MenuOption>, options = {}) {
+    sizeOption?: SizeOption;
+
+    constructor(menuOptions: Record<string, MenuOption>, sizeOption?: SizeOption, options = {}) {
         super(options);
 
         this.menuOptions = menuOptions;
+        this.sizeOption = sizeOption;
     }
 
     _prepareContext(options) {
-        return { menuOptions: this.menuOptions };
+        return { menuOptions: this.menuOptions, size: this.sizeOption };
+    }
+
+    _onRender(context, options) {
+        super._onRender?.(context, options);
+        const slider = this.element.querySelector('input[name="size"]');
+        if (!slider || !this.sizeOption) return;
+        slider.addEventListener("input", () => this.sizeOption?.input(Number(slider.value)));
+        slider.addEventListener("change", () => this.sizeOption?.commit());
+    }
+
+    /** A slide the pointer carried off the menu closes it before any change event: record it now. */
+    _onClose(options) {
+        super._onClose?.(options);
+        this.sizeOption?.commit();
     }
 
     _attachFrameListeners() {

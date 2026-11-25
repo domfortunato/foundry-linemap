@@ -3,7 +3,7 @@ import { Tool, ToolHotkey } from "../classes/tool.js";
 import { AdjustmentPoint, SnapPoint, Vec2 } from "../dto.js";
 import { add2, eq2, length2, sub2 } from "../helpers/utils.js";
 import { Symbol } from "../objects/symbol.js";
-import { ContextMenu } from "../apps/context-menu.js";
+import { ContextMenu, SizeOption } from "../apps/context-menu.js";
 import { ConstrainedPoint } from "../classes/constrained-point.js";
 import { Waypoint } from "../objects/waypoint.js";
 import { Text } from "../objects/text.js";
@@ -113,11 +113,39 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            });
+            }, this._sizeOption());
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };
         }
+    }
+
+    /**
+     * The menu's size slider, for a selection with symbols, waypoints or labels. Sliding redraws the
+     * map at each step; the edit is recorded once, when the slider is let go or the menu closes.
+     */
+    _sizeOption(): SizeOption | undefined {
+        const sized = this.layer.selection.filter(o => o.sizeRange);
+        if (!sized.length) return undefined;
+        const min = Math.min(...sized.map(o => o.sizeRange[0]));
+        const max = Math.max(...sized.map(o => o.sizeRange[1]));
+        let dirty = false;
+        return {
+            label: 'linemap.menu.size',
+            min, max, step: 0.25,
+            value: (sized[0] as any).size,
+            input: (size: number) => {
+                if (this.layer.resizeObjects(sized, () => size)) {
+                    dirty = true;
+                    this.layer.redraw();
+                }
+            },
+            commit: () => {
+                if (!dirty) return;
+                dirty = false;
+                this.layer.registerHistory();
+            }
+        };
     }
 
     onDragLeftStart(event: any): void {
@@ -204,6 +232,8 @@ export class SelectTool extends Tool {
             this.layer.registerHistory();
             this.layer.redraw();
         }
+        if (key === ToolHotkey.grow) this.layer.stepSizes(0.5);
+        if (key === ToolHotkey.shrink) this.layer.stepSizes(-0.5);
         if (key === ToolHotkey.reverse) {
             this.layer.selection.filter(obj => obj instanceof Waypoint).forEach(wp => wp.reverseDirection());
             canvas.linemap.registerHistory();

@@ -161,6 +161,28 @@ Hooks.on("init", () => {
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
+    game.keybindings.register("linemap", "growObjects", {
+        restricted: true,
+        name: "linemap.keybindings.growObjects",
+        editable: [
+            { key: "BracketRight" }
+        ],
+        onDown: () => {
+            return sendHotkey(ToolHotkey.grow);
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+    });
+    game.keybindings.register("linemap", "shrinkObjects", {
+        restricted: true,
+        name: "linemap.keybindings.shrinkObjects",
+        editable: [
+            { key: "BracketLeft" }
+        ],
+        onDown: () => {
+            return sendHotkey(ToolHotkey.shrink);
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+    });
     game.keybindings.register("linemap", "toggleLinked", {
         restricted: true,
         name: "linemap.keybindings.toggleLinked",

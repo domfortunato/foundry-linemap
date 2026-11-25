@@ -16,11 +16,15 @@ export class Waypoint extends Symbol {
         return canvas.linemap.waypointTextures;
     }
 
+    get artConfig(): "symbols" | "waypoints" {
+        return "waypoints";
+    }
+
     get orientation(): number {
         return this.point.sourceObject?.getParametricOrientation(this.point.sourceT) ?? 0;
     }
 
-    get scale(): number {
+    get baseScale(): number {
         return 1.0;
     }
 

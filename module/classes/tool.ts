@@ -6,7 +6,9 @@ export enum ToolHotkey {
     hide,
     reverse,
     bold,
-    italic
+    italic,
+    grow,
+    shrink
 }
 
 export class Tool {

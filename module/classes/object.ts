@@ -102,6 +102,19 @@ export class ObjectType {
         return 30;
     }
 
+    /** The sizes this type can be drawn at, or none when it has no size (lines and areas). */
+    get sizeRange(): [number, number] | null {
+        return null;
+    }
+
+    /** A size within this type's range, in quarter steps; anything unreadable (an older save's null) is 1. */
+    clampSize(size: any): number {
+        const range = this.sizeRange;
+        const n = Number(size);
+        if (!range || size == null || !Number.isFinite(n)) return 1;
+        return Math.min(Math.max(Math.round(n * 4) / 4, range[0]), range[1]);
+    }
+
     draw(layers: ObjectDrawLayers) {}
 
     getSnapPoints(pt: Vec2, types: SnapType[]): SnapPoint[] {

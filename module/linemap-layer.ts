@@ -10,6 +10,7 @@ import { DrawTextTool } from "./tools/draw-text.js";
 import { SelectTool } from "./tools/select-tool.js";
 import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
+import { Text } from "./objects/text.js";
 
 const { layers } = foundry.canvas;
 
@@ -67,6 +68,8 @@ export class LineMapLayer extends layers.InteractionLayer {
     symbolTextures: TextureCollection = {};
     waypointTextures: TextureCollection = {};
     patternTextures: TextureCollection = {};
+    /** Symbol and waypoint art rasterised above its native size, made on first use (see texturesAt). */
+    sharpTextures = new Map<string, { icon: any, footprint: any }>();
 
     color = LineMapLayer.defaultColor;
     symbolScale = 1.0;
@@ -392,6 +395,75 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     hotkeyPressed(key: ToolHotkey) {
         this.activeTool?.hotkeyPressed(key);
+    }
+
+    /**
+     * A symbol's or waypoint's textures, rasterised for the scale they are drawn at. The plain ones
+     * hold the art at its native size, which a big symbol stretched into a blur, so above scale 1 the
+     * SVG is rasterised again at 2 or 4 times (with the same resolution, so the sprite's size is the
+     * same). Those are made once, on first use; until one has loaded, the plain one is drawn and the
+     * map is redrawn when it arrives.
+     */
+    texturesAt(config: "symbols" | "waypoints", plain: TextureCollection, key: string, scale: number): { icon: any, footprint: any } | undefined {
+        // A symbol this build does not know is drawn as the collection's first, and keeps its own key.
+        const known = plain[key] ? key : Object.keys(plain)[0];
+        const fallback = plain[known];
+        const resolution = scale <= 1 ? 1 : scale <= 2 ? 2 : 4;
+        const art = CONFIG.linemap[config]?.[known];
+        if (resolution === 1 || !art) return fallback;
+        const id = `${config}:${known}:${resolution}`;
+        let sharp = this.sharpTextures.get(id);
+        if (!sharp) {
+            const make = (src: string | undefined) => {
+                if (!src) return undefined;
+                // Not PIXI.Texture.from: its cache is keyed by the URL alone, and would hand back the plain one.
+                const texture = new PIXI.Texture(new PIXI.BaseTexture(src, { resolution, resourceOptions: { scale: resolution } }));
+                if (!texture.baseTexture.valid) texture.baseTexture.once("loaded", () => this.redraw());
+                return texture;
+            };
+            sharp = { icon: make(art.icon), footprint: make(art.footprint) };
+            this.sharpTextures.set(id, sharp);
+        }
+        const ready = sharp.icon?.baseTexture.valid && (!sharp.footprint || sharp.footprint.baseTexture.valid);
+        return ready ? sharp : fallback;
+    }
+
+    /**
+     * Resize every object in the list that has a size, each kept within its own range. A label linked
+     * to a symbol that grows moves out with the symbol's edge, and a linked label that grows moves out
+     * by half its own growth, so neither ends up over the other. Not recorded: the caller records it.
+     * Whether anything changed.
+     */
+    resizeObjects(objects: ObjectType[], next: (size: number) => number): boolean {
+        let changed = false;
+        for (const obj of objects) {
+            const range = obj.sizeRange;
+            const old = (obj as any).size;
+            if (!range || typeof old !== "number") continue;
+            const size = obj.clampSize(next(old));
+            if (size === old) continue;
+            changed = true;
+            const height = (obj as any).sprite?.height ?? 0;
+            (obj as any).size = size;
+            // The drawn height scales with the size; the gap from the anchor is half of it.
+            const grow = height * (size / old - 1) / 2;
+            if (obj instanceof Text) {
+                if (obj.point.sourceObject) Text.pushOut(obj, grow);
+            } else {
+                for (const label of this.objects) {
+                    if (label instanceof Text && label.point.sourceObject === obj) Text.pushOut(label, grow);
+                }
+            }
+        }
+        return changed;
+    }
+
+    /** Grow or shrink the sized objects of the selection by half a size, as one edit. */
+    stepSizes(delta: number) {
+        if (this.resizeObjects(this.selection, size => size + delta)) {
+            this.registerHistory();
+            this.redraw();
+        }
     }
 
     clear(withUndo: boolean = true) {
