@@ -21,7 +21,8 @@ export function scripts() {
     return gulp.src('module/**/*.ts')
 		.pipe(sourcemaps.init())
 		.pipe(tsProject())
-		.pipe(sourcemaps.write())
+		// Maps beside the scripts, not inlined: an inlined map tripled every script a client loads.
+		.pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('dist/module'));
 }
 

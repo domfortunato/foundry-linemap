@@ -96,7 +96,8 @@ map's lines and symbols has to be drawn by the map itself.
 
 - A new object type, **image**: `src`, `rect`, `rotation`, `isRevealed`, `sort`. Images are drawn
   untinted, below areas.
-- An **image tool** (hotkey I) opens Foundry's file picker and places the image at the click.
+- An **image tool** (hotkey G; I is already italic labels) opens Foundry's file picker and places
+  the image at the click.
 - The select tool moves an image; the adjust tool resizes it by its corners, keeping the aspect
   ratio with shift.
 - The right-click menu has **Fit to scene**, so one image can be the map's background, and order

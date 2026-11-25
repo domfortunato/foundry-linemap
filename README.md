@@ -5,6 +5,18 @@ This module allows you to draw line and symbol based maps (point crawls) as insp
 It requires Foundry VTT 14. `ROADMAP.md` lists what this fork plans to build next, and
 `CHANGELOG.md` what each release changed.
 
+## Installing and updating
+
+This fork shares its package id, `linemap`, with Tero Parvinen's original, which is the one listed
+on Foundry's package website. Install the fork from its manifest URL:
+
+    https://github.com/domfortunato/foundry-linemap/releases/latest/download/module.json
+
+Foundry checks for updates against its package website, so its update buttons may not offer this
+fork's releases, and could offer the original's instead. **Do not update Line Map with "Update" or
+"Update All"**: install the fork's manifest URL again to update. The original cannot read a map
+this fork has saved, so such a map would look empty under it.
+
 ## Drawings
 
 The different object types available are:
@@ -44,6 +56,19 @@ Areas are created as rectangles, but can be freely shaped using the adjust tool 
 ### Flipping waypoints
 
 Some waypoints are directional. You can flip their direction by selecting the waypoint using the select tool (hotkey V) and pressing **D**.
+
+## Keys
+
+Each key acts only while the Line Map layer is active, and each can be changed in Configure
+Controls.
+
+- **V, A, L, S, W, P, T:** the select, adjust, line, symbol, waypoint, area and text tools
+- **R and H:** reveal and hide the selected objects (select tool)
+- **D:** flip the selected waypoints (select tool)
+- **B and I:** bold and italic for the selected label (text tool)
+- **N:** toggle whether adjusting linked points preserves links
+- **Delete or Backspace:** delete the selected objects
+- **Ctrl+Z:** undo your own last edit, one edit at a time
 
 ## Other settings
 

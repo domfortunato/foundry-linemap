@@ -1,8 +1,8 @@
 <div id="linemap-tool-options">
     <div class="linemap-tool-shelf">
         {{#each symbols as |symbol symbolName|}}
-            <a class="linemap-style-select {{#if (eq symbolName ../activeSymbol)}}active{{/if}}" data-action="set-symbol" data-line-style="{{symbolName}}">
-                <img class="symbol" src="{{symbol.icon}}" />
+            <a class="linemap-style-select {{#if (eq symbolName ../activeSymbol)}}active{{/if}}" data-action="set-symbol" data-line-style="{{symbolName}}" aria-label="{{#if symbol.label}}{{localize symbol.label}}{{else}}{{symbolName}}{{/if}}" data-tooltip="{{#if symbol.label}}{{symbol.label}}{{else}}{{symbolName}}{{/if}}">
+                <img class="symbol" src="{{symbol.icon}}" alt="" />
             </a>
         {{/each}}
     </div>

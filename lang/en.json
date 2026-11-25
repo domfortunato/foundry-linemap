@@ -11,7 +11,8 @@
             "trash": "Delete all objects",
             "newObjectsRevealed": "Created objects are revealed",
             "adjustLinked": "Adjusting linked points preserves links",
-            "settings": "Scene settings"
+            "settings": "Scene settings",
+            "control": "Line Map"
         },
         "keybindings": {
             "selectTool": "Activate the select tool",
@@ -37,7 +38,8 @@
             "contentColor": "Content color",
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
-            "confirmDelete": "Delete all scene content?"
+            "confirmDelete": "Delete all scene content?",
+            "confirmDeleteTitle": "Delete all objects"
         },
         "error": {
             "cyclicConstraint": "Attempted to make a cyclic link. The point was not linked.",
@@ -46,6 +48,34 @@
         "menu": {
             "reveal": "Reveal objects",
             "hide": "Hide objects"
+        },
+        "lineStyles": {
+            "major": "Major path",
+            "minor": "Minor path",
+            "rough": "Rough path",
+            "barrier": "Barrier"
+        },
+        "symbols": {
+            "major-settlement": "Major settlement",
+            "minor-settlement": "Minor settlement",
+            "major-site": "Major site",
+            "minor-site": "Minor site",
+            "major-danger": "Major danger",
+            "minor-danger": "Minor danger",
+            "curiosity": "Curiosity"
+        },
+        "waypoints": {
+            "waypoint": "Waypoint",
+            "pass": "Pass",
+            "elevation-left": "Elevation change (left)",
+            "elevation-right": "Elevation change (right)"
+        },
+        "patterns": {
+            "diagonal1": "Diagonal lines",
+            "diagonal2": "Diagonal lines, crossed",
+            "dots": "Dots",
+            "waves": "Waves",
+            "barrier": "Barrier outline"
         }
     }
 }

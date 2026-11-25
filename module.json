@@ -5,6 +5,10 @@
     "authors": [
         {
             "name": "Tero Parvinen (tero.p)"
+        },
+        {
+            "name": "domfortunato",
+            "url": "https://github.com/domfortunato/foundry-linemap"
         }
     ],
     "version": "0.14.0",

@@ -426,10 +426,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     async _draw(options) {
-        const size = { width: canvas.dimensions.width, height: canvas.dimensions.height };
-        this.renderTexture = PIXI.RenderTexture.create(size);
-        this.lineTexture = PIXI.RenderTexture.create(size);
-        this.maskTexture = PIXI.RenderTexture.create(size);
+        // The render targets are made by the first redraw with something to draw (_makeTargets).
         this.lineFilter = new PIXI.Filter(`
             attribute vec2 aVertexPosition;
 
@@ -476,7 +473,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                 gl_FragColor = line * (1.0 - mask.a);
                 gl_FragColor.a = line.a * (1.0 - mask.a);
             }
-        `, { screenDimensions: [this.renderTexture.width, this.renderTexture.height] });
+        `, { screenDimensions: [canvas.dimensions.width, canvas.dimensions.height] });
 
         // Symbols are painted in one colour each: one filter per colour, over a container of every
         // symbol in it. A filter per sprite cost a render pass per symbol on every redraw.
@@ -506,10 +503,11 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         this.objectContainer = new PIXI.Container();
 
-        this.renderSprite = this.addChild(new PIXI.Sprite(this.renderTexture));
+        this.renderSprite = this.addChild(new PIXI.Sprite());
 
         this.preview = this.addChild(new PIXI.Container());
 
+        await this._texturesLoaded();
         this.fetchData();
         this.redraw();
         this._migrateOnView();
@@ -517,9 +515,45 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.visible = true;
     }
 
+    /**
+     * Wait for every symbol, waypoint and pattern texture to load, or fail. The map is drawn once into
+     * a texture, so a sprite whose art had not arrived yet drew nothing, and stayed so until the map
+     * was next redrawn (a Gamemaster's edit).
+     */
+    async _texturesLoaded() {
+        const textures = [this.symbolTextures, this.waypointTextures, this.patternTextures]
+            .flatMap(c => Object.values(c).flatMap(t => [t.icon, t.footprint]))
+            .filter(t => t && !t.baseTexture.valid);
+        await Promise.all(textures.map(t => new Promise<void>(resolve => {
+            t.baseTexture.once("loaded", () => resolve());
+            t.baseTexture.once("error", () => resolve());
+        })));
+    }
+
+    /**
+     * Make the map's render targets, once there is something to draw: a Scene with no map pays for
+     * none (they are each the canvas's size, and every Scene had three). A target bigger than the GPU
+     * allows cannot be made at all, so a canvas that large is drawn at a lower resolution, as core
+     * does for the fog of war.
+     */
+    _makeTargets() {
+        const { width, height } = canvas.dimensions;
+        const gl = canvas.app.renderer.gl;
+        const max = gl?.getParameter(gl.MAX_TEXTURE_SIZE) ?? 4096;
+        const size = { width, height, resolution: Math.min(1, max / Math.max(width, height)) };
+        this.renderTexture = PIXI.RenderTexture.create(size);
+        this.lineTexture = PIXI.RenderTexture.create(size);
+        this.maskTexture = PIXI.RenderTexture.create(size);
+        this.renderSprite.texture = this.renderTexture;
+    }
+
     redraw(highQuality = true) {
-        // Nothing to draw into before the canvas has drawn this layer (_draw makes the targets).
-        if (!this.renderTexture) return;
+        // Nothing to draw into before the canvas has drawn this layer (_draw makes the containers).
+        if (!this.objectContainer) return;
+        if (!this.renderTexture) {
+            if (!this.objects.length) return;
+            this._makeTargets();
+        }
         this._disposeDrawn();
 
         const layers = {
@@ -570,11 +604,6 @@ export class LineMapLayer extends layers.InteractionLayer {
         canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: true });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
         canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
-    }
-
-    assetsLoaded() {
-        this.activeTool?.deactivate();
-        this.activeTool?.activate();
     }
 
     async _tearDown(options) {
@@ -1022,7 +1051,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                 // After core's controls (0 to 8 in v14). Unset, core's sort compared against
                 // undefined (NaN), so where Line Map landed was left to the sort.
                 order: 9,
-                title: "Line Map",
+                title: "linemap.tools.control",
                 layer: "linemap",
                 icon: "fas fa-route",
                 onChange: (event, active) => {
@@ -1098,8 +1127,8 @@ export class LineMapLayer extends layers.InteractionLayer {
                         button: true,
                         onChange: async () => {
                             if (await foundry.applications.api.DialogV2.confirm({
+                                window: { title: 'linemap.ui.confirmDeleteTitle' },
                                 content: game.i18n.localize('linemap.ui.confirmDelete'),
-                                rejectClose: false,
                                 modal: true
                             })) {
                                 // clear() saves and records history; a redraw replaces the old

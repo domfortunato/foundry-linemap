@@ -10,7 +10,8 @@ import { BarrierLine } from "./objects/line-styles/barrier-line.js";
 import { ToolHotkey } from "./classes/tool.js";
 import { Waypoint } from "./objects/waypoint.js";
 
-Hooks.on("init", async () => {
+// Every keybinding is restricted: each is a Gamemaster's action, and players have no Line Map control.
+Hooks.on("init", () => {
     CONFIG.Canvas.layers.linemap = { group: "primary", layerClass: LineMapLayer };
     Hooks.on("preUpdateScene", LineMapLayer.onPreUpdateScene);
 
@@ -28,6 +29,7 @@ Hooks.on("init", async () => {
     }
 
     game.keybindings.register("linemap", "selectTool", {
+        restricted: true,
         name: "linemap.keybindings.selectTool",
         editable: [
             { key: "KeyV" }
@@ -38,6 +40,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "adjustTool", {
+        restricted: true,
         name: "linemap.keybindings.adjustTool",
         editable: [
             { key: "KeyA" }
@@ -48,6 +51,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "drawLineTool", {
+        restricted: true,
         name: "linemap.keybindings.drawLineTool",
         editable: [
             { key: "KeyL" }
@@ -58,6 +62,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "drawSymbolTool", {
+        restricted: true,
         name: "linemap.keybindings.drawSymbolTool",
         editable: [
             { key: "KeyS" }
@@ -68,6 +73,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "drawWaypointTool", {
+        restricted: true,
         name: "linemap.keybindings.drawWaypointTool",
         editable: [
             { key: "KeyW" }
@@ -78,6 +84,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "drawAreaTool", {
+        restricted: true,
         name: "linemap.keybindings.drawAreaTool",
         editable: [
             { key: "KeyP" }
@@ -88,6 +95,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "drawTextTool", {
+        restricted: true,
         name: "linemap.keybindings.drawTextTool",
         editable: [
             { key: "KeyT" }
@@ -98,6 +106,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "revealObjects", {
+        restricted: true,
         name: "linemap.keybindings.revealObjects",
         editable: [
             { key: "KeyR" }
@@ -108,6 +117,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "hideObjects", {
+        restricted: true,
         name: "linemap.keybindings.hideObjects",
         editable: [
             { key: "KeyH" }
@@ -118,6 +128,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "reverseWaypointDirection", {
+        restricted: true,
         name: "linemap.keybindings.reverseWaypointDirection",
         editable: [
             { key: "KeyD" }
@@ -128,6 +139,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "boldText", {
+        restricted: true,
         name: "linemap.keybindings.boldText",
         editable: [
             { key: "KeyB" }
@@ -138,6 +150,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "italicText", {
+        restricted: true,
         name: "linemap.keybindings.italicText",
         editable: [
             { key: "KeyI" }
@@ -148,6 +161,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "toggleLinked", {
+        restricted: true,
         name: "linemap.keybindings.toggleLinked",
         editable: [
             { key: "KeyN" }
@@ -163,6 +177,7 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
     game.keybindings.register("linemap", "deleteSelected", {
+        restricted: true,
         name: "linemap.keybindings.deleteSelected",
         editable: [
             { key: "Delete" },
@@ -176,6 +191,7 @@ Hooks.on("init", async () => {
         }
     });
     game.keybindings.register("linemap", "undo", {
+        restricted: true,
         name: "KEYBINDINGS.Undo",
         uneditable: [
             { key: "KeyZ", modifiers: ["Control"] }
@@ -225,21 +241,25 @@ Hooks.on("init", async () => {
         },
         lineStyles: {
             major: {
+                label: 'linemap.lineStyles.major',
                 icon: 'modules/linemap/assets/lines/major-path.svg',
                 lineClass: SolidLine,
                 selectTolerance: 5
             },
             minor: {
+                label: 'linemap.lineStyles.minor',
                 icon: 'modules/linemap/assets/lines/minor-path.svg',
                 lineClass: DashLine,
                 selectTolerance: 5
             },
             rough: {
+                label: 'linemap.lineStyles.rough',
                 icon: 'modules/linemap/assets/lines/rough-path.svg',
                 lineClass: WaveLine,
                 selectTolerance: 13
             },
             barrier: {
+                label: 'linemap.lineStyles.barrier',
                 icon: 'modules/linemap/assets/lines/barrier.svg',
                 lineClass: BarrierLine,
                 selectTolerance: 13
@@ -247,73 +267,84 @@ Hooks.on("init", async () => {
         },
         symbols: {
             'major-settlement': {
+                label: 'linemap.symbols.major-settlement',
                 icon: 'modules/linemap/assets/symbols/major-settlement.svg',
                 footprint: 'modules/linemap/assets/footprints/major-settlement.svg'
             },
             'minor-settlement': {
+                label: 'linemap.symbols.minor-settlement',
                 icon: 'modules/linemap/assets/symbols/minor-settlement.svg',
                 footprint: 'modules/linemap/assets/footprints/minor-settlement.svg'
             },
             'major-site': {
+                label: 'linemap.symbols.major-site',
                 icon: 'modules/linemap/assets/symbols/major-site.svg',
                 footprint: 'modules/linemap/assets/footprints/major-site.svg'
             },
             'minor-site': {
+                label: 'linemap.symbols.minor-site',
                 icon: 'modules/linemap/assets/symbols/minor-site.svg',
                 footprint: 'modules/linemap/assets/footprints/minor-site.svg'
             },
             'major-danger': {
+                label: 'linemap.symbols.major-danger',
                 icon: 'modules/linemap/assets/symbols/major-danger.svg',
                 footprint: 'modules/linemap/assets/footprints/major-danger.svg'
             },
             'minor-danger': {
+                label: 'linemap.symbols.minor-danger',
                 icon: 'modules/linemap/assets/symbols/minor-danger.svg',
                 footprint: 'modules/linemap/assets/footprints/minor-danger.svg'
             },
             'curiosity': {
+                label: 'linemap.symbols.curiosity',
                 icon: 'modules/linemap/assets/symbols/curiosity.svg'
             },
         },
         waypoints: {
             waypoint: {
+                label: 'linemap.waypoints.waypoint',
                 icon: 'modules/linemap/assets/waypoints/waypoint.svg',
                 footprint: 'modules/linemap/assets/waypoints/waypoint.svg'
             },
             pass: {
+                label: 'linemap.waypoints.pass',
                 icon: 'modules/linemap/assets/waypoints/pass.svg',
                 footprint: 'modules/linemap/assets/footprints/pass.svg'
             },
             'elevation-left': {
+                label: 'linemap.waypoints.elevation-left',
                 icon: 'modules/linemap/assets/waypoints/elevation-left.svg',
                 reverse: 'elevation-right'
             },
             'elevation-right': {
+                label: 'linemap.waypoints.elevation-right',
                 icon: 'modules/linemap/assets/waypoints/elevation-right.svg',
                 reverse: 'elevation-left'
             }
         },
         patterns: {
             diagonal1: {
+                label: 'linemap.patterns.diagonal1',
                 texture: 'modules/linemap/assets/patterns/diagonal1.svg'
             },
             diagonal2: {
+                label: 'linemap.patterns.diagonal2',
                 texture: 'modules/linemap/assets/patterns/diagonal2.svg'
             },
             dots: {
+                label: 'linemap.patterns.dots',
                 texture: 'modules/linemap/assets/patterns/dots.svg'
             },
             waves: {
+                label: 'linemap.patterns.waves',
                 texture: 'modules/linemap/assets/patterns/waves.svg'
             },
             barrier: {
+                label: 'linemap.patterns.barrier',
                 lineWidth: 12
             }
         }
     };
 
-    const loadables = [...Object.values(CONFIG.linemap.lineStyles), ...Object.values(CONFIG.linemap.symbols)];
-    await Promise.all(loadables.map(async (symbol: any) => {
-        const response = await fetch(symbol.icon);
-        symbol.content = await response.text();
-    }));
 });

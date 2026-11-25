@@ -50,10 +50,15 @@ jobs:
           fi
 
       # "latest" moves only for a tag push of the highest version tag, never for a rebuild or an
-      # older tag (GitHub would otherwise make the newest-created release latest).
+      # older tag (GitHub would otherwise make the newest-created release latest). "Highest" counts
+      # this fork's releases and this tag only: the repo also carries upstream's tags (v0.12.0,
+      # v0.13.0), and a higher one of theirs would have kept every release here from being latest.
       - name: Whether this release becomes latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          highest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          released=$(gh release list --repo "${{ github.repository }}" --limit 200 --json tagName --jq '.[].tagName')
+          highest=$(printf '%s\n' $released "$RELEASE_TAG" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
           if [ "${{ github.event_name }}" = "push" ] && [ "$RELEASE_TAG" = "$highest" ]; then
             echo "MAKE_LATEST=true" >> "$GITHUB_ENV"
           else

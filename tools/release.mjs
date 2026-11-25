@@ -78,6 +78,20 @@ if (capture(`git ls-remote --tags origin refs/tags/${tag}`)) {
   die(`Tag ${tag} already exists on origin. Pick a new version, or remove it first:\n    git push origin :refs/tags/${tag}`);
 }
 
+// 3b. Above every release this fork has made, or the workflow would publish it without moving
+// "latest", and the install manifest would keep serving the older one. The fork's tags are the
+// annotated ones this script makes; upstream's, which the repo also carries, are lightweight.
+const newer = (a, b) => {
+  const [x, y] = [a, b].map((v) => v.split(".").map(Number));
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
+  return false;
+};
+const released = capture(`git for-each-ref refs/tags "--format=%(objecttype) %(refname:short)"`)
+  .split(/\r?\n/).map((l) => l.trim().split(" ")).filter(([kind, name]) => kind === "tag" && /^v\d+\.\d+\.\d+$/.test(name ?? ""))
+  .map(([, name]) => name.slice(1));
+const top = released.reduce((m, v) => (!m || newer(v, m) ? v : m), null);
+if (top && !newer(version, top)) die(`${version} is not above this fork's latest release, ${top}. Pick a higher version.`);
+
 // 4. The notes: CHANGELOG.md's section for this version, tracked and not empty.
 const changelogPath = path.join(ROOT, "CHANGELOG.md");
 if (!fs.existsSync(changelogPath)) die(`CHANGELOG.md is missing. Write a "## ${version}" section in it first.`);
