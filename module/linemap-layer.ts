@@ -242,7 +242,7 @@ export class LineMapLayer extends layers.InteractionLayer {
      *   merges saves of different objects from different Gamemasters;
      * - before, `flags.linemap.serialized` held the settings and an array of every object, so of two
      *   saves at once the later replaced the earlier whole. Still read; a map is moved to the new
-     *   format, all at once, the first time it is saved.
+     *   format, all at once, when the active Gamemaster views it (or at its first save, if sooner).
      * Settings saved before anything is drawn leave `map` alone, which is the new format too.
      */
     static readFlag(scene: any): LayerData | undefined {
@@ -512,6 +512,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         this.fetchData();
         this.redraw();
+        this._migrateOnView();
 
         this.visible = true;
     }
@@ -867,6 +868,20 @@ export class LineMapLayer extends layers.InteractionLayer {
     fetchData() {
         this.applyData(LineMapLayer.readFlag(canvas.scene));
         this.baseline = structuredClone(this.serialized);
+    }
+
+    /**
+     * A map still in the old format moves to the new one when a Gamemaster views it: by the active
+     * Gamemaster's client, so that two do not both write it, or by this one's if the active Gamemaster
+     * is viewing another Scene. It used to move at its first edit,
+     * which wrote the whole map: two Gamemasters' first edits at one moment each wrote it, and the
+     * later put back what the earlier had deleted.
+     */
+    _migrateOnView() {
+        const flag = canvas.scene?.flags?.linemap;
+        if (!flag?.serialized || flag?.objects || !game.user.isGM) return;
+        const active = game.users.activeGM;
+        if (active?.isSelf || active?.viewedScene !== canvas.scene.id) this._saveData();
     }
 
     /**
