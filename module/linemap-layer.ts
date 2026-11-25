@@ -78,10 +78,11 @@ export class LineMapLayer extends layers.InteractionLayer {
     // The two symbol tints, one pass each over every symbol of that colour (made in _draw).
     symbolFilter: any;
     selectedSymbolFilter: any;
-    // Label sprites kept across redraws, by object id: rasterising a text is the slow part of a
-    // redraw, and a drag redraws on every mouse move. Rebuilt only when the label's look changes.
-    labelCache = new Map<string, { key: string, sprite: any }>();
-    labelsUsed = new Set<string>();
+    // Label sprites and line graphics kept across redraws, by object id. A drag redraws on every
+    // mouse move, and rasterising every label and rebuilding every line each time was most of a big
+    // map's redraw; now only what the drag moves is rebuilt, when its look (the key) changes.
+    displayCache = new Map<string, { key: string, sprite: any }>();
+    displayUsed = new Set<string>();
 
     // Sorting in the primary group (see _draw).
     elevation = 0;
@@ -294,37 +295,37 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.preview?.removeChildren().forEach(c => c.destroy({ children: true }));
     }
 
-    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) and cached labels are kept. */
+    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) and cached displays are kept. */
     _disposeDrawn() {
         this.objectContainer?.removeChildren();
-        for (const { sprite } of this.labelCache.values()) sprite.parent?.removeChild(sprite);
+        for (const { sprite } of this.displayCache.values()) sprite.parent?.removeChild(sprite);
         this.drawn.forEach(c => c.destroy({ children: true }));
         this.drawn = [];
     }
 
     /**
-     * A label's sprite from the cache, or a new one from make() when the label is new or its look
-     * (key) changed. Sprites not asked for during a redraw are destroyed at its end.
+     * An object's display object from the cache, or a new one from make() when the object is new or
+     * its look (key) changed. Those not asked for during a redraw are destroyed at its end.
      */
-    cachedLabel(id: string, key: string, make: () => any): any {
-        this.labelsUsed.add(id);
-        const hit = this.labelCache.get(id);
+    cachedDisplay(id: string, key: string, make: () => any): any {
+        this.displayUsed.add(id);
+        const hit = this.displayCache.get(id);
         if (hit?.key === key && !hit.sprite.destroyed) return hit.sprite;
         hit?.sprite.destroy(true);
         const sprite = make();
-        this.labelCache.set(id, { key, sprite });
+        this.displayCache.set(id, { key, sprite });
         return sprite;
     }
 
-    _pruneLabels(all = false) {
-        for (const [id, { sprite }] of this.labelCache) {
-            if (all || !this.labelsUsed.has(id)) {
+    _pruneDisplays(all = false) {
+        for (const [id, { sprite }] of this.displayCache) {
+            if (all || !this.displayUsed.has(id)) {
                 sprite.parent?.removeChild(sprite);
                 sprite.destroy(true);
-                this.labelCache.delete(id);
+                this.displayCache.delete(id);
             }
         }
-        this.labelsUsed.clear();
+        this.displayUsed.clear();
     }
 
     hotkeyPressed(key: ToolHotkey) {
@@ -467,11 +468,11 @@ export class LineMapLayer extends layers.InteractionLayer {
             labels: new PIXI.Container()
         }
 
-        this.labelsUsed.clear();
+        this.displayUsed.clear();
         this.objects.forEach(obj => {
             obj.draw(layers);
         });
-        this._pruneLabels();
+        this._pruneDisplays();
 
         this.symbolFilter.uniforms.tintColor = this._objectColor;
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
@@ -516,7 +517,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     async _tearDown(options) {
         this.clear(false);
         this._disposeDrawn();
-        this._pruneLabels(true);
+        this._pruneDisplays(true);
         this.objectContainer?.destroy({ children: true });
         this.objectContainer = undefined;
         // Destroys renderSprite and preview with their children (not their textures).

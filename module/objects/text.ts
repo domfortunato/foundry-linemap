@@ -141,7 +141,7 @@ export class Text extends ObjectType {
     }
 
     draw(layers: ObjectDrawLayers) {
-        // The sprite belongs to the layer's label cache, which destroys it once no redraw asks for it.
+        // The sprite belongs to the layer's display cache, which destroys it once no redraw asks for it.
         this.sprite = undefined;
         // Hidden labels are not drawn for players, like every other object type.
         if (!this.isVisible) {
@@ -153,7 +153,7 @@ export class Text extends ObjectType {
         // every label on every mouse move of a drag was most of a big map's redraw.
         const options = this._pixiOptions;
         const key = JSON.stringify([this.text, options.fontFamily, options.fontStyle, options.fontWeight, options.fill]);
-        const text = canvas.linemap.cachedLabel(this.id, key, () => {
+        const text = canvas.linemap.cachedDisplay(this.id, key, () => {
             const t = new PreciseText(this.text, options);
             t.anchor.set(0.5);
             return t;
