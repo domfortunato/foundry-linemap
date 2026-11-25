@@ -131,7 +131,11 @@ try {
     return { held: !!t.menu, heldRendered: t.menu?.rendered, same: t.menu === app, app: !!app, appState: app?.state, menuAt: t.menuAt, active: game.activeTool, dom: document.querySelectorAll('#linemap-context-menu').length }
   })
   const m0 = await menuInfo()
-  await clickAt(gm, await at(gm, 0.8, 0.8))
+  // A raw screen point: clickAt pans its target to the middle of the screen, where the menu is.
+  await gm.mouse.move(m0.menuAt.x - 300, m0.menuAt.y - 200, { steps: 8 })
+  await gm.mouse.down()
+  await gm.mouse.up()
+  await gm.waitForTimeout(scaled(500))
   const m1 = await menuInfo()
   p.check(!(await menuOpen(gm)), 'a click elsewhere on the canvas closes it', { before: m0, after: m1 })
   await gm.evaluate(async () => { for (const app of [...foundry.applications.instances.values()]) if (app.id === 'linemap-context-menu') await app.close({ animate: false }) })
