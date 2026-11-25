@@ -4,7 +4,7 @@ Release notes for this fork of Tero Parvinen's Line Map. `npm run release X.Y.Z`
 `## X.Y.Z` section below and publishes it as the release's notes, so write it before releasing.
 Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-linemap/releases.
 
-## Unreleased
+## 0.14.0
 
 - Verified on Foundry VTT 14.
 - The manifest and download links point at this fork's releases.
