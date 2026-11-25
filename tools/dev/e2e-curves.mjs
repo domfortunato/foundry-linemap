@@ -116,7 +116,8 @@ try {
   const back = (await lines(page)).find(l => l.id === curve?.id)
   p.check(back && back.smooth === true && back.points.length === curve.points.length && back.points[0].sourceId === aId,
     'the curve is the same after a reload, links and all', back && { smooth: back.smooth, points: back.points.length })
-  p.check(await opaqueAt(page, apex) > 0, 'and is still drawn along the curve')
+  // Not at the apex: the waypoint drawn there would light those pixels on its own.
+  p.check(await opaqueAt(page, arc[3]) > 0, 'and is still drawn along the curve', await opaqueAt(page, arc[3]))
   await tool(page, 'drawLine')
   if (await toggle.count()) await toggle.click()
   await page.waitForTimeout(scaled(300))
