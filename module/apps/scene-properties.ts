@@ -25,8 +25,10 @@ export class ScenePropertiesApp extends api.HandlebarsApplicationMixin(
     _prepareContext(options: any) {
         const isLightMode = canvas.linemap.isLightMode;
         const symbolScale = canvas.linemap.symbolScale;
+        const labelFont = canvas.linemap.labelFont;
+        const labelFonts = Object.fromEntries((CONFIG.linemap.labelFonts as string[]).map(f => [f, f]));
 
-        return { isLightMode, symbolScale };
+        return { isLightMode, symbolScale, labelFont, labelFonts };
     }
 
     static async handleSubmit(event, form, formData) {
@@ -34,6 +36,8 @@ export class ScenePropertiesApp extends api.HandlebarsApplicationMixin(
         // parseFloat gives NaN, never null, so `?? 1.0` could not fall back: check and clamp instead.
         const scale = Number(form.elements.symbolScale.value);
         canvas.linemap.symbolScale = Number.isFinite(scale) ? Math.min(Math.max(scale, 1), 2) : 1.0;
+        const font = form.elements.labelFont?.value;
+        if (CONFIG.linemap.labelFonts.includes(font)) canvas.linemap.labelFont = font;
         canvas.linemap.redraw();
         await canvas.linemap.dataChanged();
 

@@ -17,6 +17,7 @@ interface LayerData {
     objects: ObjectData[];
     isLightMode: boolean;
     symbolScale: number;
+    labelFont?: string;
 }
 
 interface InterfaceState {
@@ -42,6 +43,11 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     isLightMode = false;
     symbolScale = 1.0;
+    labelFont = LineMapLayer.defaultLabelFont;
+
+    static get defaultLabelFont(): string {
+        return CONFIG.linemap?.labelFonts?.[0] ?? "Alegreya";
+    }
 
     // GPU render targets, made once per canvas draw in _draw and destroyed in _tearDown.
     renderTexture: any;
@@ -526,7 +532,8 @@ export class LineMapLayer extends layers.InteractionLayer {
         const objects = this.objects.map(o => o.serialized);
         const isLightMode = this.isLightMode;
         const symbolScale = this.symbolScale;
-        return { objects, isLightMode, symbolScale };
+        const labelFont = this.labelFont;
+        return { objects, isLightMode, symbolScale, labelFont };
     }
 
     pushHistory() {
@@ -557,6 +564,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.objects = objectEntries?.map(o => o[0]) ?? [];
             this.isLightMode = !!data.isLightMode;
             this.symbolScale = data.symbolScale ?? 1.0;
+            // Maps saved before the setting existed get the default font.
+            this.labelFont = data.labelFont || LineMapLayer.defaultLabelFont;
         } else {
             // A scene with no drawing yet starts from the defaults. The layer outlives scenes, so
             // without this the previous scene's colour and scale showed here and were saved into
@@ -564,6 +573,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.objects = [];
             this.isLightMode = false;
             this.symbolScale = 1.0;
+            this.labelFont = LineMapLayer.defaultLabelFont;
         }
     }
 

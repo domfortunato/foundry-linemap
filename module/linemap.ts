@@ -188,7 +188,28 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
 
+    // Label fonts shipped with the module (SIL OFL 1.1, licences beside the files). Registered here
+    // so Foundry loads them for every client before the canvas draws; `??=` leaves a definition
+    // made by the world or another package alone.
+    const fontPath = "modules/linemap/assets/fonts";
+    CONFIG.fontDefinitions["Alegreya"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/alegreya/Alegreya-wght.woff2`], weight: "400 900" },
+            { urls: [`${fontPath}/alegreya/Alegreya-Italic-wght.woff2`], weight: "400 900", style: "italic" }
+        ]
+    };
+    CONFIG.fontDefinitions["IM Fell English"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/im-fell-english/IMFeENrm28P.ttf`] },
+            { urls: [`${fontPath}/im-fell-english/IMFeENit28P.ttf`], style: "italic" }
+        ]
+    };
+
     CONFIG.linemap = {
+        // The scene setting's choices; the first is the default.
+        labelFonts: ["Alegreya", "IM Fell English"],
         snap: {
             lineEnd: 10,
             line: 5,
