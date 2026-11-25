@@ -50,7 +50,8 @@ Some waypoints are directional. You can flip their direction by selecting the wa
 Access other scene specific settings using the settings layer control button.
 
 - Change the icon scale from 100% to 200% to represent lower or higher levels of scale detail
-- Change the content color to white or black for better contrast with the scene background used
+- Pick the content color, any color, for contrast with the scene background. Selected objects show
+  in Foundry's selection color, or in the content color's opposite when the two are close
 - Choose the label font: Alegreya (the default) or IM Fell English
 
 ## Fonts

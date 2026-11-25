@@ -1,11 +1,8 @@
 <section>
     <div class="form-group">
-        <label>{{localize "linemap.ui.isLightMode"}}</label>
+        <label>{{localize "linemap.ui.contentColor"}}</label>
         <div class="form-fields">
-            <select name="isLightMode">
-                <option value="" {{#unless isLightMode}}selected{{/unless}}>{{localize "linemap.ui.darkMode"}}</option>
-                <option value="true" {{#if isLightMode}}selected{{/if}}>{{localize "linemap.ui.lightMode"}}</option>
-            </select>
+            <color-picker name="color" value="{{color}}"></color-picker>
         </div>
     </div>
     <div class="form-group">

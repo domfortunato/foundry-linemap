@@ -23,16 +23,18 @@ export class ScenePropertiesApp extends api.HandlebarsApplicationMixin(
 	};
 
     _prepareContext(options: any) {
-        const isLightMode = canvas.linemap.isLightMode;
+        const color = canvas.linemap.color;
         const symbolScale = canvas.linemap.symbolScale;
         const labelFont = canvas.linemap.labelFont;
         const labelFonts = Object.fromEntries((CONFIG.linemap.labelFonts as string[]).map(f => [f, f]));
 
-        return { isLightMode, symbolScale, labelFont, labelFonts };
+        return { color, symbolScale, labelFont, labelFonts };
     }
 
     static async handleSubmit(event, form, formData) {
-        canvas.linemap.isLightMode = !!form.elements.isLightMode.value;
+        // An unfinished entry in the picker's text box is not a colour: keep the one there was.
+        const color = String(form.elements.color?.value ?? "");
+        if (/^#[0-9a-f]{6}$/i.test(color)) canvas.linemap.color = color.toLowerCase();
         // parseFloat gives NaN, never null, so `?? 1.0` could not fall back: check and clamp instead.
         const scale = Number(form.elements.symbolScale.value);
         canvas.linemap.symbolScale = Number.isFinite(scale) ? Math.min(Math.max(scale, 1), 2) : 1.0;

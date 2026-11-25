@@ -15,6 +15,9 @@ const { layers } = foundry.canvas;
 
 interface LayerData {
     objects: ObjectData[];
+    // The content colour, "#rrggbb". Maps saved before it existed have only isLightMode.
+    color?: string;
+    // Saved beside the colour as its nearest of white (true) and black, for builds that know only those.
     isLightMode: boolean;
     symbolScale: number;
     labelFont?: string;
@@ -60,9 +63,34 @@ export class LineMapLayer extends layers.InteractionLayer {
     waypointTextures: TextureCollection = {};
     patternTextures: TextureCollection = {};
 
-    isLightMode = false;
+    color = LineMapLayer.defaultColor;
     symbolScale = 1.0;
     labelFont = LineMapLayer.defaultLabelFont;
+
+    static defaultColor = "#000000";
+
+    /** A saved map's colour: its own, or, saved before there was one, the black or white it had. */
+    static colorOf(data: { color?: string, isLightMode?: boolean } | undefined): string {
+        const c = data?.color;
+        if (typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c)) return c.toLowerCase();
+        return data?.isLightMode ? "#ffffff" : LineMapLayer.defaultColor;
+    }
+
+    /** Whether a colour is nearer white than black, by its luma. */
+    static isLight(color: string): boolean {
+        const [r, g, b] = foundry.utils.Color.from(color).rgb;
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
+    }
+
+    /** The settings part of a map, as it is saved in flags.linemap.map. */
+    static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string }): Omit<LayerData, "objects"> {
+        const color = LineMapLayer.colorOf(data);
+        return { color, isLightMode: LineMapLayer.isLight(color), symbolScale: data.symbolScale, labelFont: data.labelFont };
+    }
+
+    get isLightMode(): boolean {
+        return LineMapLayer.isLight(this.color);
+    }
 
     static get defaultLabelFont(): string {
         return CONFIG.linemap?.labelFonts?.[0] ?? "Alegreya";
@@ -232,8 +260,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             if (!was || JSON.stringify(was) !== JSON.stringify(o)) update[`flags.linemap.objects.${o.id}`] = o;
         }
         for (const id of before.keys()) Object.assign(update, LineMapLayer._deletion("flags.linemap.objects", id));
-        const settings = { isLightMode: to.isLightMode, symbolScale: to.symbolScale, labelFont: to.labelFont };
-        const oldSettings = from && { isLightMode: from.isLightMode, symbolScale: from.symbolScale, labelFont: from.labelFont };
+        const settings = LineMapLayer.settingsOf(to);
+        const oldSettings = from && LineMapLayer.settingsOf(from);
         if (migrate || JSON.stringify(settings) !== JSON.stringify(oldSettings)) update["flags.linemap.map"] = settings;
         if (migrate) Object.assign(update, LineMapLayer._deletion("flags.linemap", "serialized"));
         return Object.keys(update).length ? update : null;
@@ -545,23 +573,27 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     get _selectionColor(): [number, number, number] {
-        return [
-            (CONFIG.Canvas.dispositionColors.CONTROLLED >> 16 & 0xff) / 256,
-            (CONFIG.Canvas.dispositionColors.CONTROLLED >> 8 & 0xff) / 256,
-            (CONFIG.Canvas.dispositionColors.CONTROLLED & 0xff) / 256
-        ]
+        return foundry.utils.Color.from(this._selectionColorHex).rgb;
     }
 
+    /**
+     * Core's colour for controlled objects, unless the content is near it: then the content's
+     * opposite, so a selection still shows.
+     */
     get _selectionColorHex(): number {
-        return CONFIG.Canvas.dispositionColors.CONTROLLED;
+        const controlled = CONFIG.Canvas.dispositionColors.CONTROLLED;
+        const content = this._objectColor;
+        const sel = foundry.utils.Color.from(controlled).rgb;
+        const distance = Math.hypot(...content.map((v, i) => v - sel[i]));
+        return distance < 0.3 ? 0xffffff ^ this._objectColorHex : controlled;
     }
 
     get _objectColor(): [number, number, number] {
-        return this.isLightMode ? [1.0, 1.0, 1.0] : [0.0, 0.0, 0.0];
+        return foundry.utils.Color.from(this.color).rgb;
     }
 
     get _objectColorHex(): number {
-        return this.isLightMode ? 0xffffff : 0x0;
+        return Number(foundry.utils.Color.from(this.color));
     }
 
     get selection(): ObjectType[] {
@@ -760,10 +792,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     get serialized(): LayerData {
         const objects = this.objects.map(o => o.serialized);
-        const isLightMode = this.isLightMode;
-        const symbolScale = this.symbolScale;
-        const labelFont = this.labelFont;
-        return { objects, isLightMode, symbolScale, labelFont };
+        return { objects, ...LineMapLayer.settingsOf(this) };
     }
 
     /** Save a change that is not undoable (the scene settings). */
@@ -806,10 +835,10 @@ export class LineMapLayer extends layers.InteractionLayer {
             const merge = (data: LayerData): LayerData => {
                 const objects = data.objects.filter(o => !named.includes(o.id));
                 for (const id of named) if (byId.has(id)) objects.push(structuredClone(byId.get(id)));
-                const settings = changes.map ? { isLightMode: saved.isLightMode, symbolScale: saved.symbolScale, labelFont: saved.labelFont } : {};
+                const settings = changes.map ? LineMapLayer.settingsOf(saved) : {};
                 return { ...data, ...settings, objects };
             };
-            this.baseline = merge(this.baseline ?? { objects: [], isLightMode: false, symbolScale: 1 });
+            this.baseline = merge(this.baseline ?? { objects: [], color: LineMapLayer.defaultColor, isLightMode: false, symbolScale: 1 });
             this.applyData(merge(structuredClone(this.serialized)));
         }
         this.redraw();
@@ -831,7 +860,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             }, {}) ?? {};
             objectEntries?.forEach(([obj, data]: [ObjectType, ObjectData]) => obj.deserialize(data, objectMap));
             this.objects = objectEntries?.map(o => o[0]) ?? [];
-            this.isLightMode = !!data.isLightMode;
+            this.color = LineMapLayer.colorOf(data);
             this.symbolScale = data.symbolScale ?? 1.0;
             // Maps saved before the setting existed get the default font.
             this.labelFont = data.labelFont || LineMapLayer.defaultLabelFont;
@@ -840,7 +869,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             // without this the previous scene's colour and scale showed here and were saved into
             // this scene on its first edit.
             this.objects = [];
-            this.isLightMode = false;
+            this.color = LineMapLayer.defaultColor;
             this.symbolScale = 1.0;
             this.labelFont = LineMapLayer.defaultLabelFont;
         }

@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- The map can be drawn in any color, picked in the scene settings, instead of only black or white.
+  A map saved before keeps its black or white, and earlier versions of the module still draw a
+  recolored map in the nearer of the two.
 - Requires Foundry VTT 14. This fork never tested version 13, and the one code path kept for it
   (the `-=` form of deleting a key) is gone.
 - `ROADMAP.md` records what the fork intends to build, in order, and what it has set aside.

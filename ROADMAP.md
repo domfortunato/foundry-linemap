@@ -29,7 +29,7 @@ Decided on 2026-11-25.
 Prompted by upstream's issue #2: on a busy background the symbols are hard to read, and black or
 white is the only choice.
 
-1. **Any content colour.** The scene settings take a colour instead of the black-or-white toggle,
+1. **Any content colour.** *Done on `dev`.* The scene settings take a colour instead of the black-or-white toggle,
    and the selection colour follows from it. A scene saved with the old `isLightMode` still reads
    as black or white. Probe: set a colour; a symbol's tint, a line's stroke and a label's fill match
    it, for a player too, and after a reload.

@@ -34,9 +34,7 @@
             "enterTextButton": "Create text",
             "updateTextButton": "Update text",
             "propertiesTitle": "Line map settings",
-            "isLightMode": "Content color",
-            "lightMode": "White content",
-            "darkMode": "Black content",
+            "contentColor": "Content color",
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
             "confirmDelete": "Delete all scene content?"
