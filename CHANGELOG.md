@@ -36,6 +36,16 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
   the map; a menu left behind under no pointer closes when the pointer moves on.
 - The scene settings window follows the scene being viewed: left open, it wrote the previous
   scene's settings into the next one, or over another Gamemaster's change.
+- Line Map's keys are Gamemaster-only, so players' Configure Controls no longer lists them.
+- Every choice in the tools' options bars has a name, shown as a tooltip and read by screen
+  readers; the Line Map control's name can be translated, and the "delete all" question has a title.
+- Scenes with no map no longer reserve graphics memory for one, and a map on a scene too large for
+  the graphics card is drawn at a lower resolution instead of not at all.
+- On a slow connection, symbols no longer go missing from the map until a Gamemaster edits it.
+- The module loads less: it no longer downloads its icons twice, and its scripts are a quarter of
+  their former size.
+- The README explains how to install and update this fork (by its manifest URL, not Foundry's
+  Update buttons) and lists the keys.
 
 ## 0.14.0
 

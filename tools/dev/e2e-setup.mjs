@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // dev:setup: what every other probe assumes. The module is active, its canvas layer and scene control
-// are registered, its two label fonts are registered and load, its icons were fetched, and the world
+// are registered, its two label fonts are registered and load, its art files are served, and the world
 // holds no probe leftovers. A red here explains the reds in every other probe.
 import { MODULE_ID, PROBE_TAG, probe, probeScene, sweep, until } from './lib.mjs'
 
@@ -70,9 +70,19 @@ try {
   p.check(['selectObject', 'adjustObject', 'drawLine', 'drawSymbol', 'drawWaypoint', 'drawArea', 'drawText', 'clearObjects', 'newObjectsRevealed', 'adjustLinked', 'linemapSettings']
     .every(t => c.tools.includes(t)), 'the control has all eleven tools', c.tools)
   p.check(c.layer === 'LineMapLayer', 'canvas.linemap is drawn', c.layer)
-  const icons = await page.evaluate(() => [...Object.entries(CONFIG.linemap.lineStyles), ...Object.entries(CONFIG.linemap.symbols)]
-    .filter(([, s]) => typeof s.content !== 'string' || !s.content.includes('<svg')).map(([k]) => k))
-  p.check(icons.length === 0, 'every line style and symbol icon was fetched at init', icons)
+  // The art is there to load (the init hook no longer reads it into CONFIG, which nothing used).
+  const icons = await page.evaluate(async () => {
+    const c = CONFIG.linemap
+    const urls = [...Object.values(c.lineStyles).map(s => s.icon), ...Object.values(c.symbols).flatMap(s => [s.icon, s.footprint]),
+      ...Object.values(c.waypoints).flatMap(s => [s.icon, s.footprint]), ...Object.values(c.patterns).map(s => s.texture)].filter(Boolean)
+    const bad = []
+    for (const url of urls) {
+      const r = await fetch(url, { method: 'HEAD' })
+      if (!r.ok) bad.push(`${url} ${r.status}`)
+    }
+    return { count: urls.length, bad }
+  })
+  p.check(icons.count >= 20 && icons.bad.length === 0, `every icon, footprint and pattern file is served (${icons.count})`, icons.bad)
 } catch (err) {
   await p.threw(err)
 }
