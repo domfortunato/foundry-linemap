@@ -12,6 +12,30 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 - Requires Foundry VTT 14. This fork never tested version 13, and the one code path kept for it
   (the `-=` form of deleting a key) is gone.
 - `ROADMAP.md` records what the fork intends to build, in order, and what it has set aside.
+- A map saved in the old format is moved to the new one when a Gamemaster first views it, instead
+  of at its first edit, so two Gamemasters editing it for the first time at the same moment no
+  longer undo each other's edit. Viewing such a map as a Gamemaster is enough to make it unreadable
+  for upstream Line Map and versions before 0.14.0.
+- Settings picked on a scene before anything is drawn on it are kept. They were lost on a reload,
+  and other players' and Gamemasters' screens showed an error instead of taking them.
+- An undo, or a delete, made straight after the edit before it no longer goes missing on the
+  server: the map looked right, but other screens and a reload still had the edit.
+- Two Gamemasters editing the same object at the same moment end up seeing the same result.
+- A delete and an edit of the same object by two Gamemasters at once no longer leave a broken entry
+  in the scene; broken entries already there are ignored and removed by the next save.
+- A line linked to an object this version does not know keeps the link when it is edited.
+- If a change cannot be saved, a message says so and the map shows what the scene holds.
+- After the scene or level changes, or the canvas is redrawn, the selected tool works again: its
+  keys (R, H, D, B, I), its options bar, and dragging a label.
+- Switching tools quickly no longer leaves an options bar on screen.
+- Switching tools in the middle of a drag cancels the drag, instead of throwing errors or moving and
+  saving other objects.
+- Another Gamemaster's save during a drag, or while a label is being edited, no longer loses the
+  drag or the new text.
+- Escape closes the right-click menu instead of opening Foundry's main menu, and so does a click on
+  the map; a menu left behind under no pointer closes when the pointer moves on.
+- The scene settings window follows the scene being viewed: left open, it wrote the previous
+  scene's settings into the next one, or over another Gamemaster's change.
 
 ## 0.14.0
 
