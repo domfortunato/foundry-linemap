@@ -23,7 +23,7 @@ try {
   // Every store, with the first marker.
   const made = await gm.evaluate(async ({ first, sceneId, PACK, PLAYER }) => {
     const out = {}
-    const note = (k, f) => f().then(v => { out[k] = v ?? 'ok' }).catch(e => { out[k] = `ERROR ${e.message}` })
+    const note = (k, f) => f().then(v => { out[k] = typeof v === 'string' ? v : 'ok' }).catch(e => { out[k] = `ERROR ${e.message}` })
     await note('player', async () => { await foundry.documents.User.create({ name: PLAYER, role: 1 }) })
     await note('sceneFlag', () => game.scenes.get(sceneId).setFlag('linemap', 'secret', first.sceneFlag))
     await note('journalNone', async () => {
