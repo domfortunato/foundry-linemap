@@ -199,8 +199,25 @@ Hooks.on("init", async () => {
             { urls: [`${fontPath}/noticia-text/NoticiaText-BoldItalic.ttf`], weight: 700, style: "italic" }
         ]
     };
+    // Two more for the scene's Label font setting.
+    CONFIG.fontDefinitions["Alegreya"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/alegreya/Alegreya-wght.woff2`], weight: "400 900" },
+            { urls: [`${fontPath}/alegreya/Alegreya-Italic-wght.woff2`], weight: "400 900", style: "italic" }
+        ]
+    };
+    CONFIG.fontDefinitions["IM Fell English"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/im-fell-english/IMFeENrm28P.ttf`] },
+            { urls: [`${fontPath}/im-fell-english/IMFeENit28P.ttf`], style: "italic" }
+        ]
+    };
 
     CONFIG.linemap = {
+        // The scene setting's label font choices; the first is the default.
+        labelFonts: ["Noticia Text", "Alegreya", "IM Fell English"],
         snap: {
             lineEnd: 10,
             line: 5,
