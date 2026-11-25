@@ -15,7 +15,8 @@
         "dev:edit": "node tools/dev/e2e-edit.mjs",
         "dev:collab": "node tools/dev/e2e-collab.mjs",
         "dev:data": "node tools/dev/e2e-data.mjs",
-        "dev:ui": "node tools/dev/e2e-ui.mjs"
+        "dev:ui": "node tools/dev/e2e-ui.mjs",
+        "dev:integrity": "node tools/dev/e2e-integrity.mjs"
     },
     "private": true,
     "devDependencies": {
