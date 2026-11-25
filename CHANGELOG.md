@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Sizes.** A symbol or waypoint can be drawn up to four times its size, and a label from half to
+  four times, set with a slider in the right-click menu or with ] and [. A big symbol is drawn
+  sharp, and its footprint, selection box and snap radius grow with it; labels linked to it move
+  out to stay clear. Earlier versions draw every object at its usual size.
 - **Curved lines.** With Freehand on in the line tool's options bar, a drag draws a smooth curve
   along its path, in any line style; its ends link to symbols as a straight line's do, and
   waypoints and labels snap onto the curve. Earlier versions draw a curve as straight segments through its points.

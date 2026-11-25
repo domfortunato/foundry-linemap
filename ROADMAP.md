@@ -60,6 +60,8 @@ an undo.
 
 ## 4. Sizes
 
+*Done on `dev`* (probe `dev:sizes`).
+
 - A symbol or waypoint has its own `size`, 1 to 4, `null` meaning 1, multiplying the scene's
   symbol scale. A label has a `size` too, 0.5 to 4.
 - Set from the right-click menu with a slider, and with `[` and `]` on the selection, through the

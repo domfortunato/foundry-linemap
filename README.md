@@ -61,6 +61,15 @@ Double click on a text object using the select tool to edit the text content. Sh
 
 Areas are created as rectangles, but can be freely shaped using the adjust tool (hotkey A) and moving the adjustment points around. To add or remove adjustment points, switch to the area tool (hotkey P) and double click on a line or point to add or delete one.
 
+### Sizes
+
+Each symbol and waypoint can be drawn from one to four times its usual size, and each label from
+half to four times. Select them with the select tool (hotkey V) and use the size slider in the
+right-click menu, or press **]** and **[** to grow and shrink them half a size at a time. A big
+symbol stays sharp, lines still meet its edge, it is as easy to link to, and the labels linked to
+it move out to stay clear of it. The scene's icon scale (see *Other settings*) multiplies every
+symbol's size.
+
 ### Flipping waypoints
 
 Some waypoints are directional. You can flip their direction by selecting the waypoint using the select tool (hotkey V) and pressing **D**.
@@ -74,6 +83,7 @@ Controls.
 - **R and H:** reveal and hide the selected objects (select tool)
 - **D:** flip the selected waypoints (select tool)
 - **B and I:** bold and italic for the selected label (text tool)
+- **] and [:** make the selected symbols, waypoints and labels bigger and smaller (select and text tools)
 - **N:** toggle whether adjusting linked points preserves links
 - **Delete or Backspace:** delete the selected objects
 - **Ctrl+Z:** undo your own last edit, one edit at a time
