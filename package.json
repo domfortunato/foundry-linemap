@@ -18,7 +18,8 @@
         "dev:ui": "node tools/dev/e2e-ui.mjs",
         "dev:integrity": "node tools/dev/e2e-integrity.mjs",
         "dev:state": "node tools/dev/e2e-state.mjs",
-        "dev:polish": "node tools/dev/e2e-polish.mjs"
+        "dev:polish": "node tools/dev/e2e-polish.mjs",
+        "dev:curves": "node tools/dev/e2e-curves.mjs"
     },
     "private": true,
     "devDependencies": {
