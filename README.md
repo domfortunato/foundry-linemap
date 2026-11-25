@@ -2,6 +2,9 @@
 
 This module allows you to draw line and symbol based maps (point crawls) as inspired by the Grimwild RPG.
 
+It requires Foundry VTT 14. `ROADMAP.md` lists what this fork plans to build next, and
+`CHANGELOG.md` what each release changed.
+
 ## Drawings
 
 The different object types available are:
