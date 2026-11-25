@@ -193,10 +193,6 @@ try {
   }, b.id)
   p.check(gone.kept && gone.outline && gone.lines === 1 && isRed(await colourAt(page, { x: scene[0] + 20, y: scene[1] + 20 })),
     'an image whose file has gone leaves the rest of the map drawn, and an outline where it was', gone)
-  const added = p.errors.splice(errorsBefore)
-  const unexpected = added.filter(e => !/missing\.png|gone\.png|Failed to load resource/i.test(e))
-  p.check(unexpected.length === 0, 'and nothing but the missing files is logged', { added })
-  if (unexpected.length) p.errors.push(...unexpected)
 
   // A Scene resize moves and stretches images with everything else.
   await page.evaluate(async () => { await canvas.scene.update({ width: 3600 }, { autoReposition: true }) })
@@ -205,6 +201,12 @@ try {
   const resized = (await images(page))[0]
   const scene2 = await page.evaluate(() => { const s = canvas.dimensions.sceneRect; return [s.x, s.y, s.width, s.height] })
   p.check(near(resized?.rect, scene2), 'an image fitted to the Scene still fits it after the Scene is resized', { rect: resized?.rect, scene: scene2 })
+
+  // From here on the missing file is asked for at every canvas draw (the resize redrew it), as a tile's is.
+  const added = p.errors.splice(errorsBefore)
+  const unexpected = added.filter(e => !/missing\.png|gone\.png|Failed to load resource/i.test(e))
+  p.check(unexpected.length === 0, 'and nothing but the missing files is logged', { added })
+  if (unexpected.length) p.errors.push(...unexpected)
 } catch (err) {
   await p.threw(err)
 }
