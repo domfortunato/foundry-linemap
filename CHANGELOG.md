@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Curved lines.** With Freehand on in the line tool's options bar, a drag draws a smooth curve
+  along its path, in any line style; its ends link to symbols as a straight line's do, and
+  waypoints and labels snap onto the curve. Earlier versions draw a curve as straight segments through its points.
+- **A dotted line style.** Earlier versions draw a dotted line as a major path.
 - The map can be drawn in any color, picked in the scene settings, instead of only black or white.
   A map saved before keeps its black or white, and earlier versions of the module still draw a
   recolored map in the nearer of the two.

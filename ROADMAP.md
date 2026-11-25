@@ -46,6 +46,8 @@ Researched on 2026-11-25 and set aside: see *Set aside*. Hiding stays as it is, 
 
 ## 3. Curved lines and a dotted style
 
+*Done on `dev`* (probe `dev:curves`).
+
 - A **Freehand** toggle in the line tool's options. A drag records points, simplified on release
   (Ramer–Douglas–Peucker, about 4 px). Lines already hold any number of points, so the format
   needs only `smooth: true`, `null` when unset. A smooth line is drawn as a Catmull–Rom curve.

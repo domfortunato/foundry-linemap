@@ -27,6 +27,14 @@ The different object types available are:
 - **Areas (hotkey P):** Larger geographic areas like lakes
 - **Text (hotkey T):** Labels to help you remember
 
+### Curved lines
+
+Turn on **Freehand** (the signature button at the end of the line tool's options bar) and drag:
+the line follows the path of the drag as a smooth curve. Its two ends snap and link like a
+straight line's, so a curve between two symbols follows them when they move, and waypoints and
+labels snap onto the curve itself. Every line style can be drawn curved, including the **dotted**
+style.
+
 ## Snapping and object linking
 
 When using the drawing tools, most objects snap to each other and form a link, allowing you to reposition elements and have the connected paths, symbols and waypoints automatically adjust their position.
