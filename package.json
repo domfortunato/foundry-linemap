@@ -17,7 +17,8 @@
         "dev:data": "node tools/dev/e2e-data.mjs",
         "dev:ui": "node tools/dev/e2e-ui.mjs",
         "dev:integrity": "node tools/dev/e2e-integrity.mjs",
-        "dev:state": "node tools/dev/e2e-state.mjs"
+        "dev:state": "node tools/dev/e2e-state.mjs",
+        "dev:polish": "node tools/dev/e2e-polish.mjs"
     },
     "private": true,
     "devDependencies": {
