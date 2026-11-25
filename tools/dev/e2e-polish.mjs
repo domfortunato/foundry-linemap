@@ -9,7 +9,7 @@
 //   were missing until a Gamemaster edited the map.
 // - Loading the module fetches no art it never uses (the init hook read every icon into a field
 //   nothing read).
-import { at, clickAt, probe, probeScene, reload, scaled, sweep, tool, until, viewScene } from './lib.mjs'
+import { at, clickAt, probe, probeScene, scaled, sweep, tool, until, viewScene, waitReady } from './lib.mjs'
 
 const p = probe('dev:polish', { watchdogMs: 300000 })
 
@@ -62,10 +62,12 @@ try {
   // Line style art is only ever shown as an <img> in the options bar; only the init hook fetched it.
   gm.on('request', r => { if (r.url().includes('/modules/linemap/assets/lines/') && r.resourceType() === 'fetch') fetched.push(r.url()) })
   await gm.route('**/modules/linemap/assets/**/*.svg', async (route) => {
-    await new Promise(r => setTimeout(r, 2500))
-    await route.continue()
+    await new Promise(r => setTimeout(r, 12000))
+    await route.continue().catch(() => {})
   })
-  await reload(gm)
+  // Not reload(): it waits for the network to go quiet, which would wait for the delayed art too.
+  await gm.reload({ waitUntil: 'domcontentloaded', timeout: scaled(60000) })
+  await waitReady(gm, 'after a reload with slow art')
   await viewScene(gm, emptyId)
   const px = await gm.evaluate((pt) => {
     const L = canvas.linemap
