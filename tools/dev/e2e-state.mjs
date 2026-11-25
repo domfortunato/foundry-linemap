@@ -3,7 +3,8 @@
 // - A canvas redraw that restores Line Map restores its tool too: its option bar, and its keys.
 // - A tool switched twice in one moment leaves no option bar of the first behind.
 // - A tool change in the middle of a drag ends the drag cleanly: no error, nothing half-moved.
-// - A drag that leaves the canvas leaves the map as the Scene holds it.
+// - A drag released off the canvas leaves the map as the Scene holds it (PIXI still delivers the
+//   release, so the drop happens; kept as a regression check).
 // - The right-click menu closes with Escape (which then does not open Foundry's main menu) and with a
 //   click elsewhere.
 // - A label being edited when another Gamemaster saves keeps the edit.
@@ -164,7 +165,14 @@ try {
   await tool(gm, 'selectObject')
   await gm.locator('#scene-controls [data-tool="linemapSettings"]').first().click()
   await gm.waitForSelector(`${FORM} select[name="labelFont"]`, { timeout: scaled(10000) })
-  await probeScene(p, gm, 'state B')
+  // Viewed without the probe helpers, which close every framed window on the way.
+  const sceneB = await gm.evaluate(async (name) => (await foundry.documents.Scene.create({
+    name, width: 3000, height: 2000, padding: 0, grid: { type: 0 }, navigation: false
+  })).id, `${PROBE_TAG} state B`)
+  p.cleanup(() => gm.evaluate(async (id) => { await game.scenes.get(id)?.delete() }, sceneB))
+  await gm.evaluate(async (id) => { await game.scenes.get(id).view() }, sceneB)
+  await until(gm, (id) => canvas.ready && canvas.scene?.id === id, sceneB, { timeout: 60000 })
+  await gm.waitForTimeout(scaled(800))
   const stillOpen = await gm.evaluate((FORM) => !!document.querySelector(`${FORM} select[name="labelFont"]`), FORM)
   if (stillOpen) {
     const other = await gm.evaluate((FORM) => [...document.querySelectorAll(`${FORM} select[name="labelFont"] option`)].map(o => o.value).find(v => v !== canvas.linemap.labelFont), FORM)
@@ -172,7 +180,8 @@ try {
     await gm.waitForTimeout(scaled(1200))
   }
   const b = await gm.evaluate(() => ({ saved: canvas.linemap.constructor.readFlag(canvas.scene)?.color ?? null, shown: canvas.linemap.color }))
-  p.check(b.saved !== '#00aa00' && b.shown !== '#00aa00', "the settings window left open on another Scene never gives it the first Scene's colour", { stillOpen, ...b })
+  p.check(stillOpen, 'the settings window is still open after another Scene is viewed', stillOpen)
+  p.check(b.saved !== '#00aa00' && b.shown !== '#00aa00', "and a change in it never gives that Scene the first Scene's colour", b)
   await gm.evaluate(async () => { for (const app of [...foundry.applications.instances.values()]) if (app.id === 'linemap-scene-properties') await app.close({ animate: false }) })
 } catch (err) {
   await p.threw(err)
