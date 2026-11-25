@@ -23,8 +23,9 @@ const shown = (page) => page.evaluate(() => {
     if (o.isRevealed) out[t].revealed++
     if (t !== 'area' && t !== 'line' && o.sprite?.parent && o.sprite.visible !== false) out[t].drawn++
   }
-  // Areas have no sprite: each drawn one is a child of the first container a redraw makes.
-  if (out.area) out.area.drawn = L.drawn?.[0]?.children?.length ?? 0
+  // Areas have no sprite. Each drawn one adds exactly one outline (a PIXI.Graphics) to the first container
+  // a redraw makes, and a pattern mesh beside it when the pattern has a texture: count the outlines.
+  if (out.area) out.area.drawn = (L.drawn?.[0]?.children ?? []).filter(c => c instanceof PIXI.Graphics).length
   return out
 })
 

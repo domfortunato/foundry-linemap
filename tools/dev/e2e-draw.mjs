@@ -3,7 +3,7 @@
 // probe's own Scene: a symbol, a line, a waypoint on that line, an area and a label typed through the
 // text dialog. Each is saved to the Scene's flag (flags.linemap.serialized) and comes back the same
 // after a reload.
-import { at, clickAt, countTypes, dragThrough, layerState, probe, probeScene, reload, sweep, tool, until, writeLabel } from './lib.mjs'
+import { at, clickAt, countTypes, dragThrough, layerState, probe, probeScene, reload, sweep, tool, until, viewScene, writeLabel } from './lib.mjs'
 
 const LABEL = 'Hollow Hills of Wending'
 const p = probe('dev:draw', { watchdogMs: 240000 })
@@ -61,8 +61,10 @@ try {
   p.check(drawn.every(([, on]) => on), 'the symbol, waypoint and label have sprites on the canvas', drawn)
 
   const before = JSON.stringify(countTypes(s.objects))
+  // A reload brings the canvas back to the active Scene, and the probe's own is only viewed: view it again.
   await reload(page)
-  const back = await until(page, (sceneId) => canvas.ready && canvas.scene?.id === sceneId && canvas.linemap.objects.length ? canvas.linemap.objects.length : null, sceneId, { timeout: 30000 })
+  await viewScene(page, sceneId)
+  const back = await until(page, () => canvas.linemap.objects.length || null, null, { timeout: 30000 })
   s = await layerState(page)
   p.check(back && JSON.stringify(countTypes(s.objects)) === before, 'after a reload the layer holds the same objects', { before, after: countTypes(s.objects) })
   p.check(await page.evaluate(() => canvas.linemap.objects.find(o => o.constructor.type === 'text')?.text) === LABEL, 'after a reload the label still says what was typed')

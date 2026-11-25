@@ -77,8 +77,9 @@ try {
   p.check(redrawn, 'the label is redrawn in IM Fell English')
   await closeSettings(page)
 
+  // A reload brings the canvas back to the active Scene, and the probe's own is only viewed: view it again.
   await reload(page)
-  await until(page, (sceneId) => canvas.ready && canvas.scene?.id === sceneId, sceneId, { timeout: 30000 })
+  await viewScene(page, sceneId)
   v = await values(page)
   p.check(v.isLightMode === true && v.symbolScale === 1.5 && v.labelFont === 'IM Fell English', 'after a reload the three settings are as chosen', v)
 
