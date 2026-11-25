@@ -12,7 +12,10 @@ export interface ObjectDrawLayers {
     areas?: any;
     lines?: any;
     footprints?: any;
+    // Symbols in the map colour and in the selection colour: each container is tinted as a whole.
     symbols?: any;
+    selectedSymbols?: any;
+    labels?: any;
 }
 
 export type ObjectIdMapping = Record<string, ObjectType>;

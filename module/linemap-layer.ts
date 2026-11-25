@@ -50,6 +50,14 @@ export class LineMapLayer extends layers.InteractionLayer {
     // The display objects of the last redraw: destroyed at the start of the next one (objects read
     // their sprite's size between redraws, so they cannot be destroyed straight after rendering).
     drawn: any[] = [];
+    // The two symbol tints, one pass each over every symbol of that colour (made in _draw).
+    symbolFilter: any;
+    selectedSymbolFilter: any;
+    // Label sprites and line graphics kept across redraws, by object id. A drag redraws on every
+    // mouse move, and rasterising every label and rebuilding every line each time was most of a big
+    // map's redraw; now only what the drag moves is rebuilt, when its look (the key) changes.
+    displayCache = new Map<string, { key: string, sprite: any }>();
+    displayUsed = new Set<string>();
 
     // Sorting in the primary group (see _draw).
     elevation = 0;
@@ -207,11 +215,37 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.preview?.removeChildren().forEach(c => c.destroy({ children: true }));
     }
 
-    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) are kept. */
+    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) and cached displays are kept. */
     _disposeDrawn() {
         this.objectContainer?.removeChildren();
+        for (const { sprite } of this.displayCache.values()) sprite.parent?.removeChild(sprite);
         this.drawn.forEach(c => c.destroy({ children: true }));
         this.drawn = [];
+    }
+
+    /**
+     * An object's display object from the cache, or a new one from make() when the object is new or
+     * its look (key) changed. Those not asked for during a redraw are destroyed at its end.
+     */
+    cachedDisplay(id: string, key: string, make: () => any): any {
+        this.displayUsed.add(id);
+        const hit = this.displayCache.get(id);
+        if (hit?.key === key && !hit.sprite.destroyed) return hit.sprite;
+        hit?.sprite.destroy(true);
+        const sprite = make();
+        this.displayCache.set(id, { key, sprite });
+        return sprite;
+    }
+
+    _pruneDisplays(all = false) {
+        for (const [id, { sprite }] of this.displayCache) {
+            if (all || !this.displayUsed.has(id)) {
+                sprite.parent?.removeChild(sprite);
+                sprite.destroy(true);
+                this.displayCache.delete(id);
+            }
+        }
+        this.displayUsed.clear();
     }
 
     hotkeyPressed(key: ToolHotkey) {
@@ -300,6 +334,23 @@ export class LineMapLayer extends layers.InteractionLayer {
             }
         `, { screenDimensions: [this.renderTexture.width, this.renderTexture.height] });
 
+        // Symbols are painted in one colour each: one filter per colour, over a container of every
+        // symbol in it. A filter per sprite cost a render pass per symbol on every redraw.
+        const tint = `
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSampler;
+            uniform vec3 tintColor;
+
+            void main(void)
+            {
+                vec4 s = texture2D(uSampler, vTextureCoord);
+                gl_FragColor.a = s.a;
+                gl_FragColor.rgb = tintColor * s.a;
+            }
+        `;
+        this.symbolFilter = new PIXI.Filter(null, tint, { tintColor: this._objectColor });
+        this.selectedSymbolFilter = new PIXI.Filter(null, tint, { tintColor: this._selectionColor });
+
         // In the primary group, sit just above the background of the level being viewed: v14 draws
         // each level's background at that level's bottom elevation, so at elevation 0 a raised
         // level's background covered the map. Tiles, drawings and tokens there stay above it, as on
@@ -331,19 +382,31 @@ export class LineMapLayer extends layers.InteractionLayer {
             areas: new PIXI.Container(),
             lines: new PIXI.Container(),
             footprints: new PIXI.Container(),
-            symbols: new PIXI.Container()
+            symbols: new PIXI.Container(),
+            selectedSymbols: new PIXI.Container(),
+            labels: new PIXI.Container()
         }
 
+        this.displayUsed.clear();
         this.objects.forEach(obj => {
             obj.draw(layers);
         });
+        this._pruneDisplays();
 
-        this.drawn = Object.values(layers);
+        this.symbolFilter.uniforms.tintColor = this._objectColor;
+        this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
+        layers.symbols.filters = [this.symbolFilter];
+        layers.selectedSymbols.filters = [this.selectedSymbolFilter];
+        // What is rendered as "symbols": both tints, then the labels above them.
+        const symbols = new PIXI.Container();
+        symbols.addChild(layers.symbols, layers.selectedSymbols, layers.labels);
+
+        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols];
 
         if (!highQuality) {
             this.objectContainer.addChild(layers.areas);
             this.objectContainer.addChild(layers.lines);
-            this.objectContainer.addChild(layers.symbols);
+            this.objectContainer.addChild(symbols);
             canvas.app.renderer.render(this.objectContainer, { renderTexture: this.renderTexture, clear: true });
             return;
         }
@@ -362,7 +425,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: true });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
-        canvas.app.renderer.render(layers.symbols, { renderTexture: this.renderTexture, clear: false });
+        canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
     }
 
     assetsLoaded() {
@@ -373,6 +436,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     async _tearDown(options) {
         this.clear(false);
         this._disposeDrawn();
+        this._pruneDisplays(true);
         this.objectContainer?.destroy({ children: true });
         this.objectContainer = undefined;
         // Destroys renderSprite and preview with their children (not their textures).

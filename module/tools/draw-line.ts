@@ -69,7 +69,7 @@ export class DrawLineTool extends Tool {
             const layers = {
                 lines: this.layer.preview
             };
-            previewLine.draw(layers);
+            previewLine.drawPreview(layers);
         }
 
         if (this.snapPoint) {

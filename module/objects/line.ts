@@ -1,4 +1,4 @@
-import { ObjectData, ObjectIdMapping, ObjectType, PointMover } from "../classes/object.js";
+import { ObjectData, ObjectDrawLayers, ObjectIdMapping, ObjectType, PointMover } from "../classes/object.js";
 import { ConstrainedPoint, ConstrainedPointData } from "../classes/constrained-point.js";
 import { Vec2, SnapPoint, SnapType, AdjustmentPoint, PointType } from "../dto.js";
 import { add2, distanceToLine, dotProduct, length2, lengthAndUnitVector, lineIntersectsBox, mult2, sub2 } from "../helpers/utils.js";
@@ -45,6 +45,36 @@ export class Line extends ObjectType {
             points: this.points.map(pt => pt.serialized),
             style: this.style
         }};
+    }
+
+    /** Opacity of a hidden line, as the Gamemaster sees it. */
+    get hiddenAlpha(): number {
+        return 0.4;
+    }
+
+    /** This line's graphics, built from scratch (each style draws its own). */
+    makeGraphics(): any {
+        return new PIXI.Graphics();
+    }
+
+    /** What the line's graphics depend on: a change of any of it rebuilds them. */
+    get _drawKey(): string {
+        return JSON.stringify([this.style, this._currentColorHex, this.points.map(pt => pt.point)]);
+    }
+
+    draw(layers: ObjectDrawLayers) {
+        if (!this.isVisible || !this.points) return;
+        this._place(layers, canvas.linemap.cachedDisplay(this.id, this._drawKey, () => this.makeGraphics()));
+    }
+
+    /** Draw a line that is not on the map (the line tool's preview), outside the layer's cache. */
+    drawPreview(layers: ObjectDrawLayers) {
+        if (this.points) this._place(layers, this.makeGraphics());
+    }
+
+    _place(layers: ObjectDrawLayers, gfx: any) {
+        gfx.alpha = this.isRevealed ? 1.0 : this.hiddenAlpha;
+        layers.lines?.addChild(gfx);
     }
 
     get pointType(): PointType {

@@ -79,23 +79,8 @@ export class Symbol extends ObjectType {
             sprite.scale = { x: scale, y: scale };
             sprite.alpha = this.isRevealed ? 1.0 : 0.4;
 
-            const tintColor = this._currentColor;
-            sprite.filters = [new PIXI.Filter(null, `
-                varying vec2 vTextureCoord;
-                uniform sampler2D uSampler;
-                uniform vec3 tintColor;
-
-                void main(void)
-                {
-                    vec4 s = texture2D(uSampler, vTextureCoord);
-                    gl_FragColor.a = s.a;
-                    gl_FragColor.rgb = tintColor * s.a;
-                }
-            `, {
-                tintColor
-            })];
-
-            layers.symbols?.addChild(sprite);
+            // Tinted by the container it goes in (the layer's map or selection colour).
+            (this.isSelected ? layers.selectedSymbols : layers.symbols)?.addChild(sprite);
             this.sprite = sprite;
 
             if (footprint) {

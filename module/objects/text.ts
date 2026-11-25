@@ -145,8 +145,15 @@ export class Text extends ObjectType {
         }
 
         const pt = this.point.point;
-        const text = new PreciseText(this.text, this._pixiOptions);
-        text.anchor.set(0.5);
+        // The sprite is the layer's, kept across redraws while the label looks the same: rasterising
+        // every label on every mouse move of a drag was most of a big map's redraw.
+        const options = this._pixiOptions;
+        const key = JSON.stringify([this.text, options.fontFamily, options.fontStyle, options.fontWeight, options.fill]);
+        const text = canvas.linemap.cachedDisplay(this.id, key, () => {
+            const t = new PreciseText(this.text, options);
+            t.anchor.set(0.5);
+            return t;
+        });
         text.alpha = this.isRevealed ? 1.0 : 0.4;
 
         const [offset, orientation] = this._transformedProperties;
@@ -156,7 +163,7 @@ export class Text extends ObjectType {
 
         this.sprite = text;
 
-        layers.symbols.addChild(text);
+        layers.labels?.addChild(text);
     }
 
     testSelection(pt1: Vec2, pt2?: Vec2): boolean {
