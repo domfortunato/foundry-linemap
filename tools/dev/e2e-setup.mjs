@@ -33,12 +33,24 @@ try {
   p.check(JSON.stringify(Object.keys(r.fonts)) === JSON.stringify(['Alegreya', 'IM Fell English']), 'the label fonts are Alegreya, then IM Fell English', Object.keys(r.fonts))
   for (const [font, n] of Object.entries(r.fonts)) p.check(n >= 1, `${font} is in CONFIG.fontDefinitions`, n)
 
-  // Core loads every font definition at startup; each face must have come from this module's files.
-  const faces = await until(page, () => {
+  // Core loads every font definition at startup (FontConfig.loadFont adds a face to document.fonts only
+  // once it has loaded, and only warns when one fails); each face must have come from this module's files.
+  const readFaces = () => page.evaluate(() => {
     const mine = [...document.fonts].filter(f => /Alegreya|IM Fell English/.test(f.family.replace(/"/g, '')))
-    return mine.length && mine.every(f => f.status === 'loaded' || f.status === 'error') ? mine.map(f => `${f.family.replace(/"/g, '')} ${f.style} ${f.status}`) : null
+    return {
+      faces: mine.map(f => `${f.family.replace(/"/g, '')} ${f.style} ${f.weight} ${f.status}`),
+      check: { Alegreya: document.fonts.check('1rem "Alegreya"'), 'IM Fell English': document.fonts.check('1rem "IM Fell English"') },
+      all: document.fonts.size
+    }
+  })
+  await until(page, () => {
+    const mine = [...document.fonts].filter(f => /Alegreya|IM Fell English/.test(f.family.replace(/"/g, '')))
+    return mine.length >= 4 && mine.every(f => f.status === 'loaded' || f.status === 'error')
   }, null, { timeout: 20000 })
-  p.check(Array.isArray(faces) && faces.every(f => f.endsWith('loaded')), 'every Alegreya and IM Fell English face loaded', faces)
+  const faces = await readFaces()
+  const fontWarnings = p.warnings.filter(w => /font/i.test(String(w)))
+  p.check(faces.faces.length >= 4 && faces.faces.every(f => f.endsWith('loaded')) && faces.check.Alegreya && faces.check['IM Fell English'],
+    'every Alegreya and IM Fell English face loaded', { ...faces, fontWarnings })
   const served = await page.evaluate(async () => {
     const urls = ['Alegreya', 'IM Fell English'].flatMap(f => CONFIG.fontDefinitions[f]?.fonts?.flatMap(d => d.urls) ?? [])
     return Promise.all(urls.map(async u => `${(await fetch(u)).status} ${u}`))
