@@ -95,7 +95,10 @@ export class AdjustTool extends Tool {
         if (!event.shiftKey) {
             this.selectedAdjustmentPoints = covered;
         } else {
-            this.selectedAdjustmentPoints.push(...covered.filter(p1 => this.selectedAdjustmentPoints.find(p2 => !p2.equals(p1))));
+            // Shift adds the covered points that are not selected yet: the old filter kept a point when
+            // any selected point differed from it, so it added nothing to an empty selection
+            // and added a selected point again once two were selected.
+            this.selectedAdjustmentPoints.push(...covered.filter(p1 => !this.selectedAdjustmentPoints.some(p2 => p2.equals(p1))));
         }
         this.updateIndicators();
     }
@@ -169,7 +172,8 @@ export class AdjustTool extends Tool {
             if (!event.shiftKey) {
                 this.selectedAdjustmentPoints = covered;
             } else {
-                this.selectedAdjustmentPoints.push(...covered.filter(p1 => this.selectedAdjustmentPoints.find(p2 => !p2.equals(p1))));
+                // As a shift-click: add only what is not selected yet.
+                this.selectedAdjustmentPoints.push(...covered.filter(p1 => !this.selectedAdjustmentPoints.some(p2 => p2.equals(p1))));
             }
         } else {
             for (const apt of this.affectedAdjustmentPoints) {

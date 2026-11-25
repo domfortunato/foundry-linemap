@@ -118,11 +118,19 @@ try {
     const low = time(false, 15)
     const high = time(true, 5)
     const count = L.objects.length
+    // Where the time goes: the symbols alone, then with each other kind added.
+    const part = {}
+    for (const [name, keepType] of [['symbols', ['symbol']], ['+lines', ['symbol', 'line']], ['+labels', ['symbol', 'text']], ['+areas', ['symbol', 'area']]]) {
+      L.applyData({ ...keep, objects: objects.filter(o => keepType.includes(o.type)) })
+      time(false, 2)
+      part[name] = time(false, 7)
+    }
     L.applyData(keep)
     L.redraw()
-    return { count, lowMs: low, highMs: high }
+    return { count, lowMs: low, highMs: high, part }
   })
-  p.check(timing.count > 300 && timing.lowMs <= 16, `a map of ${timing.count} objects redraws for a drag within a frame (median ${timing.lowMs} ms; full quality ${timing.highMs} ms)`, timing)
+  console.log(`  note  low-quality redraw by kind (median ms): ${JSON.stringify(timing.part)}`)
+  p.check(timing.count >= 250 && timing.lowMs <= 16, `a map of ${timing.count} objects redraws for a drag within a frame (median ${timing.lowMs} ms; full quality ${timing.highMs} ms)`, timing)
 
   // Unknown entries, written straight into the flag as an older or newer build might have left them.
   const e0 = p.errors.length

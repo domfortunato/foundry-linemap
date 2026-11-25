@@ -1,4 +1,4 @@
-import { ObjectData, ObjectType } from "./classes/object.js";
+import { ObjectData, ObjectType, UnknownObject } from "./classes/object.js";
 import { Tool, ToolHotkey } from "./classes/tool.js";
 import { Vec2, SnapType, SnapPoint } from "./dto.js";
 import { length2, sub2 } from "./helpers/utils.js";
@@ -24,13 +24,32 @@ interface InterfaceState {
     selectedIds: string[];
 }
 
+/** One object an edit touched: what it was (null: the edit made it) and where it stood. */
+interface ObjectChange {
+    id: string;
+    index: number;
+    before: ObjectData | null;
+}
+
+/** One undoable edit: the objects it changed, made or removed. */
+interface HistoryEntry {
+    changes: ObjectChange[];
+}
+
 export type TextureCollection = Record<string, { icon: any, footprint: any }>;
 
 export class LineMapLayer extends layers.InteractionLayer {
+    static MaxUndo = 100;
+
     objects: ObjectType[] = [];
     placeables: any[] = [];
 
-    undoHistory: LayerData[] = [];
+    // This user's own edits, newest last. Each holds only the objects it touched, so an undo takes
+    // back that edit and leaves alone whatever another Gamemaster drew meanwhile; whole-map
+    // snapshots wiped it.
+    undoHistory: HistoryEntry[] = [];
+    // The map as last saved or loaded, deep-copied: an edit is the difference from it.
+    baseline: LayerData;
 
     tools: Record<string, Tool> = {};
     activeTool: Tool;
@@ -56,6 +75,18 @@ export class LineMapLayer extends layers.InteractionLayer {
     // The display objects of the last redraw: destroyed at the start of the next one (objects read
     // their sprite's size between redraws, so they cannot be destroyed straight after rendering).
     drawn: any[] = [];
+    // The two symbol tints, one pass each over every symbol of that colour (made in _draw).
+    symbolFilter: any;
+    selectedSymbolFilter: any;
+    // Label sprites kept across redraws, by object id: rasterising a text is the slow part of a
+    // redraw, and a drag redraws on every mouse move. Rebuilt only when the label's look changes.
+    labelCache = new Map<string, { key: string, sprite: any }>();
+    labelsUsed = new Set<string>();
+
+    // Sorting in the primary group (see _draw).
+    elevation = 0;
+    sortLayer = 0;
+    sort = 1;
 
     // Stage handlers bound once, so _deactivate removes exactly what _activate added.
     stageHandlers: Record<string, (event: any) => void>;
@@ -126,6 +157,37 @@ export class LineMapLayer extends layers.InteractionLayer {
         });
     }
 
+    /**
+     * preUpdateScene: when a Scene is resized with autoReposition (its config window sets it when
+     * the Scene has a background), core moves every placeable to keep its place on the background.
+     * Move the map the same way, in the same update; it used to stay put and slide off its places.
+     * Runs after core's own _preUpdate, so the transform is core's: scale by the size change, then
+     * offset to the new Scene rectangle.
+     */
+    static onPreUpdateScene(scene: any, changed: any, options: any) {
+        if (!options?.autoReposition) return;
+        const data = foundry.utils.getProperty(changed, "flags.linemap.serialized") ?? scene.getFlag("linemap", "serialized");
+        if (!data?.objects?.length) return;
+
+        const dims: Record<string, any> = {};
+        for (const key of ["width", "height", "padding", "shiftX", "shiftY", "grid"]) {
+            if (key in changed) dims[key] = foundry.utils.deepClone(changed[key]);
+        }
+        const updated = scene.clone(dims);
+        const sx = updated.width / scene.width;
+        const sy = updated.height / scene.height;
+        const ox = updated.dimensions.sceneX - sx * scene.dimensions.sceneX;
+        const oy = updated.dimensions.sceneY - sy * scene.dimensions.sceneY;
+        if (![sx, sy, ox, oy].every(Number.isFinite) || (sx === 1 && sy === 1 && ox === 0 && oy === 0)) return;
+
+        const move = ([x, y]: Vec2): Vec2 => [x * sx + ox, y * sy + oy];
+        const objects = data.objects.map(o => {
+            const cls = CONFIG.linemap.objectTypes[o?.type];
+            return cls ? cls.moveData(o, move) : o;
+        });
+        foundry.utils.setProperty(changed, "flags.linemap.serialized", { ...data, objects });
+    }
+
     /** Add the stage handlers; safe to repeat, since each is removed by identity first. */
     _attachStageHandlers() {
         for (const [type, handler] of Object.entries(this.stageHandlers)) {
@@ -146,7 +208,6 @@ export class LineMapLayer extends layers.InteractionLayer {
     _activate() {
         this._attachStageHandlers();
         this.undoHistory = [];
-        this.pushHistory();
     }
 
     _deactivate() {
@@ -177,11 +238,37 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.preview?.removeChildren().forEach(c => c.destroy({ children: true }));
     }
 
-    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) are kept. */
+    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) and cached labels are kept. */
     _disposeDrawn() {
         this.objectContainer?.removeChildren();
+        for (const { sprite } of this.labelCache.values()) sprite.parent?.removeChild(sprite);
         this.drawn.forEach(c => c.destroy({ children: true }));
         this.drawn = [];
+    }
+
+    /**
+     * A label's sprite from the cache, or a new one from make() when the label is new or its look
+     * (key) changed. Sprites not asked for during a redraw are destroyed at its end.
+     */
+    cachedLabel(id: string, key: string, make: () => any): any {
+        this.labelsUsed.add(id);
+        const hit = this.labelCache.get(id);
+        if (hit?.key === key && !hit.sprite.destroyed) return hit.sprite;
+        hit?.sprite.destroy(true);
+        const sprite = make();
+        this.labelCache.set(id, { key, sprite });
+        return sprite;
+    }
+
+    _pruneLabels(all = false) {
+        for (const [id, { sprite }] of this.labelCache) {
+            if (all || !this.labelsUsed.has(id)) {
+                sprite.parent?.removeChild(sprite);
+                sprite.destroy(true);
+                this.labelCache.delete(id);
+            }
+        }
+        this.labelsUsed.clear();
     }
 
     hotkeyPressed(key: ToolHotkey) {
@@ -206,7 +293,12 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     deleteObjects(...obj: ObjectType[]) {
-        this.objects = this.objects.filter(o => !obj.includes(o));
+        const gone = new Set(obj);
+        // A point linked to a deleted object is pinned where it is now. Left linked, it kept following
+        // the deleted object in this session and was saved naming it, so a reload put it back where
+        // it had first been drawn.
+        for (const o of this.objects) if (!gone.has(o)) o.releaseConstraints(gone);
+        this.objects = this.objects.filter(o => !gone.has(o));
 
         this.registerHistory();
         this.redraw();
@@ -265,6 +357,32 @@ export class LineMapLayer extends layers.InteractionLayer {
             }
         `, { screenDimensions: [this.renderTexture.width, this.renderTexture.height] });
 
+        // Symbols are painted in one colour each: one filter per colour, over a container of every
+        // symbol in it. A filter per sprite cost a render pass per symbol on every redraw.
+        const tint = `
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSampler;
+            uniform vec3 tintColor;
+
+            void main(void)
+            {
+                vec4 s = texture2D(uSampler, vTextureCoord);
+                gl_FragColor.a = s.a;
+                gl_FragColor.rgb = tintColor * s.a;
+            }
+        `;
+        this.symbolFilter = new PIXI.Filter(null, tint, { tintColor: this._objectColor });
+        this.selectedSymbolFilter = new PIXI.Filter(null, tint, { tintColor: this._selectionColor });
+
+        // In the primary group, sit just above the background of the level being viewed: v14 draws
+        // each level's background at that level's bottom elevation, so at elevation 0 a raised
+        // level's background covered the map. Tiles, drawings and tokens there stay above it, as on
+        // the ground level. Viewing another level redraws the canvas, which runs this again.
+        this.elevation = canvas.level?.elevation?.bottom ?? 0;
+        this.sortLayer = foundry.canvas.groups?.PrimaryCanvasGroup?.SORT_LAYERS?.SCENE ?? 0;
+        this.sort = 1;
+        if (this.parent) this.parent.sortDirty = true;
+
         this.objectContainer = new PIXI.Container();
 
         this.renderSprite = this.addChild(new PIXI.Sprite(this.renderTexture));
@@ -278,25 +396,39 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     redraw(highQuality = true) {
+        // Nothing to draw into before the canvas has drawn this layer (_draw makes the targets).
+        if (!this.renderTexture) return;
         this._disposeDrawn();
 
         const layers = {
             areas: new PIXI.Container(),
             lines: new PIXI.Container(),
             footprints: new PIXI.Container(),
-            symbols: new PIXI.Container()
+            symbols: new PIXI.Container(),
+            selectedSymbols: new PIXI.Container(),
+            labels: new PIXI.Container()
         }
 
+        this.labelsUsed.clear();
         this.objects.forEach(obj => {
             obj.draw(layers);
         });
+        this._pruneLabels();
 
-        this.drawn = Object.values(layers);
+        this.symbolFilter.uniforms.tintColor = this._objectColor;
+        this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
+        layers.symbols.filters = [this.symbolFilter];
+        layers.selectedSymbols.filters = [this.selectedSymbolFilter];
+        // What is rendered as "symbols": both tints, then the labels above them.
+        const symbols = new PIXI.Container();
+        symbols.addChild(layers.symbols, layers.selectedSymbols, layers.labels);
+
+        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols];
 
         if (!highQuality) {
             this.objectContainer.addChild(layers.areas);
             this.objectContainer.addChild(layers.lines);
-            this.objectContainer.addChild(layers.symbols);
+            this.objectContainer.addChild(symbols);
             canvas.app.renderer.render(this.objectContainer, { renderTexture: this.renderTexture, clear: true });
             return;
         }
@@ -315,7 +447,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: true });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
-        canvas.app.renderer.render(layers.symbols, { renderTexture: this.renderTexture, clear: false });
+        canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
     }
 
     assetsLoaded() {
@@ -326,6 +458,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     async _tearDown(options) {
         this.clear(false);
         this._disposeDrawn();
+        this._pruneLabels(true);
         this.objectContainer?.destroy({ children: true });
         this.objectContainer = undefined;
         // Destroys renderSprite and preview with their children (not their textures).
@@ -500,20 +633,59 @@ export class LineMapLayer extends layers.InteractionLayer {
         await this.tools[game.activeTool]?.onDeleteKey(event);
     }
 
+    /**
+     * Record an edit for undo and save it. The record is the difference from the last saved state,
+     * taken before the save is awaited: callers do not await this, and a record pushed after the
+     * await held whatever the map looked like by then, so two quick edits came back as one.
+     */
     async registerHistory() {
-        await this.dataChanged();
-        this.pushHistory();
+        const entry = this._diff(this.baseline, this.serialized);
+        if (entry.changes.length) {
+            this.undoHistory.push(entry);
+            if (this.undoHistory.length > LineMapLayer.MaxUndo) this.undoHistory.shift();
+        }
+        await this._saveData();
     }
 
-    async undo() {
-        if (this.undoHistory.length >= 2) {
-            const state = this._captureState();
-            this.undoHistory.pop();
-            this.applyData(this.undoHistory.at(-1));
-            await this._saveData();
-            this.redraw();
-            this._stateInvalidated(state);
+    /** The objects that differ between two states, each with what it was in the first. */
+    _diff(from: LayerData | undefined, to: LayerData): HistoryEntry {
+        const before = new Map((from?.objects ?? []).map((o, index) => [o.id, { o, index }]));
+        const after = new Map(to.objects.map(o => [o.id, o]));
+        const changes: ObjectChange[] = [];
+        for (const [id, { o, index }] of before) {
+            const now = after.get(id);
+            if (!now || JSON.stringify(now) !== JSON.stringify(o)) changes.push({ id, index, before: o });
         }
+        for (const id of after.keys()) {
+            if (!before.has(id)) changes.push({ id, index: -1, before: null });
+        }
+        return { changes: structuredClone(changes) };
+    }
+
+    /** Take back this user's last edit: what it made goes, what it changed or removed comes back. */
+    async undo() {
+        const entry = this.undoHistory.pop();
+        if (!entry) return;
+        const state = this._captureState();
+        // What the undo removes may have been linked to since (by another Gamemaster): pin those points.
+        const removed = new Set(entry.changes.filter(c => !c.before).map(c => c.id));
+        const gone = new Set(this.objects.filter(o => removed.has(o.id)));
+        if (gone.size) for (const o of this.objects) if (!gone.has(o)) o.releaseConstraints(gone);
+        const data = structuredClone(this.serialized);
+        const pending = new Map(entry.changes.map(c => [c.id, c]));
+        const objects = data.objects.flatMap(o => {
+            const change = pending.get(o.id);
+            if (!change) return [o];
+            pending.delete(o.id);
+            return change.before ? [change.before] : [];
+        });
+        // What the edit removed (or changed, and someone has removed since) goes back where it was.
+        const restore = [...pending.values()].filter(c => c.before).sort((a, b) => a.index - b.index);
+        for (const c of restore) objects.splice(Math.min(c.index, objects.length), 0, c.before);
+        this.applyData({ ...data, objects: structuredClone(objects) });
+        this.redraw();
+        await this._saveData();
+        this._stateInvalidated(state);
     }
 
     _captureState(): InterfaceState {
@@ -536,28 +708,30 @@ export class LineMapLayer extends layers.InteractionLayer {
         return { objects, isLightMode, symbolScale, labelFont };
     }
 
-    pushHistory() {
-        this.undoHistory.push(structuredClone(this.serialized));
-    }
-
+    /** Save a change that is not undoable (the scene settings). */
     async dataChanged() {
         await this._saveData();
     }
 
     fetchData() {
         this.applyData(canvas.scene.getFlag("linemap", "serialized"));
+        this.baseline = structuredClone(this.serialized);
     }
 
     async _saveData() {
-        await canvas.scene.update({ "flags.linemap.serialized": this.serialized }, { userId: game.user.id });
+        const data = structuredClone(this.serialized);
+        this.baseline = structuredClone(data);
+        await canvas.scene.update({ "flags.linemap.serialized": data }, { userId: game.user.id });
     }
 
     applyData(data: LayerData) {
         if (data) {
             // this.quadtree.clear();
             const objectEntries: [ObjectType, ObjectData][] = data.objects?.map(o => [ObjectType.create(o), o]);
+            // Links resolve only to objects this build can draw; a link to an unknown one falls
+            // back to the point saved with it.
             const objectMap = objectEntries?.reduce((acc, obj) => {
-                acc[obj[0].id] = obj[0];
+                if (!(obj[0] instanceof UnknownObject)) acc[obj[0].id] = obj[0];
                 return acc;
             }, {}) ?? {};
             objectEntries?.forEach(([obj, data]: [ObjectType, ObjectData]) => obj.deserialize(data, objectMap));
@@ -581,6 +755,9 @@ export class LineMapLayer extends layers.InteractionLayer {
         if (game.user.isGM) {
             return {
                 name: "linemap",
+                // After core's controls (0 to 8 in v14). Unset, core's sort compared against
+                // undefined (NaN), so where Line Map landed was left to the sort.
+                order: 9,
                 title: "Line Map",
                 layer: "linemap",
                 icon: "fas fa-route",
@@ -617,7 +794,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawLine"); }
                     },
                     drawSymbol: {
-                        order: 3,
+                        order: 4,
                         name: "drawSymbol",
                         title: "linemap.tools.drawSymbol",
                         icon: "fas fa-shapes",
@@ -625,7 +802,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawSymbol"); }
                     },
                     drawWaypoint: {
-                        order: 4,
+                        order: 5,
                         name: "drawWaypoint",
                         title: "linemap.tools.drawWaypoint",
                         icon: "fas fa-circle-nodes",
@@ -633,7 +810,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawWaypoint"); }
                     },
                     drawArea: {
-                        order: 5,
+                        order: 6,
                         name: "drawArea",
                         title: "linemap.tools.drawArea",
                         icon: "fas fa-vector-polygon",
@@ -641,7 +818,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawArea"); }
                     },
                     drawText: {
-                        order: 6,
+                        order: 7,
                         name: "drawText",
                         title: "linemap.tools.drawText",
                         icon: "fas fa-text",
@@ -649,7 +826,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         onChange: (event, active) => { active && canvas.linemap.activateTool("drawText"); }
                     },
                     clearObjects: {
-                        order: 7,
+                        order: 8,
                         name: "clearObjects",
                         title: "linemap.tools.trash",
                         icon: "fas fa-trash",
@@ -671,7 +848,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     newObjectsRevealed: {
-                        order: 8,
+                        order: 9,
                         name: "newObjectsRevealed",
                         title: "linemap.tools.newObjectsRevealed",
                         icon: "fas fa-eye",
@@ -683,7 +860,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     adjustLinked: {
-                        order: 9,
+                        order: 10,
                         name: "adjustLinked",
                         title: "linemap.tools.adjustLinked",
                         icon: "fas fa-arrows-left-right",
@@ -696,7 +873,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         }
                     },
                     linemapSettings: {
-                        order: 10,
+                        order: 11,
                         name: "linemapSettings",
                         title: "linemap.tools.settings",
                         icon: "fas fa-cog",
