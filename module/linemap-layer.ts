@@ -54,6 +54,12 @@ export class LineMapLayer extends layers.InteractionLayer {
     // Stage handlers bound once, so _deactivate removes exactly what _activate added.
     stageHandlers: Record<string, (event: any) => void>;
 
+    // The name core records to restore the active layer after a canvas redraw, and the scene
+    // control activate() switches to. Unset, it was "", so a redraw dropped the GM onto Tokens.
+    static get layerOptions() {
+        return foundry.utils.mergeObject(super.layerOptions, { name: "linemap" });
+    }
+
     constructor() {
         super();
 
@@ -532,8 +538,15 @@ export class LineMapLayer extends layers.InteractionLayer {
             }, {}) ?? {};
             objectEntries?.forEach(([obj, data]: [ObjectType, ObjectData]) => obj.deserialize(data, objectMap));
             this.objects = objectEntries?.map(o => o[0]) ?? [];
-            this.isLightMode = data.isLightMode;
+            this.isLightMode = !!data.isLightMode;
             this.symbolScale = data.symbolScale ?? 1.0;
+        } else {
+            // A scene with no drawing yet starts from the defaults. The layer outlives scenes, so
+            // without this the previous scene's colour and scale showed here and were saved into
+            // this scene on its first edit.
+            this.objects = [];
+            this.isLightMode = false;
+            this.symbolScale = 1.0;
         }
     }
 

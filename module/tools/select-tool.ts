@@ -58,6 +58,8 @@ export class SelectTool extends Tool {
     async onDoubleClick(event: any) {
         const eventPt: Vec2 = [event.interactionData.destination.x, event.interactionData.destination.y];
         const text = this.layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
+        // Only a double-click on a text edits it; anywhere else there is nothing to do.
+        if (!text) return;
         const content = await DrawTextTool.promptText(text.text);
         if (content) {
             text.text = content;
