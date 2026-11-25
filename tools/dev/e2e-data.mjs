@@ -139,8 +139,7 @@ try {
     const r = canvas.dimensions.sceneRect
     const pt = (fx, fy) => [r.x + r.width * fx, r.y + r.height * fy]
     // Start from no map at all: the steps above saved this Scene's map in the new format.
-    const del = foundry.data?.operators?.ForcedDeletion
-    await canvas.scene.update(del ? { 'flags.linemap': new del() } : { 'flags.-=linemap': null })
+    await canvas.scene.update({ 'flags.linemap': new foundry.data.operators.ForcedDeletion() })
     await canvas.scene.update({
       'flags.linemap.serialized': {
         isLightMode: false,

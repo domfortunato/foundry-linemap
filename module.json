@@ -9,7 +9,7 @@
     ],
     "version": "0.14.0",
     "compatibility": {
-        "minimum": 13,
+        "minimum": 14,
         "verified": 14
     },
     "esmodules": [

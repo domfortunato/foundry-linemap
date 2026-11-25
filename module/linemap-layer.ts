@@ -239,10 +239,9 @@ export class LineMapLayer extends layers.InteractionLayer {
         return Object.keys(update).length ? update : null;
     }
 
-    /** Remove a key in an update: v14's ForcedDeletion, or v13's "-=" key. */
+    /** Remove a key in an update (Foundry 14's ForcedDeletion operator). */
     static _deletion(parent: string, key: string): Record<string, any> {
-        const ForcedDeletion = foundry.data?.operators?.ForcedDeletion;
-        return ForcedDeletion ? { [`${parent}.${key}`]: new ForcedDeletion() } : { [`${parent}.-=${key}`]: null };
+        return { [`${parent}.${key}`]: new foundry.data.operators.ForcedDeletion() };
     }
 
     /** Add the stage handlers; safe to repeat, since each is removed by identity first. */
