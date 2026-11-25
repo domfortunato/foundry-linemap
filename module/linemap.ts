@@ -152,8 +152,11 @@ Hooks.on("init", async () => {
             { key: "KeyN" }
         ],
         onDown: () => {
-            canvas.linemap.adjustLinked = !canvas.linemap.adjustLinked;
-            ui.controls.initialize();
+            // Only on the Line Map layer, so N still reaches core and other packages elsewhere.
+            if (!canvas.linemap?.active) return;
+            // Through the toggle, so the button follows and its onChange sets adjustLinked
+            // (ui.controls.initialize() is deprecated and never updated the button).
+            ui.controls.activate({ toggles: { adjustLinked: !canvas.linemap.adjustLinked } });
             return true;
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY

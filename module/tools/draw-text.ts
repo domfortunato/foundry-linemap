@@ -14,7 +14,7 @@ export class DrawTextTool extends Tool {
     }
 
     _updatePreview() {
-        this.layer.preview.removeChildren();
+        this.layer.clearPreview();
 
         if (this.snapPoint) {
             const gfx = this.layer.preview.addChild(new PIXI.Graphics());
@@ -77,7 +77,7 @@ export class DrawTextTool extends Tool {
                 this.layer.setSelection();
             }
 
-            this.layer.preview.removeChildren();
+            this.layer.clearPreview();
         }
     }
 

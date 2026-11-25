@@ -50,10 +50,12 @@ export class Symbol extends ObjectType {
     }
 
     get textAscent(): number {
-        return this.sprite.height / 2 + 5;
+        return (this.sprite?.height ?? 0) / 2 + 5;
     }
 
     draw(layers: ObjectDrawLayers) {
+        // The previous redraw's sprite is destroyed by the layer; never keep a reference to it.
+        this.sprite = undefined;
         const pt = this.point.point;
         const icon = this.textureCollection[this.symbol].icon;
         const footprint = this.textureCollection[this.symbol].footprint;

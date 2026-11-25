@@ -134,7 +134,7 @@ export class SelectTool extends Tool {
         const d = sub2(pt2, pt1);
 
         if (this.dragOperation === DragOperation.select) {
-            this.layer.preview.removeChildren();
+            this.layer.clearPreview();
 
             if (length2(d) > 3) {
                 const gfx = this.layer.preview.addChild(new PIXI.Graphics());
@@ -156,7 +156,7 @@ export class SelectTool extends Tool {
         const d = sub2(pt2, pt1);
 
         if (this.dragOperation === DragOperation.select) {
-            this.layer.preview.removeChildren();
+            this.layer.clearPreview();
 
             this._updateSelection(event.shiftKey, pt1, pt2);
         } else {

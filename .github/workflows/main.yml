@@ -37,8 +37,44 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "24"
+      # A manual rebuild only re-attaches files to a release that already exists. Without this, a
+      # dispatch on any tag (upstream's v0.12.0, say) would create a release and could take "latest".
+      - name: On a rebuild, the release must already exist
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::error::no release exists for $RELEASE_TAG; a rebuild only refreshes an existing release (cut new ones with npm run release)"
+            exit 1
+          fi
+
+      # "latest" moves only for a tag push of the highest version tag, never for a rebuild or an
+      # older tag (GitHub would otherwise make the newest-created release latest).
+      - name: Whether this release becomes latest
+        run: |
+          highest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          if [ "${{ github.event_name }}" = "push" ] && [ "$RELEASE_TAG" = "$highest" ]; then
+            echo "MAKE_LATEST=true" >> "$GITHUB_ENV"
+          else
+            echo "MAKE_LATEST=false" >> "$GITHUB_ENV"
+          fi
+          echo "highest tag: $highest; this run: $RELEASE_TAG (${{ github.event_name }})"
+
       - run: npm ci
       - run: npm run build
+
+      # Every file the manifest names must be in the build, or the release would install broken.
+      - name: Check the build has every file module.json names
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const m = JSON.parse(fs.readFileSync("dist/module.json", "utf8"));
+            const paths = [...(m.esmodules ?? []), ...(m.scripts ?? []), ...(m.styles ?? []), ...(m.languages ?? []).map(l => l.path)];
+            const missing = paths.filter(p => !fs.existsSync(`dist/${p}`));
+            if (missing.length) { console.error(`::error::missing from dist/: ${missing.join(", ")}`); process.exit(1); }
+            console.log(`dist/ has all ${paths.length} files module.json names`);
+          '
 
       - name: Versioned manifest in the build
         env:
@@ -77,7 +113,9 @@ jobs:
           allowUpdates: true
           omitNameDuringUpdate: true
           bodyFile: release-notes.md
-          omitBodyDuringUpdate: true
+          # A rebuild keeps the release's notes; a re-pushed tag (a redo) brings corrected ones.
+          omitBodyDuringUpdate: ${{ github.event_name == 'workflow_dispatch' }}
+          makeLatest: ${{ env.MAKE_LATEST }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}

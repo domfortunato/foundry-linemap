@@ -41,7 +41,7 @@ export class AdjustTool extends Tool {
     }
 
     updateIndicators() {
-        this.layer.preview.removeChildren();
+        this.layer.clearPreview();
 
         const selectedPts: Vec2[] = [];
         const nonSelectedPts: Vec2[] = [];
@@ -132,7 +132,7 @@ export class AdjustTool extends Tool {
         const d = add2(sub2(pt2, pt1), event.interactionData.pointOffset ?? [0, 0]);
 
         if (this.dragOperation === DragOperation.select) {
-            this.layer.preview.removeChildren();
+            this.layer.clearPreview();
             this.updateIndicators();
 
             if (length2(d) > 3) {

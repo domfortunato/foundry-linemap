@@ -130,6 +130,13 @@ export class Text extends ObjectType {
     }
 
     draw(layers: ObjectDrawLayers) {
+        // The previous redraw's sprite is destroyed by the layer; never keep a reference to it.
+        this.sprite = undefined;
+        // Hidden labels are not drawn for players, like every other object type.
+        if (!this.isVisible) {
+            return;
+        }
+
         const pt = this.point.point;
         const text = new PreciseText(this.text, this._pixiOptions);
         text.anchor.set(0.5);
@@ -226,7 +233,9 @@ export class Text extends ObjectType {
 
     static calculateHeight(content: string): number {
         const text = new PreciseText(content, this._staticPixiOptions);
-        const bounds = text.getLocalBounds();
-        return bounds.height;
+        const height = text.getLocalBounds().height;
+        // A text owns a canvas and a texture: free them once measured.
+        text.destroy(true);
+        return height;
     }
 }

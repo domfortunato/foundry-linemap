@@ -43,6 +43,17 @@ export class LineMapLayer extends layers.InteractionLayer {
     isLightMode = false;
     symbolScale = 1.0;
 
+    // GPU render targets, made once per canvas draw in _draw and destroyed in _tearDown.
+    renderTexture: any;
+    lineTexture: any;
+    maskTexture: any;
+    // The display objects of the last redraw: destroyed at the start of the next one (objects read
+    // their sprite's size between redraws, so they cannot be destroyed straight after rendering).
+    drawn: any[] = [];
+
+    // Stage handlers bound once, so _deactivate removes exactly what _activate added.
+    stageHandlers: Record<string, (event: any) => void>;
+
     constructor() {
         super();
 
@@ -56,6 +67,14 @@ export class LineMapLayer extends layers.InteractionLayer {
             drawText: new DrawTextTool(this)
         };
         this.activeTool = this.tools['selectObject'];
+        this.stageHandlers = {
+            mousedown: this._leftMouseDown.bind(this),
+            mouseup: this._leftMouseUp.bind(this),
+            rightdown: this._rightMouseDown.bind(this),
+            rightup: this._rightMouseUp.bind(this),
+            pointermove: this._pointerMove.bind(this),
+            pointerout: this._pointerOut.bind(this)
+        };
 
         this.symbolTextures = Object.fromEntries(Object.entries(CONFIG.linemap.symbols).map(([key, value]: [string, any]) => {
             return [key, {
@@ -88,29 +107,27 @@ export class LineMapLayer extends layers.InteractionLayer {
         });
     }
 
-    activate({ tool }: { tool?: string } = {}) {
-        super.activate({tool});
-        canvas.stage.addEventListener("mousedown", this._leftMouseDown.bind(this));
-        canvas.stage.addEventListener("mouseup", this._leftMouseUp.bind(this));
-        canvas.stage.addEventListener("rightdown", this._rightMouseDown.bind(this));
-        canvas.stage.addEventListener("rightup", this._rightMouseUp.bind(this));
-        canvas.stage.addEventListener("pointermove", this._pointerMove.bind(this));
-        canvas.stage.addEventListener("pointerout", this._pointerOut.bind(this));
+    // Core's activate()/deactivate() call these only on a real change of state, so the handlers are
+    // added once per activation and removed by identity (a fresh .bind() would match nothing and the
+    // listeners would pile up on every visit to the layer).
+    _activate() {
+        for (const [type, handler] of Object.entries(this.stageHandlers)) {
+            canvas.stage.addEventListener(type, handler);
+        }
         this.undoHistory = [];
         this.pushHistory();
-        return this;
     }
 
-    deactivate() {
-        super.deactivate();
-        canvas.stage.removeEventListener("mousedown", this._leftMouseDown.bind(this));
-        canvas.stage.removeEventListener("mouseup", this._leftMouseUp.bind(this));
-        canvas.stage.removeEventListener("rightdown", this._rightMouseDown.bind(this));
-        canvas.stage.removeEventListener("rightup", this._rightMouseUp.bind(this));
-        canvas.stage.removeEventListener("pointermove", this._pointerMove.bind(this));
-        canvas.stage.removeEventListener("pointerout", this._pointerOut.bind(this));
+    _deactivate() {
+        for (const [type, handler] of Object.entries(this.stageHandlers)) {
+            canvas.stage.removeEventListener(type, handler);
+        }
+        this.interactionData = undefined;
+        this.interactionDataRight = undefined;
+        // Takes the tool's option bar and preview off screen; the tool's own onChange(true)
+        // re-activates it when the GM comes back to the control.
+        this.clearTool();
         this.undoHistory = [];
-        return this;
     }
 
     activateTool(tool: string) {
@@ -123,7 +140,19 @@ export class LineMapLayer extends layers.InteractionLayer {
     clearTool() {
         this.activeTool?.deactivate();
         this.activeTool = null;
-        this.preview.removeChildren();
+        this.clearPreview();
+    }
+
+    /** Remove and destroy the preview's graphics: they are always made fresh, and a Graphics holds GPU buffers until destroyed. */
+    clearPreview() {
+        this.preview?.removeChildren().forEach(c => c.destroy({ children: true }));
+    }
+
+    /** Destroy the previous redraw's display objects. Shared textures (icons, render targets) are kept. */
+    _disposeDrawn() {
+        this.objectContainer?.removeChildren();
+        this.drawn.forEach(c => c.destroy({ children: true }));
+        this.drawn = [];
     }
 
     hotkeyPressed(key: ToolHotkey) {
@@ -136,8 +165,6 @@ export class LineMapLayer extends layers.InteractionLayer {
         if (withUndo) {
             this.registerHistory();
         }
-
-        this.removeChildren();
         // this.quadtree.clear();
     }
 
@@ -157,7 +184,10 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     async _draw(options) {
-        this.renderTexture = PIXI.RenderTexture.create({ width: canvas.dimensions.width, height: canvas.dimensions.height });
+        const size = { width: canvas.dimensions.width, height: canvas.dimensions.height };
+        this.renderTexture = PIXI.RenderTexture.create(size);
+        this.lineTexture = PIXI.RenderTexture.create(size);
+        this.maskTexture = PIXI.RenderTexture.create(size);
         this.lineFilter = new PIXI.Filter(`
             attribute vec2 aVertexPosition;
 
@@ -219,7 +249,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     redraw(highQuality = true) {
-        this.objectContainer.removeChildren();
+        this._disposeDrawn();
 
         const layers = {
             areas: new PIXI.Container(),
@@ -232,6 +262,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             obj.draw(layers);
         });
 
+        this.drawn = Object.values(layers);
+
         if (!highQuality) {
             this.objectContainer.addChild(layers.areas);
             this.objectContainer.addChild(layers.lines);
@@ -240,17 +272,17 @@ export class LineMapLayer extends layers.InteractionLayer {
             return;
         }
 
-        const lineTexture = PIXI.RenderTexture.create({ width: canvas.dimensions.width, height: canvas.dimensions.height });
-        const maskTexture = PIXI.RenderTexture.create({ width: canvas.dimensions.width, height: canvas.dimensions.height });
-
-        canvas.app.renderer.render(layers.lines, { renderTexture: lineTexture, clear: true });
-        canvas.app.renderer.render(layers.footprints, { renderTexture: maskTexture, clear: true });
+        // The line and mask targets are reused: a fresh pair per redraw was never freed (PIXI's texture
+        // GC skips render textures) and leaked two scene-sized textures per click.
+        canvas.app.renderer.render(layers.lines, { renderTexture: this.lineTexture, clear: true });
+        canvas.app.renderer.render(layers.footprints, { renderTexture: this.maskTexture, clear: true });
 
         const lineContainer = new PIXI.Container();
-        const lineSprite = lineContainer.addChild(new PIXI.Sprite(lineTexture));
+        const lineSprite = lineContainer.addChild(new PIXI.Sprite(this.lineTexture));
         lineSprite.filters = [this.lineFilter];
-        this.lineFilter.uniforms.lineTexture = lineTexture;
-        this.lineFilter.uniforms.maskTexture = maskTexture;
+        this.lineFilter.uniforms.lineTexture = this.lineTexture;
+        this.lineFilter.uniforms.maskTexture = this.maskTexture;
+        this.drawn.push(lineContainer);
 
         canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: true });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
@@ -264,7 +296,13 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     async _tearDown(options) {
         this.clear(false);
-        super._tearDown(options);
+        this._disposeDrawn();
+        this.objectContainer?.destroy({ children: true });
+        this.objectContainer = undefined;
+        // Destroys renderSprite and preview with their children (not their textures).
+        await super._tearDown(options);
+        for (const texture of [this.renderTexture, this.lineTexture, this.maskTexture]) texture?.destroy(true);
+        this.renderTexture = this.lineTexture = this.maskTexture = undefined;
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]): SnapPoint[] {
@@ -583,9 +621,12 @@ export class LineMapLayer extends layers.InteractionLayer {
                                 rejectClose: false,
                                 modal: true
                             })) {
+                                // clear() saves and records history; a redraw replaces the old
+                                // _draw() call, which made a second set of textures and children.
+                                const state = canvas.linemap._captureState();
                                 canvas.linemap.clear();
-                                await canvas.linemap.dataChanged();
-                                canvas.linemap._draw();
+                                canvas.linemap.redraw();
+                                canvas.linemap._stateInvalidated(state);
                             }
                         }
                     },
@@ -595,7 +636,8 @@ export class LineMapLayer extends layers.InteractionLayer {
                         title: "linemap.tools.newObjectsRevealed",
                         icon: "fas fa-eye",
                         toggle: true,
-                        active: true,
+                        // Live state: the controls are rebuilt on every canvas draw.
+                        active: canvas.linemap?.revealNewObjects ?? true,
                         onChange: (event, active) => {
                             canvas.linemap.revealNewObjects = active;
                         }
@@ -606,8 +648,10 @@ export class LineMapLayer extends layers.InteractionLayer {
                         title: "linemap.tools.adjustLinked",
                         icon: "fas fa-arrows-left-right",
                         toggle: true,
-                        active: true,
-                        onClick: (event, active) => {
+                        active: canvas.linemap?.adjustLinked ?? true,
+                        // onChange(event, active): the deprecated onClick is called with one
+                        // argument, which left adjustLinked undefined.
+                        onChange: (event, active) => {
                             canvas.linemap.adjustLinked = active;
                         }
                     },

@@ -25,15 +25,27 @@ export function scripts() {
         .pipe(gulp.dest('dist/module'));
 }
 
-export function styles() {
+// A Sass error must fail `build` (a release would otherwise ship without its stylesheet), while
+// `watch` only logs it and keeps watching. sass.logError ends the stream normally, so it is used
+// for watch alone.
+function compileStyles({ keepGoing }) {
+	const compile = sass({
+		outputStyle: "compressed",
+		silenceDeprecations: ['legacy-js-api', 'import'],
+	});
 	return gulp.src([`scss/**/*.scss`], { base: `scss` })
 		.pipe(sourcemaps.init({ loadMaps: true }))
-		.pipe(sass({
-			outputStyle: "compressed",
-			silenceDeprecations: ['legacy-js-api', 'import'],
-		}).on("error", sass.logError))
+		.pipe(keepGoing ? compile.on("error", sass.logError) : compile)
 		.pipe(sourcemaps.write("."))
 		.pipe(gulp.dest(`dist/styles`));
+}
+
+export function styles() {
+	return compileStyles({ keepGoing: false });
+}
+
+function stylesWatch() {
+	return compileStyles({ keepGoing: true });
 }
 
 async function copyFiles() {
@@ -46,7 +58,7 @@ async function copyFiles() {
 
 export function watch() {
     gulp.watch('module/**/*.ts', scripts);
-    gulp.watch('scss/**/*.scss', styles);
+    gulp.watch('scss/**/*.scss', stylesWatch);
 	gulp.watch(
 		staticFiles,
 		{ ignoreInitial: false },
