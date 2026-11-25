@@ -39,7 +39,8 @@
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
             "confirmDelete": "Delete all scene content?",
-            "confirmDeleteTitle": "Delete all objects"
+            "confirmDeleteTitle": "Delete all objects",
+            "freehand": "Freehand: draw a curve as you drag"
         },
         "error": {
             "cyclicConstraint": "Attempted to make a cyclic link. The point was not linked.",
@@ -53,7 +54,8 @@
             "major": "Major path",
             "minor": "Minor path",
             "rough": "Rough path",
-            "barrier": "Barrier"
+            "barrier": "Barrier",
+            "dotted": "Dotted path"
         },
         "symbols": {
             "major-settlement": "Major settlement",

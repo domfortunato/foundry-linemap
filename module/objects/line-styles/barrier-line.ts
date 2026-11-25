@@ -8,14 +8,15 @@ export class BarrierLine extends Line {
 
     makeGraphics(): any {
         {
-            const poly = new PIXI.Polygon(...this.points.flatMap(pt => pt.point));
+            const poly = new PIXI.Polygon(...this.centerline.flat());
             poly.closeStroke = false;
             const gfx = new PIXI.Graphics()
                 .lineStyle(12, this._currentColorHex)
                 .drawPolygon(poly);
 
-            const pt1b = this.points[0].point;
-            const pt2b = this.points[1].point;
+            const path = this.centerline;
+            const pt1b = path[0];
+            const pt2b = path[1];
             const db = sub2(pt2b, pt1b);
             const nb = normalize(normal(db));
             gfx
@@ -23,8 +24,8 @@ export class BarrierLine extends Line {
                 .moveTo(...add2(pt1b, mult2(nb, 20)))
                 .lineTo(...add2(pt1b, mult2(nb, -20)));
 
-            const pt1e = this.points.at(-2).point;
-            const pt2e = this.points.at(-1).point;
+            const pt1e = path.at(-2);
+            const pt2e = path.at(-1);
             const de = sub2(pt2e, pt1e);
             const ne = normalize(normal(de));
             gfx

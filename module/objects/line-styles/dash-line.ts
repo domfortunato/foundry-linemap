@@ -27,9 +27,10 @@ export class DashLine extends Line {
                 }
             }
 
-            for (let i = 0; i < this.points.length - 1; i++) {
-                const pt1 = this.points[i].point;
-                const pt2 = this.points[i+1].point;
+            const path = this.centerline;
+            for (let i = 0; i < path.length - 1; i++) {
+                const pt1 = path[i];
+                const pt2 = path[i+1];
                 const d = sub2(pt2, pt1);
                 const [l, u] = lengthAndUnitVector(d);
 

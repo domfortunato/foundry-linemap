@@ -160,3 +160,77 @@ export function lineIntersectsBox(points: Vec2[], box: Vec2[]): boolean {
     return (p1[0] >= xMin && p1[0] <= xMax && p1[1] >= yMin && p1[1] <= yMax) ||
            (p2[0] >= xMin && p2[0] <= xMax && p2[1] >= yMin && p2[1] <= yMax);
 }
+/** Ramer–Douglas–Peucker: the points of a polyline that keep it within `epsilon` of the original. */
+export function simplifyPath(points: Vec2[], epsilon: number): Vec2[] {
+    if (points.length < 3) return [...points];
+    const [a, b] = [points[0], points[points.length - 1]];
+    let worst = -1, index = 0;
+    for (let i = 1; i < points.length - 1; i++) {
+        const d = eq2(a, b) ? length2(sub2(points[i], a)) : distanceToLine(points[i], a, b, true);
+        if (d > worst) { worst = d; index = i; }
+    }
+    if (worst <= epsilon) return [a, b];
+    const left = simplifyPath(points.slice(0, index + 1), epsilon);
+    return [...left.slice(0, -1), ...simplifyPath(points.slice(index), epsilon)];
+}
+
+/** A Catmull–Rom curve through every point, as a polyline with a vertex about every `step` px. */
+export function catmullRom(points: Vec2[], step = 5): Vec2[] {
+    if (points.length < 3) return [...points];
+    const out: Vec2[] = [points[0]];
+    for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[Math.max(i - 1, 0)], p1 = points[i], p2 = points[i + 1], p3 = points[Math.min(i + 2, points.length - 1)];
+        const n = Math.max(1, Math.ceil(length2(sub2(p2, p1)) / step));
+        for (let k = 1; k <= n; k++) {
+            const t = k / n, t2 = t * t, t3 = t2 * t;
+            const c = (q0: number, q1: number, q2: number, q3: number) =>
+                0.5 * ((2 * q1) + (-q0 + q2) * t + (2 * q0 - 5 * q1 + 4 * q2 - q3) * t2 + (-q0 + 3 * q1 - 3 * q2 + q3) * t3);
+            out.push([c(p0[0], p1[0], p2[0], p3[0]), c(p0[1], p1[1], p2[1], p3[1])]);
+        }
+    }
+    return out;
+}
+
+/** The length of a polyline. */
+export function pathLength(path: Vec2[]): number {
+    let l = 0;
+    for (let i = 0; i < path.length - 1; i++) l += length2(sub2(path[i + 1], path[i]));
+    return l;
+}
+
+/** The point at a fraction `t` (0 to 1) of a polyline's length, and the direction of travel there. */
+export function pointAlongPath(path: Vec2[], t: number): { pt: Vec2, dir: Vec2 } {
+    const total = pathLength(path);
+    let left = Math.min(Math.max(t, 0), 1) * total;
+    for (let i = 0; i < path.length - 1; i++) {
+        const l = length2(sub2(path[i + 1], path[i]));
+        if (!l) continue;
+        const u = mult2(sub2(path[i + 1], path[i]), 1 / l);
+        if (left <= l) return { pt: add2(path[i], mult2(u, left)), dir: u };
+        left -= l;
+    }
+    // Past the end (rounding): the last point, in the last segment's direction.
+    for (let i = path.length - 1; i > 0; i--) {
+        const l = length2(sub2(path[i], path[i - 1]));
+        if (l) return { pt: path[path.length - 1], dir: mult2(sub2(path[i], path[i - 1]), 1 / l) };
+    }
+    return { pt: path[0], dir: [1, 0] };
+}
+
+/** The nearest point on a polyline, its distance, and where it is as a fraction of the length. */
+export function nearestOnPath(path: Vec2[], pt: Vec2): { pt: Vec2, dist: number, t: number } {
+    const total = pathLength(path) || 1;
+    let best = { pt: path[0], dist: Infinity, t: 0 };
+    let before = 0;
+    for (let i = 0; i < path.length - 1; i++) {
+        const l = length2(sub2(path[i + 1], path[i]));
+        if (!l) continue;
+        const u = mult2(sub2(path[i + 1], path[i]), 1 / l);
+        const s = Math.min(Math.max(dotProduct(u, sub2(pt, path[i])), 0), l);
+        const q = add2(path[i], mult2(u, s));
+        const dist = length2(sub2(pt, q));
+        if (dist < best.dist) best = { pt: q, dist, t: (before + s) / total };
+        before += l;
+    }
+    return best;
+}

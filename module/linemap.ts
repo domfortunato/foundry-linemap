@@ -7,6 +7,7 @@ import { SolidLine } from "./objects/line-styles/solid-line.js";
 import { DashLine } from "./objects/line-styles/dash-line.js";
 import { WaveLine } from "./objects/line-styles/wave-line.js";
 import { BarrierLine } from "./objects/line-styles/barrier-line.js";
+import { DotLine } from "./objects/line-styles/dot-line.js";
 import { ToolHotkey } from "./classes/tool.js";
 import { Waypoint } from "./objects/waypoint.js";
 
@@ -263,6 +264,12 @@ Hooks.on("init", () => {
                 icon: 'modules/linemap/assets/lines/barrier.svg',
                 lineClass: BarrierLine,
                 selectTolerance: 13
+            },
+            dotted: {
+                label: 'linemap.lineStyles.dotted',
+                icon: 'modules/linemap/assets/lines/dotted.svg',
+                lineClass: DotLine,
+                selectTolerance: 6
             }
         },
         symbols: {

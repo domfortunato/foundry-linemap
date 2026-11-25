@@ -1,9 +1,10 @@
 import { PointType, SnapPoint, SnapType, Vec2 } from "../../dto.js";
-import { add2, dotProduct, length2, lengthAndUnitVector, mult2, normal, sub2 } from "../../helpers/utils.js";
+import { add2, dotProduct, length2, lengthAndUnitVector, mult2, normal, pathLength, pointAlongPath, sub2 } from "../../helpers/utils.js";
 import { Line } from "../line.js";
 
 export class WaveLine extends Line {
     get path(): Vec2[] {
+        if (this.smooth) return this._curvedPath();
         const gfx = new PIXI.Graphics();
         for (let i = 0; i < this.points.length - 1; i++) {
             const pt1 = this.points[i].point;
@@ -33,6 +34,32 @@ export class WaveLine extends Line {
         return [...Array(points.length / 2).keys()].map(i => [points[i * 2], points[i * 2 + 1]]);
     }
 
+    /**
+     * The waves along a smooth line's curve: a crest every 32 px of its length, as a straight line has,
+     * each bent to the curve's direction between them.
+     */
+    _curvedPath(): Vec2[] {
+        const base = this.centerline;
+        const l = pathLength(base);
+        const count = Math.max(Math.floor((l - 16.0) / 32.0), 0);
+        const stops = [...[...Array(count).keys()].map(j => 32.0 * (j + 1) / l), 1].map(t => pointAlongPath(base, t).pt);
+        const gfx = new PIXI.Graphics();
+        let prevPt = base[0];
+        let side = 1;
+        gfx.moveTo(...prevPt);
+        for (const nextPt of stops) {
+            const [, u] = lengthAndUnitVector(sub2(nextPt, prevPt));
+            const n = mult2(normal(u), side);
+            const cp1 = add2(prevPt, mult2(add2(u, n), 8.0));
+            const cp2 = add2(nextPt, mult2(add2(mult2(u, -1), n), 8.0));
+            gfx.bezierCurveTo(...cp1, ...cp2, ...nextPt);
+            prevPt = nextPt;
+            side = -side;
+        }
+        const points = gfx.currentPath.points;
+        return [...Array(points.length / 2).keys()].map(i => [points[i * 2], points[i * 2 + 1]]);
+    }
+
     makeGraphics(): any {
         const gfx = new PIXI.Graphics()
             .lineStyle(3, this._currentColorHex);
@@ -42,6 +69,8 @@ export class WaveLine extends Line {
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]) {
+        // A smooth line snaps to its curve's centre (Line); the waves are 8 px either side of it.
+        if (this.smooth) return super.getSnapPoints(pt, types);
         const result: SnapPoint[] = [];
         const config = CONFIG.linemap.snap;
 
@@ -88,7 +117,7 @@ export class WaveLine extends Line {
     }
 
     getParametricPoint(t: number, type: PointType): Vec2 {
-        if (type === PointType.line) {
+        if (type === PointType.line && !this.smooth) {
             const pt0 = this.points[0].point;
             const pt1 = this.points[1].point;
             const [l, u] = lengthAndUnitVector(sub2(pt1, pt0));

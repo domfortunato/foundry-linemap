@@ -37,6 +37,11 @@
         }
     }
 
+    a.linemap-freehand i {
+        color: black;
+        font-size: 22px;
+    }
+
     a.active {
         border: 2px solid var(--color-warm-2);
         box-shadow: 0 0 4px var(--color-warm-3);

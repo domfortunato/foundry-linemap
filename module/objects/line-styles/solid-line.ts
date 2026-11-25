@@ -6,7 +6,7 @@ export class SolidLine extends Line {
     }
 
     makeGraphics(): any {
-        const poly = new PIXI.Polygon(...this.points.flatMap(pt => pt.point));
+        const poly = new PIXI.Polygon(...this.centerline.flat());
         poly.closeStroke = false;
         return new PIXI.Graphics()
             .lineStyle(4, this._currentColorHex)

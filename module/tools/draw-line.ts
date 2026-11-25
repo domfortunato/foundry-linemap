@@ -1,7 +1,7 @@
 import { ConstrainedPoint } from "../classes/constrained-point.js";
 import { Tool } from "../classes/tool.js"
 import { Point, PointType, SnapPoint, SnapType, Vec2 } from "../dto.js";
-import { add2, length2, sub2 } from "../helpers/utils.js";
+import { add2, length2, pathLength, simplifyPath, sub2 } from "../helpers/utils.js";
 import { Line } from "../objects/line.js";
 
 const { getTemplate } = foundry.applications.handlebars;
@@ -14,6 +14,10 @@ export class DrawLineTool extends Tool {
     optionsTemplate: any;
 
     activeStyle: string = Object.keys(CONFIG.linemap.lineStyles)[0];
+    /** Freehand: a drag records the path it takes, and the line is a smooth curve along it. */
+    freehand = false;
+    /** The freehand drag's path so far, from its start. */
+    trace: Vec2[];
 
     activate() {
         this._setupOptionsElement();
@@ -38,9 +42,15 @@ export class DrawLineTool extends Tool {
     _updateOptionsElement() {
         const htmlStr = this.optionsTemplate({
             styles: CONFIG.linemap.lineStyles,
-            activeStyle: this.activeStyle
+            activeStyle: this.activeStyle,
+            freehand: this.freehand
         });
         const html = $(htmlStr);
+
+        html.on('click', '[data-action="toggle-freehand"]', () => {
+            this.freehand = !this.freehand;
+            this._updateOptionsElement();
+        });
 
         html.on('click', '[data-action="set-line-style"]', (event) => {
             this.activeStyle = event.currentTarget.dataset.lineStyle;
@@ -57,7 +67,8 @@ export class DrawLineTool extends Tool {
             const line = new (style.lineClass as typeof Line)();
             line.construct(
                 this.stroke,
-                this.activeStyle
+                this.activeStyle,
+                this.freehand
             );
             return line;
         }
@@ -105,6 +116,7 @@ export class DrawLineTool extends Tool {
             ConstrainedPoint.fromSnapOrPoint(PointType.line, eventPt, this.snapPoint),
             ConstrainedPoint.fromSnapOrPoint(PointType.line, eventPt, this.snapPoint)
         ];
+        this.trace = [eventPt];
 
         this._updatePreview();
 
@@ -116,17 +128,27 @@ export class DrawLineTool extends Tool {
         this.snapPoint = this.layer.getSnapPoint(eventPt, [SnapType.lineContour, SnapType.lineEnd, SnapType.symbol]);
         const pt = this.snapPoint ? this.snapPoint.pt : eventPt;
         
-        this.stroke[1] = ConstrainedPoint.fromSnapOrPoint(PointType.line, eventPt, this.snapPoint);
+        const end = ConstrainedPoint.fromSnapOrPoint(PointType.line, eventPt, this.snapPoint);
+        if (this.freehand) {
+            if (length2(sub2(eventPt, this.trace.at(-1))) >= 2) this.trace.push(eventPt);
+            // Only the ends snap and link; the points between are where the drag went, simplified
+            // (Ramer–Douglas–Peucker, 4 px) so a curve holds tens of points, not hundreds.
+            const middle = simplifyPath([this.stroke[0].point, ...this.trace.slice(1, -1), end.point], 4).slice(1, -1);
+            this.stroke = [this.stroke[0], ...middle.map(pt => new ConstrainedPoint(PointType.line, pt)), end];
+        } else {
+            this.stroke[1] = end;
+        }
 
         this._updatePreview();
     }
 
     async onDragLeftDrop(event) {
-        if (length2(sub2(this.stroke[0].point, this.stroke[1].point)) > 10) {
+        if (pathLength(this.stroke.map(pt => pt.point)) > 10) {
             this._submitStroke(event);
         }
         this.layer.clearPreview();
         this.stroke = undefined;
+        this.trace = undefined;
     }
 
 }

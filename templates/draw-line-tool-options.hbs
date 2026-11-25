@@ -3,5 +3,7 @@
         {{#each styles as |style styleName|}}
             <a class="linemap-style-select {{#if (eq styleName ../activeStyle)}}active{{/if}}" data-action="set-line-style" data-line-style="{{styleName}}" aria-label="{{#if style.label}}{{localize style.label}}{{else}}{{styleName}}{{/if}}" data-tooltip="{{#if style.label}}{{style.label}}{{else}}{{styleName}}{{/if}}"><img src="{{style.icon}}" alt="" /></a>
         {{/each}}
+        <div class="spacer"></div>
+        <a class="linemap-style-select linemap-freehand {{#if freehand}}active{{/if}}" data-action="toggle-freehand" aria-pressed="{{#if freehand}}true{{else}}false{{/if}}" aria-label="{{localize "linemap.ui.freehand"}}" data-tooltip="linemap.ui.freehand"><i class="fas fa-signature" aria-hidden="true"></i></a>
     </div>
 </div>
