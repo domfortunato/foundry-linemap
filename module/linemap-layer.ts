@@ -111,23 +111,40 @@ export class LineMapLayer extends layers.InteractionLayer {
                 this.redraw();
             }
         });
+
+        // A canvas draw restores the active layer (layerOptions.name) and only afterwards clears every
+        // stage listener (Canvas#addListeners: stage.removeAllListeners()), then fires canvasReady. So
+        // when this layer is the one restored, its handlers are put back here.
+        Hooks.on("canvasReady", () => {
+            if (this.active) this._attachStageHandlers();
+        });
     }
 
-    // Core's activate()/deactivate() call these only on a real change of state, so the handlers are
-    // added once per activation and removed by identity (a fresh .bind() would match nothing and the
-    // listeners would pile up on every visit to the layer).
-    _activate() {
+    /** Add the stage handlers; safe to repeat, since each is removed by identity first. */
+    _attachStageHandlers() {
         for (const [type, handler] of Object.entries(this.stageHandlers)) {
+            canvas.stage.removeEventListener(type, handler);
             canvas.stage.addEventListener(type, handler);
         }
+    }
+
+    _detachStageHandlers() {
+        for (const [type, handler] of Object.entries(this.stageHandlers)) {
+            canvas.stage.removeEventListener(type, handler);
+        }
+    }
+
+    // Core's activate()/deactivate() call these only on a real change of state. The handlers are
+    // bound once and removed by identity: a fresh .bind() would match nothing, and a set of
+    // listeners piled up on every visit to the layer.
+    _activate() {
+        this._attachStageHandlers();
         this.undoHistory = [];
         this.pushHistory();
     }
 
     _deactivate() {
-        for (const [type, handler] of Object.entries(this.stageHandlers)) {
-            canvas.stage.removeEventListener(type, handler);
-        }
+        this._detachStageHandlers();
         this.interactionData = undefined;
         this.interactionDataRight = undefined;
         // Takes the tool's option bar and preview off screen; the tool's own onChange(true)
