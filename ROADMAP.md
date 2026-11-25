@@ -77,6 +77,8 @@ blurred); its links still meet it; it survives a reload; undo restores it.
 
 ## 5. Images in the map
 
+*Done on `dev`* (probe `dev:images`).
+
 Foundry 14 draws tiles above the map at the same elevation, so an image meant to lie under the
 map's lines and symbols has to be drawn by the map itself.
 

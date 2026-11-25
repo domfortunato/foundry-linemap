@@ -26,6 +26,7 @@ The different object types available are:
 - **Waypoints (hotkey W):** Symbols that can only be attached to lines, to mark days of travel, portals and elevation changes
 - **Areas (hotkey P):** Larger geographic areas like lakes
 - **Text (hotkey T):** Labels to help you remember
+- **Images (hotkey G):** Pictures drawn inside the map, under its lines, symbols and labels
 
 ### Curved lines
 
@@ -61,6 +62,22 @@ Double click on a text object using the select tool to edit the text content. Sh
 
 Areas are created as rectangles, but can be freely shaped using the adjust tool (hotkey A) and moving the adjustment points around. To add or remove adjustment points, switch to the area tool (hotkey P) and double click on a line or point to add or delete one.
 
+### Images
+
+Pick the image tool (hotkey G) and click where the picture should go: Foundry's file picker opens,
+and the picked image is placed centred on the click at its own size. Images are drawn under the
+map's areas, lines, symbols and labels, in their own colors, so a hand-drawn map or a texture can
+sit beneath the point crawl. (A tile can't do this: Foundry draws tiles above the map.)
+
+- Move an image with the select tool (hotkey V), and resize it by its corners with the adjust tool
+  (hotkey A). Hold **Shift** while resizing to keep its proportions.
+- The right-click menu on a selected image has **Fit to scene**, which makes the image cover the
+  whole scene so it can be the map's background, and **Bring forward** and **Send back** to order
+  images that overlap.
+- Images hide and reveal like every other object, and move with the map when the scene is resized.
+- If an image's file goes missing, the rest of the map still draws, and the Gamemaster sees a
+  crossed-out outline where the image was, to select and delete.
+
 ### Sizes
 
 Each symbol and waypoint can be drawn from one to four times its usual size, and each label from
@@ -79,7 +96,7 @@ Some waypoints are directional. You can flip their direction by selecting the wa
 Each key acts only while the Line Map layer is active, and each can be changed in Configure
 Controls.
 
-- **V, A, L, S, W, P, T:** the select, adjust, line, symbol, waypoint, area and text tools
+- **V, A, L, S, W, P, T, G:** the select, adjust, line, symbol, waypoint, area, text and image tools
 - **R and H:** reveal and hide the selected objects (select tool)
 - **D:** flip the selected waypoints (select tool)
 - **B and I:** bold and italic for the selected label (text tool)

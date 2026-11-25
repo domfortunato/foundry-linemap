@@ -6,6 +6,11 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Images in the map.** A new image tool (hotkey G) places a picture from Foundry's file picker,
+  drawn under the map's lines, symbols and labels in its own colors. Images move with the select
+  tool, resize by their corners with the adjust tool (Shift keeps their proportions), and can be
+  fitted to the scene, brought forward or sent back from the right-click menu. They hide and reveal
+  like other objects. Earlier versions keep a map's images but do not draw them.
 - **Sizes.** A symbol or waypoint can be drawn up to four times its size, and a label from half to
   four times, set with a slider in the right-click menu or with ] and [. A big symbol is drawn
   sharp, and its footprint, selection box and snap radius grow with it; labels linked to it move
