@@ -13,8 +13,8 @@ new features, then the play-utility and editing items of the first plan.
   `-=` form of deleting a key, is gone: 14's `ForcedDeletion` is the only form. The fork has
   nowhere to test 13, so it promises nothing for it.
 - **The order:** a Foundry review, real hiding, curved lines, sizes, images in the map, themes,
-  then the rest. Real hiding comes before images and document links because both hide through
-  it. Two items of the first plan are folded into new ones: per-object size into *Sizes*, and the
+  then the rest. Real hiding was researched first, since images and document links would have
+  hidden through it; it was set aside, so they hide on screen like everything else. Two items of the first plan are folded into new ones: per-object size into *Sizes*, and the
   halo into *Themes*.
 - **Every feature starts as a probe.** A probe in `tools/dev/` states the feature's behaviour and
   fails before the feature exists. The feature is done when the probe passes on every Foundry 14
@@ -24,8 +24,7 @@ new features, then the play-utility and editing items of the first plan.
 - **The save format stays per-object**: `flags.linemap.objects.<id>` and `flags.linemap.map`. A
   new field on an object is written as `null` when unset, never left out, because a save merges
   into what is there. A new look-affecting property goes into the object's draw key, or the cached
-  display stays stale. Real hiding, if it is built, keeps hidden objects in the same per-object
-  shape in a second store.
+  display stays stale.
 - **Edits go through the undo record.** A new edit path calls `registerHistory()`, `addObject` or
   `deleteObjects`, never a save of its own.
 
@@ -41,26 +40,9 @@ new features, then the play-utility and editing items of the first plan.
 The whole module read against Foundry 14's documentation, as the first review was. Each confirmed
 finding is fixed probe-first. The colour and these fixes can make a release on their own.
 
-## 2. Real hiding
+## 2. Real hiding: set aside (the gate failed)
 
-Today a hidden object is hidden on screen only: a player's client receives it in the Scene's
-flags. Real hiding means a hidden object never reaches a player's client at all.
-
-**The gate, before any design:** find, from Foundry's documentation and source, a store that a
-player's client never receives, such as a document players have no permission on or a world
-setting only a Gamemaster reads. A throwaway probe settles it by searching a player's game data
-and socket traffic for a marker. If no such store exists, real hiding needs a server, which a
-module lacks, and this item goes back to *Set aside*.
-
-**The design, to be confirmed before building:**
-- A hidden object moves out of the Scene's flags into that store, and revealing moves it back.
-- Undo records which store each object was in.
-- Remote updates merge from both stores, on a Gamemaster's client only.
-- An older build of the module shows a Gamemaster only the revealed objects; the changelog says so.
-
-Probe: a player's client holds no hidden object anywhere, not in the Scene's flags, not in any
-document or setting, not in the socket frames. Revealing reaches the player live, hiding removes
-it live, and undo of a hide works.
+Researched on 2026-11-25 and set aside: see *Set aside*. Hiding stays as it is, on screen only.
 
 ## 3. Curved lines and a dotted style
 
@@ -102,11 +84,11 @@ map's lines and symbols has to be drawn by the map itself.
   ratio with shift.
 - The right-click menu has **Fit to scene**, so one image can be the map's background, and order
   controls (bring forward, send back).
-- Images hide and reveal like other objects, through real hiding, and follow a scene resize.
+- Images hide and reveal like other objects (on screen only), and follow a scene resize.
 - Foundry's own scene background still works under the map.
 
 Probe: two images placed and resized, their pixels where expected and under a line's pixels;
-hidden from a player; they survive a reload; a missing file does not break the map.
+a hidden one not drawn for a player; they survive a reload; a missing file does not break the map.
 
 ## 6. Themes, with the halo
 
@@ -168,6 +150,16 @@ lead somewhere; the editing items are independent conveniences.
 
 ## Set aside
 
+- **Real hiding.** A hidden object is hidden on screen only: a player's client receives it in the
+  Scene's flags. Real hiding needs a store that a player's client never receives, and Foundry 14
+  has none a module can use. A probe on Foundry 14.370 (2026-11-25) had a Gamemaster put a marker in
+  nine stores and a player search everything their client held, and every update it was sent: a
+  Scene flag; a journal entry, a journal page, a macro and an actor with no player permission; a world
+  setting; a Gamemaster's user-scoped setting and user flags; and a world compendium closed to
+  players. The marker reached the player from every one, at joining and live. Foundry hides a
+  document the player may not see (its `visible` is false) but sends it, and the player could read
+  the closed compendium's documents too. Keeping data from players needs a server, which a module
+  does not have. Images and document links (step 5, step 7.2) hide on screen like every other object.
 - **A map per level.** There is one map per Scene, drawn on every level above the viewed level's
   background. Not planned until a map needs it.
 - **Export and import.** Likely to fall out of copy and paste, a selection serialised to the
