@@ -11,7 +11,7 @@ const PLAYER = `${PROBE_TAG} Player`
 const PACK = 'linemap-probe-secrets'
 const p = probe('dev:research-hiding', { watchdogMs: 300000 })
 const mark = (store, n) => `LMSECRET-${store}-${n}-${Math.random().toString(36).slice(2, 10)}`
-const STORES = ['sceneFlag', 'journalNone', 'journalPageNone', 'macroNone', 'worldSetting', 'userFlagGM', 'packNone', 'actorNone']
+const STORES = ['sceneFlag', 'journalNone', 'journalPageNone', 'macroNone', 'worldSetting', 'userSettingGM', 'userFlagGM', 'packNone', 'actorNone']
 
 try {
   const gm = await p.gmPage()
@@ -40,6 +40,10 @@ try {
       game.settings.register('linemap', 'probeSecret', { scope: 'world', config: false, type: String, default: '' })
       await game.settings.set('linemap', 'probeSecret', first.worldSetting)
     })
+    await note('userSettingGM', async () => {
+      game.settings.register('linemap', 'probeUserSecret', { scope: 'user', config: false, type: String, default: '' })
+      await game.settings.set('linemap', 'probeUserSecret', first.userSettingGM)
+    })
     await note('userFlagGM', () => game.user.setFlag('linemap', 'secret', first.userFlagGM))
     await note('actorNone', async () => {
       const type = Object.keys(CONFIG.Actor.dataModels ?? {})[0] ?? game.documentTypes?.Actor?.find(t => t !== 'base') ?? 'base'
@@ -61,6 +65,7 @@ try {
     await game.actors.get(made.actorNone)?.delete()
     await game.user.unsetFlag('linemap', 'secret')
     await game.settings.storage.get('world').getSetting('linemap.probeSecret')?.delete()
+    for (const st of game.settings.storage.get('world').filter?.(x => x.key === 'linemap.probeUserSecret') ?? []) await st.delete()
     await game.packs.get(`world.${PACK}`)?.deleteCompendium()
     await game.users.getName(PLAYER)?.delete()
   }, { PACK, PLAYER, made }))
@@ -119,6 +124,7 @@ try {
     })
     await tryIt(() => game.macros.get(made.macroNone).update({ command: `// ${second.macroNone}` }))
     await tryIt(() => game.settings.set('linemap', 'probeSecret', second.worldSetting))
+    await tryIt(() => game.settings.set('linemap', 'probeUserSecret', second.userSettingGM))
     await tryIt(() => game.user.setFlag('linemap', 'secret', second.userFlagGM))
     await tryIt(() => game.actors.get(made.actorNone).setFlag('linemap', 'secret', second.actorNone))
     await tryIt(async () => {
