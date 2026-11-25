@@ -67,6 +67,18 @@ try {
 
   // The player joins after every store holds its first marker.
   const player = await p.pageAs(PLAYER)
+  const who = await player.evaluate(({ made, PACK }) => ({
+    name: game.user.name, role: game.user.role, isGM: game.user.isGM,
+    journalVisible: game.journal.get(made.journalNone)?.visible ?? 'absent',
+    journalInCollection: !!game.journal.get(made.journalNone),
+    actorInCollection: !!game.actors.get(made.actorNone),
+    macroInCollection: !!game.macros.get(made.macroNone),
+    packVisible: game.packs.get(`world.${PACK}`)?.visible ?? 'absent',
+    packOwnership: game.packs.get(`world.${PACK}`)?.ownership,
+    packTestUser: game.packs.get(`world.${PACK}`)?.testUserPermission?.(game.user, 'OBSERVER')
+  }), { made, PACK })
+  console.log(`  note  the player page: ${JSON.stringify(who)}`)
+  p.check(!who.isGM && who.role === 1, 'the second page is a plain player', who)
   const frames = []
   player.on('websocket', ws => ws.on('framereceived', f => frames.push(String(f.payload))))
   // Playwright only reports sockets opened after the listener: Foundry's is open by now, so hear
