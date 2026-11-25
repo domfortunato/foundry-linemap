@@ -15,7 +15,7 @@ const shiftClick = async (page, point) => {
   await page.keyboard.down('Shift')
   try { await clickAt(page, point) } finally { await page.keyboard.up('Shift') }
 }
-const savedCount = (page) => page.evaluate(() => canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0)
+const savedCount = (page) => page.evaluate(() => canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0)
 
 try {
   const page = await p.gmPage()
@@ -45,15 +45,15 @@ try {
 
   // Undo: one label, one Ctrl+Z.
   await page.evaluate(() => { canvas.linemap.clear(); canvas.linemap.redraw() })
-  await until(page, () => (canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0) === 0)
+  await until(page, () => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0) === 0)
   await tool(page, 'selectObject')
   await writeLabel(page, await at(page, 0.5, 0.4), 'Undo Me Once')
-  await until(page, () => (canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0) === 1)
+  await until(page, () => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0) === 1)
   await tool(page, 'selectObject')
   await page.evaluate(() => document.activeElement?.blur?.())
   await page.keyboard.press('Control+z')
   await page.waitForTimeout(800)
-  const afterUndo = await page.evaluate(() => ({ layer: canvas.linemap.objects.length, saved: canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0 }))
+  const afterUndo = await page.evaluate(() => ({ layer: canvas.linemap.objects.length, saved: canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0 }))
   p.check(afterUndo.layer === 0 && afterUndo.saved === 0, 'one Ctrl+Z takes back a label just written', afterUndo)
 
   // Two edits in quick succession (the second starts before the first is saved), then one undo.
@@ -69,12 +69,12 @@ try {
     L.addObject(mk(r.x + 600, r.y + 1400))
     L.addObject(mk(r.x + 900, r.y + 1400))
     const end = Date.now() + 5000
-    while ((canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0) < 2 && Date.now() < end) await new Promise(r => setTimeout(r, 100))
+    while ((canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0) < 2 && Date.now() < end) await new Promise(r => setTimeout(r, 100))
     await new Promise(r => setTimeout(r, 500))
     await L.undo()
-    const one = { layer: L.objects.length, saved: canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0 }
+    const one = { layer: L.objects.length, saved: canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0 }
     await L.undo()
-    const two = { layer: L.objects.length, saved: canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0 }
+    const two = { layer: L.objects.length, saved: canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0 }
     return { one, two }
   })
   p.check(quick.one.layer === 1 && quick.one.saved === 1 && quick.two.layer === 0 && quick.two.saved === 0,
@@ -104,11 +104,11 @@ try {
 
   await page.evaluate(() => document.activeElement?.blur?.())
   await page.keyboard.press('Delete')
-  await until(page, () => !canvas.scene.getFlag('linemap', 'serialized')?.objects?.some(o => o.type === 'symbol'))
+  await until(page, () => !canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.some(o => o.type === 'symbol'))
   const deleted = await page.evaluate(() => {
     const L = canvas.linemap
     const line = L.objects.find(o => o.constructor.type === 'line')
-    const saved = canvas.scene.getFlag('linemap', 'serialized')?.objects ?? []
+    const saved = canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []
     const ids = new Set(saved.map(o => o.id))
     const sl = saved.find(o => o.type === 'line')
     return {

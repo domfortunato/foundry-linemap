@@ -10,7 +10,7 @@ const p = probe('dev:settings', { watchdogMs: 300000 })
 const FORM = '#linemap-scene-properties'
 const values = (page) => page.evaluate(() => {
   const L = canvas.linemap
-  const saved = canvas.scene.getFlag('linemap', 'serialized') ?? {}
+  const saved = canvas.linemap.constructor.readFlag(canvas.scene) ?? {}
   const label = L.objects.find(o => o.constructor.type === 'text')
   return {
     isLightMode: L.isLightMode,
@@ -56,7 +56,7 @@ try {
   p.check((await values(page)).labelSprite?.includes('Alegreya'), 'the label is drawn in Alegreya', (await values(page)).labelSprite)
 
   await page.selectOption(`${FORM} select[name="isLightMode"]`, 'true')
-  let v = await until(page, () => canvas.scene.getFlag('linemap', 'serialized')?.isLightMode === true) && await values(page)
+  let v = await until(page, () => canvas.linemap.constructor.readFlag(canvas.scene)?.isLightMode === true) && await values(page)
   p.check(v && v.isLightMode === true, 'choosing light mode switches the layer to it and saves it', v)
 
   await page.evaluate((FORM) => {
@@ -64,11 +64,11 @@ try {
     el.value = 1.5
     el.dispatchEvent(new Event('change', { bubbles: true }))
   }, FORM)
-  v = await until(page, () => canvas.scene.getFlag('linemap', 'serialized')?.symbolScale === 1.5) && await values(page)
+  v = await until(page, () => canvas.linemap.constructor.readFlag(canvas.scene)?.symbolScale === 1.5) && await values(page)
   p.check(v && v.symbolScale === 1.5, 'the scale picker sets the symbol scale and saves it', v)
 
   await page.selectOption(`${FORM} select[name="labelFont"]`, 'IM Fell English')
-  v = await until(page, () => canvas.scene.getFlag('linemap', 'serialized')?.labelFont === 'IM Fell English') && await values(page)
+  v = await until(page, () => canvas.linemap.constructor.readFlag(canvas.scene)?.labelFont === 'IM Fell English') && await values(page)
   p.check(v && v.labelFont === 'IM Fell English', 'choosing IM Fell English sets the label font and saves it', v)
   const redrawn = await until(page, () => {
     const label = canvas.linemap.objects.find(o => o.constructor.type === 'text')
@@ -87,7 +87,7 @@ try {
   await probeScene(p, page, 'settings, no map')
   v = await values(page)
   p.check(v.isLightMode === false && v.symbolScale === 1 && v.labelFont === 'Alegreya', "a Scene with no map starts from the defaults, not the last Scene's settings", v)
-  p.check(await page.evaluate(() => canvas.scene.getFlag('linemap', 'serialized') === undefined), 'viewing it wrote no map into it')
+  p.check(await page.evaluate(() => canvas.linemap.constructor.readFlag(canvas.scene) === undefined), 'viewing it wrote no map into it')
   await viewScene(page, sceneId)
   v = await values(page)
   p.check(v.isLightMode === true && v.symbolScale === 1.5 && v.labelFont === 'IM Fell English', "going back, the first Scene has its own settings again", v)

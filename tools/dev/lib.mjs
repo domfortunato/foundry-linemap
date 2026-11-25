@@ -384,7 +384,7 @@ export const at = (page, fx, fy) => page.evaluate(({ fx, fy }) => {
 /** What the layer holds, and what the Scene's flag has saved. */
 export const layerState = (page) => page.evaluate(() => ({
   objects: canvas.linemap.objects.map(o => ({ type: o.constructor.type, isRevealed: o.isRevealed })),
-  saved: (canvas.scene.getFlag('linemap', 'serialized')?.objects ?? []).map(o => ({ type: o.type, isRevealed: o.isRevealed }))
+  saved: (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).map(o => ({ type: o.type, isRevealed: o.isRevealed }))
 }))
 
 /** The count of each object type in a list from layerState. */

@@ -2,9 +2,9 @@ import { PointType, SnapPoint, Vec2 } from "../dto.js";
 import { ObjectType } from "./object.js";
 
 export interface ConstrainedPointData {
-    point?: Vec2;
-    sourceId?: string;
-    sourceT?: number;
+    point?: Vec2 | null;
+    sourceId?: string | null;
+    sourceT?: number | null;
 }
 
 export class ConstrainedPoint {
@@ -13,23 +13,22 @@ export class ConstrainedPoint {
     sourceObject: ObjectType | undefined;
     sourceT: number | undefined;
 
-    constructor(type: PointType, point?: Vec2, object?: ObjectType, t?: number) {
+    constructor(type: PointType, point?: Vec2 | null, object?: ObjectType, t?: number | null) {
         this.type = type;
-        this.unconstrainedPoint = point;
-        this.sourceObject = object;
-        this.sourceT = t;
+        // Saved data holds null for an unset key.
+        this.unconstrainedPoint = point ?? undefined;
+        this.sourceObject = object ?? undefined;
+        this.sourceT = t ?? undefined;
     }
 
+    // Every key, null when unset: a save merges each object into the one already saved, so a key
+    // left out (a link just dropped) would keep its old value.
     get serialized(): ConstrainedPointData {
-        const result: ConstrainedPointData = {};
-        if (this.unconstrainedPoint) {
-            result.point = this.unconstrainedPoint;
-        }
-        if (this.sourceObject) {
-            result.sourceId = this.sourceObject.id;
-            result.sourceT = this.sourceT;
-        }
-        return result;
+        return {
+            point: this.unconstrainedPoint ?? null,
+            sourceId: this.sourceObject?.id ?? null,
+            sourceT: this.sourceObject ? this.sourceT ?? null : null
+        };
     }
 
     get point(): Vec2 {

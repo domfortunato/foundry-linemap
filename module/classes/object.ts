@@ -6,6 +6,8 @@ export interface ObjectData {
     id: string;
     type: string;
     isRevealed: boolean;
+    /** Drawing order, lowest first; set once when the object is made. */
+    sort?: number;
 }
 
 export interface ObjectDrawLayers {
@@ -30,6 +32,7 @@ export class ObjectType {
 
     isSelected = false;
     isRevealed = false;
+    sort = 0;
 
     constructor(id?: string) {
         this.id = id ?? generateId();
@@ -67,6 +70,7 @@ export class ObjectType {
 
     deserialize(data: any, objectMap: ObjectIdMapping) {
         this.isRevealed = data.isRevealed;
+        this.sort = data.sort ?? this.sort;
     }
 
     get _currentColor(): [number, number, number] {
@@ -81,7 +85,8 @@ export class ObjectType {
         return {
             id: this.id,
             type: (this.constructor as typeof ObjectType).type,
-            isRevealed: this.isRevealed
+            isRevealed: this.isRevealed,
+            sort: this.sort
         };
     }
 
@@ -138,6 +143,6 @@ export class UnknownObject extends ObjectType {
     }
 
     get serialized(): ObjectData {
-        return structuredClone(this.raw);
+        return { ...structuredClone(this.raw), sort: this.sort };
     }
 }

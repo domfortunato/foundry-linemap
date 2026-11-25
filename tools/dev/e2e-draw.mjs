@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // dev:draw: each drawing tool, driven with the mouse as a Gamemaster would, makes its object on the
 // probe's own Scene: a symbol, a line, a waypoint on that line, an area and a label typed through the
-// text dialog. Each is saved to the Scene's flag (flags.linemap.serialized) and comes back the same
+// text dialog. Each is saved to the Scene's flag (flags.linemap.objects, one key per object) and comes back the same
 // after a reload.
 import { at, clickAt, countTypes, dragThrough, layerState, probe, probeScene, reload, sweep, tool, until, viewScene, writeLabel } from './lib.mjs'
 
@@ -52,7 +52,7 @@ try {
   p.check(text === LABEL, 'the label says what was typed', text)
 
   const saved = await until(page, () => {
-    const saved = canvas.scene.getFlag('linemap', 'serialized')?.objects ?? []
+    const saved = canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []
     return saved.length === canvas.linemap.objects.length ? saved.length : null
   })
   p.check(saved === 5, "all five objects are saved in the Scene's flag", saved)

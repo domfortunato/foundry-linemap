@@ -8,6 +8,7 @@
 //   kind every mouse move of a drag makes, within a frame.
 // - A saved map holding an object type, a symbol or a line style that this build does not know
 //   still loads and draws the rest, raises no error, and keeps the unknown entry when it is saved.
+//   It is written in the old format (one array), so its first edit also moves it to the new one.
 import { at, clickAt, dragThrough, probe, probeScene, reload, sweep, tool, until, viewScene } from './lib.mjs'
 
 const p = probe('dev:data', { watchdogMs: 300000 })
@@ -32,7 +33,7 @@ try {
   await clickAt(page, await at(page, 0.5, 0.5))
   await tool(page, 'drawArea')
   await dragThrough(page, [await at(page, 0.2, 0.2), await at(page, 0.3, 0.3), await at(page, 0.4, 0.35)])
-  await until(page, () => (canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0) === 2)
+  await until(page, () => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0) === 2)
   const before = await fractions(page)
   await page.evaluate(async () => {
     await canvas.scene.update({ width: 4500, padding: 0.25 }, { autoReposition: true })
@@ -44,7 +45,7 @@ try {
   p.check(before.length === 5 && same, 'resizing the Scene (autoReposition) keeps the map in place on the Scene', { before, after })
   const savedAfter = await page.evaluate(() => {
     const r = canvas.dimensions.sceneRect
-    const s = (canvas.scene.getFlag('linemap', 'serialized')?.objects ?? []).find(o => o.type === 'symbol')
+    const s = (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).find(o => o.type === 'symbol')
     return s ? [(s.point.point[0] - r.x) / r.width, (s.point.point[1] - r.y) / r.height] : null
   })
   p.check(savedAfter && Math.abs(savedAfter[0] - 0.5) < 0.002 && Math.abs(savedAfter[1] - 0.5) < 0.002, 'and the moved map is what the Scene saved', savedAfter)
@@ -164,13 +165,19 @@ try {
   await tool(page, 'drawSymbol')
   await clickAt(page, await at(page, 0.6, 0.3))
   const kept = await until(page, () => {
-    const saved = canvas.scene.getFlag('linemap', 'serialized')?.objects ?? []
+    const saved = canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []
     return saved.length >= 5 ? saved.map(o => ({ id: o.id, type: o.type, extra: o.extra, symbol: o.symbol, style: o.style })) : null
   }, null, { timeout: 8000 })
   const byId = Object.fromEntries((kept ?? []).map(o => [o.id, o]))
   p.check(byId.unknownType00001?.type === 'no-such-type' && byId.unknownType00001?.extra === 42 &&
     byId.unknownSymbol001?.symbol === 'no-such-symbol' && byId.unknownStyle0001?.style === 'no-such-style',
     'an edit saves the unknown entries back unchanged', kept)
+  const format = await page.evaluate(() => {
+    const f = canvas.scene.flags.linemap ?? {}
+    return { objects: Object.keys(f.objects ?? {}).length, map: !!f.map, serialized: 'serialized' in f }
+  })
+  p.check(format.objects === 5 && format.map && !format.serialized,
+    'that first edit moved the old-format map to one flag key per object, and removed the old key', format)
   p.check(p.errors.length === e0, 'loading, clicking and saving that map raises no error', p.errors.slice(e0, e0 + 3))
 } catch (err) {
   await p.threw(err)

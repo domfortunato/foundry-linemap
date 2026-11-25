@@ -56,7 +56,7 @@ try {
   await gm.locator('#scene-controls [data-tool="newObjectsRevealed"]').first().click()
   await gm.waitForTimeout(400)
 
-  const saved = await until(gm, () => (canvas.scene.getFlag('linemap', 'serialized')?.objects?.length ?? 0) === 6)
+  const saved = await until(gm, () => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects?.length ?? 0) === 6)
   p.check(saved, "the six objects are saved in the Scene's flag")
   const g = await shown(gm)
   p.check(['symbol', 'text', 'area'].every(t => g[t]?.all === 2 && g[t]?.revealed === 1), 'the Gamemaster has one revealed and one hidden symbol, label and area', g)
