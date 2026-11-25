@@ -10,7 +10,11 @@
         "dev:draw": "node tools/dev/e2e-draw.mjs",
         "dev:hidden": "node tools/dev/e2e-hidden.mjs",
         "dev:lifecycle": "node tools/dev/e2e-lifecycle.mjs",
-        "dev:settings": "node tools/dev/e2e-settings.mjs"
+        "dev:settings": "node tools/dev/e2e-settings.mjs",
+        "dev:edit": "node tools/dev/e2e-edit.mjs",
+        "dev:collab": "node tools/dev/e2e-collab.mjs",
+        "dev:data": "node tools/dev/e2e-data.mjs",
+        "dev:ui": "node tools/dev/e2e-ui.mjs"
     },
     "private": true,
     "devDependencies": {
