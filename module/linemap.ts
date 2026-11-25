@@ -185,6 +185,21 @@ Hooks.on("init", async () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
 
+    // The label font, shipped with the module (SIL OFL 1.1, licence beside the files): it was named
+    // but never loaded, so each browser drew labels in whatever serif it had. Registered here so
+    // Foundry loads it for every client before the canvas draws; `??=` leaves a definition made by
+    // the world or another package alone.
+    const fontPath = "modules/linemap/assets/fonts";
+    CONFIG.fontDefinitions["Noticia Text"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/noticia-text/NoticiaText-Regular.ttf`] },
+            { urls: [`${fontPath}/noticia-text/NoticiaText-Bold.ttf`], weight: 700 },
+            { urls: [`${fontPath}/noticia-text/NoticiaText-Italic.ttf`], style: "italic" },
+            { urls: [`${fontPath}/noticia-text/NoticiaText-BoldItalic.ttf`], weight: 700, style: "italic" }
+        ]
+    };
+
     CONFIG.linemap = {
         snap: {
             lineEnd: 10,

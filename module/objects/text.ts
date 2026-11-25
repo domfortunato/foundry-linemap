@@ -77,7 +77,7 @@ export class Text extends ObjectType {
 
     static get _staticPixiOptions(): any {
         return {
-            fontFamily: 'Noticia Text',
+            fontFamily: ['Noticia Text', 'serif'],
             fontSize: 36,
             align: 'center'
         };
