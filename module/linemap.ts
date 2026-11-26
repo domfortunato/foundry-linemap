@@ -251,6 +251,12 @@ Hooks.on("init", () => {
             { urls: [`${fontPath}/alegreya/Alegreya-Italic-wght.woff2`], weight: "400 900", style: "italic" }
         ]
     };
+    CONFIG.fontDefinitions["Orbitron"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/orbitron/Orbitron-wght.ttf`], weight: "400 900" }
+        ]
+    };
     CONFIG.fontDefinitions["IM Fell English"] ??= {
         editor: false,
         fonts: [
@@ -261,7 +267,7 @@ Hooks.on("init", () => {
 
     CONFIG.linemap = {
         // The scene setting's choices; the first is the default.
-        labelFonts: ["Alegreya", "IM Fell English"],
+        labelFonts: ["Alegreya", "IM Fell English", "Orbitron"],
         snap: {
             lineEnd: 10,
             line: 5,
@@ -305,6 +311,22 @@ Hooks.on("init", () => {
                 icon: 'modules/linemap/assets/lines/dotted.svg',
                 lineClass: DotLine,
                 selectTolerance: 6
+            },
+            // The sci-fi theme's: a thin trade lane, and a jump in long dashes.
+            lane: {
+                label: 'linemap.lineStyles.lane',
+                icon: 'modules/linemap/assets/themes/scifi/lines/lane.svg',
+                lineClass: SolidLine,
+                width: 2,
+                selectTolerance: 5
+            },
+            jump: {
+                label: 'linemap.lineStyles.jump',
+                icon: 'modules/linemap/assets/themes/scifi/lines/jump.svg',
+                lineClass: DashLine,
+                width: 3,
+                dash: [26, 14],
+                selectTolerance: 5
             }
         },
         symbols: {
@@ -342,6 +364,12 @@ Hooks.on("init", () => {
                 label: 'linemap.symbols.curiosity',
                 icon: 'modules/linemap/assets/symbols/curiosity.svg'
             },
+            // The sci-fi theme's, from game-icons.net (CC BY 3.0, credited in the README).
+            ...Object.fromEntries(["station", "planet", "starport", "asteroid", "jump-gate", "derelict"].map(name => [`scifi:${name}`, {
+                label: `linemap.symbols.scifi-${name}`,
+                icon: `modules/linemap/assets/themes/scifi/symbols/${name}.svg`,
+                footprint: `modules/linemap/assets/themes/scifi/footprints/${name}.svg`
+            }]))
         },
         waypoints: {
             waypoint: {
@@ -363,6 +391,31 @@ Hooks.on("init", () => {
                 label: 'linemap.waypoints.elevation-right',
                 icon: 'modules/linemap/assets/waypoints/elevation-right.svg',
                 reverse: 'elevation-left'
+            }
+        },
+        // Presets picked in the scene settings. Picking one sets the map's colour, label font, halo and
+        // background picture; its symbol and line styles are the ones the tools show. A map with no
+        // theme shows the first theme's.
+        themes: {
+            fantasy: {
+                label: 'linemap.themes.fantasy',
+                color: '#3a2614',
+                labelFont: 'IM Fell English',
+                halo: true,
+                haloColor: '#efe0bb',
+                background: 'modules/linemap/assets/themes/fantasy/parchment.svg',
+                symbols: ['major-settlement', 'minor-settlement', 'major-site', 'minor-site', 'major-danger', 'minor-danger', 'curiosity'],
+                lineStyles: ['major', 'minor', 'rough', 'barrier', 'dotted']
+            },
+            scifi: {
+                label: 'linemap.themes.scifi',
+                color: '#a8dcff',
+                labelFont: 'Orbitron',
+                halo: true,
+                haloColor: '#070b18',
+                background: 'modules/linemap/assets/themes/scifi/starfield.svg',
+                symbols: ['scifi:station', 'scifi:planet', 'scifi:starport', 'scifi:asteroid', 'scifi:jump-gate', 'scifi:derelict'],
+                lineStyles: ['lane', 'jump', 'dotted', 'barrier']
             }
         },
         patterns: {

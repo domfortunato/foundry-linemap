@@ -6,7 +6,7 @@ import { BaseIconTool } from "./base-icon.js";
 
 export class DrawSymbolTool extends BaseIconTool {
     get symbolCollection(): any { 
-        return CONFIG.linemap.symbols;
+        return this.layer.themed(CONFIG.linemap.symbols, "symbols");
     }
 
     get snapTypes(): SnapType[] {

@@ -22,6 +22,12 @@ export class DrawLineTool extends Tool {
     activate() {
         this._setupOptionsElement();
         this.layer.setSelection();
+        if (!(this.activeStyle in this.styles)) this.activeStyle = Object.keys(this.styles)[0];
+    }
+
+    /** The line styles the scene's theme lists. */
+    get styles(): Record<string, any> {
+        return this.layer.themed(CONFIG.linemap.lineStyles, "lineStyles");
     }
 
     deactivate() {
@@ -41,7 +47,7 @@ export class DrawLineTool extends Tool {
 
     _updateOptionsElement() {
         const htmlStr = this.optionsTemplate({
-            styles: CONFIG.linemap.lineStyles,
+            styles: this.styles,
             activeStyle: this.activeStyle,
             freehand: this.freehand
         });

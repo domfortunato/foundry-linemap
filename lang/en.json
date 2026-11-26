@@ -43,6 +43,8 @@
             "contentColor": "Content color",
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
+            "theme": "Theme",
+            "themeHint": "Picking a theme sets the color, label font, halo and background picture, and the symbols and lines the tools offer. Everything it sets can still be changed.",
             "halo": "Halo",
             "haloHint": "An outline in this color behind symbols and labels, to set them apart from what lies under the map.",
             "confirmDelete": "Delete all scene content?",
@@ -66,7 +68,9 @@
             "minor": "Minor path",
             "rough": "Rough path",
             "barrier": "Barrier",
-            "dotted": "Dotted path"
+            "dotted": "Dotted path",
+            "lane": "Lane",
+            "jump": "Jump"
         },
         "symbols": {
             "major-settlement": "Major settlement",
@@ -75,7 +79,18 @@
             "minor-site": "Minor site",
             "major-danger": "Major danger",
             "minor-danger": "Minor danger",
-            "curiosity": "Curiosity"
+            "curiosity": "Curiosity",
+            "scifi-station": "Station",
+            "scifi-planet": "Planet",
+            "scifi-starport": "Starport",
+            "scifi-asteroid": "Asteroid field",
+            "scifi-jump-gate": "Jump gate",
+            "scifi-derelict": "Derelict"
+        },
+        "themes": {
+            "none": "None",
+            "fantasy": "Fantasy",
+            "scifi": "Sci-fi"
         },
         "waypoints": {
             "waypoint": "Waypoint",

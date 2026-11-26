@@ -1,5 +1,14 @@
 <section>
     <div class="form-group">
+        <label>{{localize "linemap.ui.theme"}}</label>
+        <div class="form-fields">
+            <select name="theme">
+                {{selectOptions themes selected=theme localize=true}}
+            </select>
+        </div>
+        <p class="hint">{{localize "linemap.ui.themeHint"}}</p>
+    </div>
+    <div class="form-group">
         <label>{{localize "linemap.ui.contentColor"}}</label>
         <div class="form-fields">
             <color-picker name="color" value="{{color}}"></color-picker>

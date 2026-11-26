@@ -28,6 +28,8 @@ interface LayerData {
     halo?: boolean | null;
     /** The halo's colour, "#rrggbb", or null for the content colour's opposite. */
     haloColor?: string | null;
+    /** The theme last picked (a CONFIG.linemap.themes key), or null for none. */
+    theme?: string | null;
 }
 
 interface InterfaceState {
@@ -84,6 +86,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     labelFont = LineMapLayer.defaultLabelFont;
     halo = false;
     haloColor: string | null = null;
+    theme: string | null = null;
 
     static defaultColor = "#000000";
     /** How far the halo reaches beyond a symbol's art and a label's glyphs, in Scene pixels. */
@@ -108,13 +111,63 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     /** The settings part of a map, as it is saved in flags.linemap.map. */
-    static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string, halo?: boolean | null, haloColor?: string | null }): Omit<LayerData, "objects"> {
+    static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string, halo?: boolean | null, haloColor?: string | null, theme?: string | null }): Omit<LayerData, "objects"> {
         const color = LineMapLayer.colorOf(data);
         return {
             color, isLightMode: LineMapLayer.isLight(color), symbolScale: data?.symbolScale, labelFont: data?.labelFont,
             halo: data?.halo ? true : null,
-            haloColor: LineMapLayer.haloColorOf(data?.haloColor)
+            haloColor: LineMapLayer.haloColorOf(data?.haloColor),
+            theme: typeof data?.theme === "string" && data.theme ? data.theme : null
         };
+    }
+
+    /**
+     * The theme whose symbols and line styles the tools show: the map's, or with none, the first.
+     * A theme this build does not know (another package's, now off) shows everything.
+     */
+    get toolTheme(): any {
+        const themes = CONFIG.linemap.themes ?? {};
+        return this.theme ? themes[this.theme] : themes[Object.keys(themes)[0]];
+    }
+
+    /** The entries of a collection (CONFIG.linemap.symbols, .lineStyles) that the theme lists, in its order. */
+    themed(collection: Record<string, any>, list: "symbols" | "lineStyles"): Record<string, any> {
+        const keys: string[] | undefined = this.toolTheme?.[list];
+        const known = keys?.filter(k => k in collection);
+        if (!known?.length) return collection;
+        return Object.fromEntries(known.map(k => [k, collection[k]]));
+    }
+
+    /**
+     * Pick a theme: its colour, label font, halo and background picture, as one edit. A background
+     * picture a theme put in before is replaced, so switching does not stack them; the values stay
+     * editable afterwards.
+     */
+    async applyTheme(id: string) {
+        const theme = CONFIG.linemap.themes?.[id];
+        if (!theme) return;
+        this.theme = id;
+        if (LineMapLayer.haloColorOf(theme.color)) this.color = theme.color.toLowerCase();
+        if (CONFIG.linemap.labelFonts.includes(theme.labelFont)) this.labelFont = theme.labelFont;
+        this.halo = !!theme.halo;
+        this.haloColor = LineMapLayer.haloColorOf(theme.haloColor);
+        const backgrounds = new Set(Object.values(CONFIG.linemap.themes).map((t: any) => t.background).filter(b => b));
+        const old = this.objects.filter(o => o instanceof MapImage && backgrounds.has(o.src));
+        this.objects = this.objects.filter(o => !old.includes(o));
+        if (theme.background) {
+            const r = canvas.dimensions.sceneRect;
+            const image = new MapImage();
+            image.construct(theme.background, [r.x, r.y, r.width, r.height]);
+            image.isRevealed = true;
+            // Under everything already on the map.
+            image.sort = Math.min(0, ...this.objects.map(o => o.sort)) - 1;
+            this.objects.unshift(image);
+        }
+        this.setSelection();
+        this.redraw();
+        await this.registerHistory();
+        // A symbol or line tool already open shows the new theme's sets.
+        if (this.active && this.activeTool) this.activateTool(game.activeTool);
     }
 
     /** The halo's colour as drawn: the picked one, or the content colour's opposite of black and white. */
@@ -843,13 +896,15 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     /**
-     * A symbol's halo: its art (its footprint, which fills its gaps, where it has one) stamped in
-     * rings of copies around it, under every symbol, and painted in the halo colour as a whole.
+     * A symbol's halo: its art stamped in rings of copies around it, and its footprint, where it has
+     * one, filling its gaps; under every symbol, and painted in the halo colour as a whole.
      */
-    stampHalo(layers: any, texture: any, x: number, y: number, scale: number, rotation: number, revealed: boolean) {
+    stampHalo(layers: any, icon: any, footprint: any, x: number, y: number, scale: number, rotation: number, revealed: boolean) {
         const target = revealed ? layers.halos : layers.hiddenHalos;
-        if (!target || !texture) return;
-        for (const [dx, dy] of LineMapLayer._haloOffsets(LineMapLayer.haloWidth)) {
+        if (!target || !icon) return;
+        const stamps: [any, Vec2][] = LineMapLayer._haloOffsets(LineMapLayer.haloWidth).map(offset => [icon, offset]);
+        if (footprint) stamps.push([footprint, [0, 0]]);
+        for (const [texture, [dx, dy]] of stamps) {
             const sprite = new PIXI.Sprite(texture);
             sprite.anchor.set(0.5);
             sprite.x = x + dx;
@@ -1249,6 +1304,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.labelFont = data.labelFont || LineMapLayer.defaultLabelFont;
             this.halo = !!data.halo;
             this.haloColor = LineMapLayer.haloColorOf(data.haloColor);
+            this.theme = LineMapLayer.settingsOf(data).theme;
         } else {
             // A scene with no drawing yet starts from the defaults. The layer outlives scenes, so
             // without this the previous scene's colour and scale showed here and were saved into
@@ -1259,6 +1315,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.labelFont = LineMapLayer.defaultLabelFont;
             this.halo = false;
             this.haloColor = null;
+            this.theme = null;
         }
     }
 

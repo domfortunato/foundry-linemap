@@ -9,7 +9,7 @@ export class SolidLine extends Line {
         const poly = new PIXI.Polygon(...this.centerline.flat());
         poly.closeStroke = false;
         return new PIXI.Graphics()
-            .lineStyle(4, this._currentColorHex)
+            .lineStyle(CONFIG.linemap.lineStyles[this.style]?.width ?? 4, this._currentColorHex)
             .drawPolygon(poly);
     }
 }

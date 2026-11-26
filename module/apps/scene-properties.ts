@@ -31,10 +31,24 @@ export class ScenePropertiesApp extends api.HandlebarsApplicationMixin(
         const halo = canvas.linemap.halo;
         const haloColor = canvas.linemap.haloColorShown;
 
-        return { color, symbolScale, labelFont, labelFonts, halo, haloColor };
+        const theme = canvas.linemap.theme ?? "";
+        const themes = {
+            "": "linemap.themes.none",
+            ...Object.fromEntries(Object.entries(CONFIG.linemap.themes ?? {}).map(([id, t]: [string, any]) => [id, t.label ?? id]))
+        };
+
+        return { color, symbolScale, labelFont, labelFonts, halo, haloColor, theme, themes };
     }
 
     static async handleSubmit(event, form, formData) {
+        // A theme picked: it sets the other fields, which still show the values from before.
+        const theme = String(form.elements.theme?.value ?? "");
+        if (theme && theme !== canvas.linemap.theme && CONFIG.linemap.themes?.[theme]) {
+            await canvas.linemap.applyTheme(theme);
+            this.render();
+            return;
+        }
+        if (!theme) canvas.linemap.theme = null;
         // An unfinished entry in the picker's text box is not a colour: keep the one there was.
         // The halo colour shown is the automatic one until another is picked: it stays automatic
         // (following the content colour) unless the picker now holds a colour it did not show.

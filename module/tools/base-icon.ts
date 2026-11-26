@@ -26,7 +26,7 @@ export class BaseIconTool extends Tool {
         this._setupOptionsElement();
         this.layer.setSelection();
 
-        if (!this.activeSymbol) {
+        if (!this.activeSymbol || !(this.activeSymbol in this.symbolCollection)) {
             this.activeSymbol = Object.keys(this.symbolCollection)[0];
         }
     }
