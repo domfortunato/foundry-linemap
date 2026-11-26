@@ -68,6 +68,10 @@ zoomed-out map can still be read. Hidden labels are left out for players.
 
 Text objects that are linked to another object have two adjustment points. One is the point where they attach to the other object and another is the offset that makes the text not lie on top of the object it is labeling. These can be adjusted individually using the adjust tool (hotkey A). Text snapped to a line will orient itself to the line's direction.
 
+To turn a label to any angle, select it with the select tool (hotkey V) and use the rotation slider
+in the right-click menu, under the size slider. The label turns where it is; on a line, it turns from
+the line's direction. Double-click a slider to put it back (rotation 0, size 1).
+
 To detach text from an object, deselect the preserve links option and move the text object using the select tool (hotkey V). To attach a separated text to an object, use the adjustment tool to snap the single adjustment handle to the target object.
 
 ### Editing text

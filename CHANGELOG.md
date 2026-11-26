@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Rotate labels.** The right-click menu of a selected label has a rotation slider, under the
+  size slider: the label turns in place, or from a line's direction when it is on one. A
+  double-click on either slider puts it back to its default. The API's label builder takes a
+  `rotation`.
 - **Nudge.** The arrow keys move the selected objects a pixel, ten with Shift, with linked lines and
   labels following; a run of presses is one edit for undo. With nothing selected they still pan
   the canvas.

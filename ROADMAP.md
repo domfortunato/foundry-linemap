@@ -169,6 +169,9 @@ lead somewhere; the editing items are independent conveniences.
 
 Step 7 is done on `dev` (2026-11-26).
 
+Added afterwards, on request: a **rotation slider for labels** in the right-click menu (probe
+`dev:rotate`), since a label could only take a line's direction before.
+
 ## Set aside
 
 - **Real hiding.** A hidden object is hidden on screen only: a player's client receives it in the
