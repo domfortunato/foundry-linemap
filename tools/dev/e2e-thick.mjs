@@ -25,6 +25,23 @@ const thickness = (page, x, y) => page.evaluate(({ x, y }) => {
   for (let i = 3; i < px.length; i += 4) if (px[i] > 128) n++
   return n
 }, { x, y })
+/** How far a wavy line's waves reach from its centre line, at most. */
+const swing = (page, id) => page.evaluate((id) => {
+  const o = canvas.linemap.objects.find(o => o.id === id)
+  const c = o.centerline
+  const dist = (p) => {
+    let best = Infinity
+    for (let i = 0; i < c.length - 1; i++) {
+      const [a, b] = [c[i], c[i + 1]]
+      const d = [b[0] - a[0], b[1] - a[1]]
+      const l2 = d[0] * d[0] + d[1] * d[1] || 1
+      const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1]) / l2))
+      best = Math.min(best, Math.hypot(p[0] - a[0] - t * d[0], p[1] - a[1] - t * d[1]))
+    }
+    return best
+  }
+  return Math.round(Math.max(...o.path.map(dist)) * 10) / 10
+}, id)
 const menuOn = async (page, id, point) => {
   await page.evaluate((id) => { const L = canvas.linemap; L.setSelection(L.objects.find(o => o.id === id)) }, id)
   await clickAt(page, point, { button: 'right' })
@@ -58,7 +75,7 @@ try {
     const get = (id) => canvas.linemap.objects.find(o => o.id === id)
     return { wp: get(ids.wp)?.point.point.map(Math.round), label: get(ids.label)?.sprite && [Math.round(get(ids.label).sprite.x), Math.round(get(ids.label).sprite.y)] }
   }, ids)
-  const before = { major: await thickness(gm, 1000, 500), rough: await drawn(gm, ids.rough), dotted: await drawn(gm, ids.dotted), barrier: await drawn(gm, ids.barrier), placed: await placed(gm) }
+  const before = { major: await thickness(gm, 1000, 500), rough: await swing(gm, ids.rough), dotted: await drawn(gm, ids.dotted), barrier: await drawn(gm, ids.barrier), placed: await placed(gm) }
 
   // The major line, from the slider.
   await menuOn(gm, ids.major, { x: 1000, y: 500 })
@@ -87,8 +104,8 @@ try {
   await sizeSlider(gm).fill('2')
   await closeMenu(gm)
   await until(gm, (id) => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).find(o => o.id === id)?.size === 2, ids.rough)
-  const roughAfter = await drawn(gm, ids.rough)
-  p.check(roughAfter && roughAfter.h > before.rough.h + 8, "a curved rough line's waves grow with it", { before: before.rough, after: roughAfter })
+  const roughAfter = await swing(gm, ids.rough)
+  p.check(roughAfter >= before.rough * 1.7 && roughAfter <= before.rough * 2.3, "a curved rough line's waves reach twice as far at size 2", { before: before.rough, after: roughAfter })
 
   // A dotted line: its dots.
   await menuOn(gm, ids.dotted, { x: 1000, y: 1300 })
