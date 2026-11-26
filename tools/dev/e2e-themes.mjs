@@ -74,7 +74,8 @@ const shelf = async (page, toolName, action) => {
 const labelInfo = (page) => page.evaluate(() => {
   const t = canvas.linemap.objects.find(o => o.constructor.type === 'text')
   const font = t?.sprite?.style?.fontFamily
-  const family = Array.isArray(font) ? font[0] : String(font ?? '').split(',')[0]
+  // PIXI hands the family back quoted.
+  const family = String(Array.isArray(font) ? font[0] : String(font ?? '').split(',')[0]).replace(/["']/g, '').trim()
   return { family, width: t?.sprite?.width ?? 0, loaded: document.fonts.check(`36px "${family}"`) }
 })
 
