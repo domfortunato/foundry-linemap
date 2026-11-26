@@ -137,6 +137,8 @@ Controls.
 - **B and I:** bold and italic for the selected label (text tool)
 - **] and [:** make the selected symbols, waypoints and labels bigger and smaller (select and text tools)
 - **N:** toggle whether adjusting linked points preserves links
+- **Arrow keys:** nudge the selected objects a pixel, ten with **Shift**; linked lines and labels
+  follow, and a run of presses is one edit for undo (with nothing selected, they pan the canvas)
 - **Delete or Backspace:** delete the selected objects
 - **Ctrl+C, Ctrl+X and Ctrl+V:** copy, cut and paste the selected objects (paste puts them at the pointer)
 - **Ctrl+Z:** undo your own last edit, one edit at a time

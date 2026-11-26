@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Nudge.** The arrow keys move the selected objects a pixel, ten with Shift, with linked lines and
+  labels following; a run of presses is one edit for undo. With nothing selected they still pan
+  the canvas.
 - **Copy, cut, paste and duplicate.** Ctrl+C, Ctrl+X and Ctrl+V copy, cut and paste the selected
   objects, keeping the links among them; paste puts them at the pointer, in the same scene or
   another. Duplicate in the right-click menu copies the selection beside itself.

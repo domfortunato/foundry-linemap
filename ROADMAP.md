@@ -163,7 +163,11 @@ lead somewhere; the editing items are independent conveniences.
    linked objects copied to a second scene are linked there, with new ids. *Done on `dev`* (probe
    `dev:copy`): core's Ctrl+C, Ctrl+X and Ctrl+V, paste at the pointer, and Duplicate in the menu.
 8. **Nudge.** The arrow keys move the selection a pixel, ten with shift, and linked objects
-   follow. Probe: one press moves a symbol by one pixel, and the line linked to it.
+   follow. Probe: one press moves a symbol by one pixel, and the line linked to it. *Done on `dev`*
+   (probe `dev:nudge`): the select tool's drag move, a run of presses saved as one edit, and the
+   keys left to core's panning when nothing is selected.
+
+Step 7 is done on `dev` (2026-11-26).
 
 ## Set aside
 
