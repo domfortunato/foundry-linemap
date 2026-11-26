@@ -1,3 +1,4 @@
+import { LineMapApi } from "./api.js";
 import { LineMapLayer } from "./linemap-layer.js";
 import { Line } from "./objects/line.js";
 import { Symbol } from "./objects/symbol.js";
@@ -264,6 +265,10 @@ Hooks.on("init", () => {
             { urls: [`${fontPath}/im-fell-english/IMFeENit28P.ttf`], style: "italic" }
         ]
     };
+
+    // The scripting API, for macros and other packages (README, "Scripting").
+    const module = game.modules.get("linemap");
+    if (module) module.api = new LineMapApi();
 
     CONFIG.linemap = {
         // The scene setting's choices; the first is the default.

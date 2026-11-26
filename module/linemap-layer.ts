@@ -265,6 +265,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         // Another user's save: take in the objects it names. This client's own saves are already on
         // its canvas, and so are any of its edits still on their way to the server.
         Hooks.on("updateScene", (obj, updates, options, userId) => {
+            if (updates.flags?.linemap) LineMapLayer._announceChanges(obj, updates.flags.linemap, userId);
             if (obj === canvas.scene && updates.flags?.linemap && userId !== game.user.id) {
                 this._mergeRemote(updates.flags.linemap);
             }
@@ -735,6 +736,26 @@ export class LineMapLayer extends layers.InteractionLayer {
         this._migrateOnView();
 
         this.visible = true;
+        /** A Scene's map is on the canvas: (layer, scene). */
+        Hooks.callAll("linemapReady", this, canvas.scene);
+    }
+
+    /**
+     * linemapObjectsChanged (scene, { changed, deleted, settings, userId }) for every save of a map, by
+     * any user, on any Scene: the ids of the objects saved and of those removed, and whether the map's
+     * settings were saved. A whole map saved in the old format names every object.
+     */
+    static _announceChanges(scene: any, changes: any, userId: string) {
+        const saved = LineMapLayer.readFlag(scene);
+        const present = new Set((saved?.objects ?? []).map(o => o.id));
+        const whole = "serialized" in changes || "-=serialized" in changes;
+        const named = whole ? [...present] : Object.keys(changes.objects ?? {}).map(k => k.replace(/^-=/, ""));
+        Hooks.callAll("linemapObjectsChanged", scene, {
+            changed: named.filter(id => present.has(id)),
+            deleted: named.filter(id => !present.has(id)),
+            settings: "map" in changes || whole,
+            userId
+        });
     }
 
     /**
@@ -1283,21 +1304,25 @@ export class LineMapLayer extends layers.InteractionLayer {
         for (const changes of merges) this._mergeRemote(changes);
     }
 
+    /**
+     * Objects from their saved data, in drawing order, with their links resolved by id. Needs no
+     * canvas, so the API builds a Scene's map with it whether the Scene is viewed or not.
+     */
+    static buildObjects(data: ObjectData[]): ObjectType[] {
+        const sorted = [...data]
+            .map((o, i) => ({ ...o, sort: o?.sort ?? i }))
+            .sort(LineMapLayer.compareSort);
+        const objectEntries: [ObjectType, ObjectData][] = sorted.map(o => [ObjectType.create(o), o]);
+        // A link to an object of a type this build does not know is kept, and drawn at the point
+        // saved with it (UnknownObject gives no point of its own).
+        const objectMap = Object.fromEntries(objectEntries.map(([obj]) => [obj.id, obj]));
+        objectEntries.forEach(([obj, data]) => obj.deserialize(data, objectMap));
+        return objectEntries.map(o => o[0]);
+    }
+
     applyData(data: LayerData) {
         if (data) {
-            // this.quadtree.clear();
-            const sorted = [...(data.objects ?? [])]
-                .map((o, i) => ({ ...o, sort: o?.sort ?? i }))
-                .sort(LineMapLayer.compareSort);
-            const objectEntries: [ObjectType, ObjectData][] = sorted.map(o => [ObjectType.create(o), o]);
-            // A link to an object of a type this build does not know is kept, and drawn at the point
-            // saved with it (UnknownObject gives no point of its own).
-            const objectMap = objectEntries?.reduce((acc, obj) => {
-                acc[obj[0].id] = obj[0];
-                return acc;
-            }, {}) ?? {};
-            objectEntries?.forEach(([obj, data]: [ObjectType, ObjectData]) => obj.deserialize(data, objectMap));
-            this.objects = objectEntries?.map(o => o[0]) ?? [];
+            this.objects = LineMapLayer.buildObjects(data.objects ?? []);
             this.color = LineMapLayer.colorOf(data);
             this.symbolScale = data.symbolScale ?? 1.0;
             // Maps saved before the setting existed get the default font.
