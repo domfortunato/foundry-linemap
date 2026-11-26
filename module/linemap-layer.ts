@@ -407,9 +407,11 @@ export class LineMapLayer extends layers.InteractionLayer {
     // Core's activate()/deactivate() call these only on a real change of state. The handlers are
     // bound once and removed by identity: a fresh .bind() would match nothing, and a set of
     // listeners piled up on every visit to the layer.
+    // The undo record is cleared on leaving the layer and with the canvas (_tearDown), not on coming
+    // to it: an edit a macro made through the API while the Gamemaster was on another layer stays
+    // undoable when they switch to Line Map.
     _activate() {
         this._attachStageHandlers();
-        this.undoHistory = [];
     }
 
     _deactivate() {
@@ -861,6 +863,8 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     async _tearDown(options) {
         this.clear(false);
+        // Another Scene, or this one drawn again: the record names this map's objects.
+        this.undoHistory = [];
         this._disposeDrawn();
         this._pruneDisplays(true);
         this.objectContainer?.destroy({ children: true });
