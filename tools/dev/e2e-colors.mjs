@@ -89,6 +89,7 @@ try {
   await select(gm, ids.road)
   await menuAt(gm, { x: 1000, y: 900 })
   const row = await swatches(gm)
+  await p.shot(gm, 'menu')
   p.check(row.some(([c]) => c === RED) && row.some(([c, active]) => c === 'default' && active) && row.some(([c]) => c === 'custom'),
     "a selected line's menu has a row of colours, the scene colour marked, and a custom one", row)
   await pickColor(gm, RED)
