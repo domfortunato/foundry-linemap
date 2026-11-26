@@ -204,11 +204,11 @@ export class TravelRoutes {
         const light = this.layer.constructor.isLight(foundry.utils.Color.from(color).css);
         const text = new PIXI.Text(this.countText(route), {
             fontFamily: [this.layer.labelFont ?? "Alegreya", "serif"],
-            fontSize: 30,
+            fontSize: 44,
             fontWeight: "bold",
             fill: color,
             stroke: light ? 0x000000 : 0xffffff,
-            strokeThickness: 6,
+            strokeThickness: 8,
             lineJoin: "round"
         });
         text.anchor.set(0.5, 1);
