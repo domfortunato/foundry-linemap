@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Line thickness.** A selected line, straight or freehand, takes the size slider and **]** and
+  **[** to be drawn up to four times as thick, with its whole style scaled: widths, dashes, waves,
+  dots and a barrier's ticks. The API's line builder takes a `size`.
 - **Rotate labels.** The right-click menu of a selected label has a rotation slider, under the
   size slider: the label turns in place, or from a line's direction when it is on one. A
   double-click on either slider puts it back to its default. The API's label builder takes a

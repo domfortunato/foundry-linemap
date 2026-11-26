@@ -170,7 +170,8 @@ lead somewhere; the editing items are independent conveniences.
 Step 7 is done on `dev` (2026-11-26).
 
 Added afterwards, on request: a **rotation slider for labels** in the right-click menu (probe
-`dev:rotate`), since a label could only take a line's direction before.
+`dev:rotate`), since a label could only take a line's direction before; and **line thickness**
+through the size slider (probe `dev:thick`), every style scaled as a whole.
 
 ## Set aside
 

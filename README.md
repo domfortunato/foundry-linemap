@@ -107,6 +107,11 @@ symbol stays sharp, lines still meet its edge, it is as easy to link to, and the
 it move out to stay clear of it. The scene's icon scale (see *Other settings*) multiplies every
 symbol's size.
 
+Lines, straight or freehand, take the same slider and keys to be drawn from one to four times as
+thick. The whole style grows: a road's width, a trail's dashes, a river's waves, a dotted line's
+dots, a barrier and its end ticks. A thick line is as easy to click as it looks, and the waypoints
+and labels on it stay where they are.
+
 ### Changing a look
 
 To give an object another look without redrawing it, select it with the select tool (hotkey V) and
@@ -139,7 +144,7 @@ Controls.
 - **R and H:** reveal and hide the selected objects (select tool)
 - **D:** flip the selected waypoints (select tool)
 - **B and I:** bold and italic for the selected label (text tool)
-- **] and [:** make the selected symbols, waypoints and labels bigger and smaller (select and text tools)
+- **] and [:** make the selected symbols, waypoints and labels bigger and smaller, and lines thicker and thinner (select and text tools)
 - **N:** toggle whether adjusting linked points preserves links
 - **Arrow keys:** nudge the selected objects a pixel, ten with **Shift**; linked lines and labels
   follow, and a run of presses is one edit for undo (with nothing selected, they pan the canvas)
