@@ -71,7 +71,8 @@
         "menu": {
             "reveal": "Reveal objects",
             "hide": "Hide objects",
-            "size": "Size",
+            "size": "Size (double-click: back to 1)",
+            "rotation": "Rotation (double-click: back to 0)",
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",
             "sendBack": "Send back",

@@ -14,11 +14,12 @@
     {{/if}}
     {{#if below}}
         <div class="linemap-menu-below">
-            {{#if size}}
-                <label class="linemap-menu-size" data-tooltip="{{size.label}}">
-                    <input type="range" name="size" min="{{size.min}}" max="{{size.max}}" step="{{size.step}}" value="{{size.value}}" aria-label="{{localize size.label}}">
+            {{#each sliders}}
+                <label class="linemap-menu-slider linemap-menu-{{name}}" data-tooltip="{{label}}">
+                    <i class="fas {{icon}}" aria-hidden="true"></i>
+                    <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" aria-label="{{localize label}}">
                 </label>
-            {{/if}}
+            {{/each}}
             {{#if look}}
                 <div class="linemap-menu-look" role="group" aria-label="{{localize look.label}}">
                     {{#each look.options}}

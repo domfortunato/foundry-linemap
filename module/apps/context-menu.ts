@@ -13,16 +13,24 @@ export interface MenuOption {
     handler: () => void
 }
 
-/** A slider under the menu's two buttons: input() on each step, commit() once, when let go or closed. */
-export interface SizeOption {
+/**
+ * A slider under the menu's two buttons (size, rotation): input() on each step, commit() once, when
+ * let go or closed. A double-click puts it back to `reset`.
+ */
+export interface SliderOption {
+    name: string,
     label: string,
+    icon: string,
     min: number,
     max: number,
     step: number,
     value: number,
-    input: (size: number) => void,
+    reset: number,
+    input: (value: number) => void,
     commit: () => void
 }
+
+export type SizeOption = SliderOption;
 
 export class ContextMenu extends api.HandlebarsApplicationMixin(
 	api.ApplicationV2
@@ -47,15 +55,15 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
 
     menuOptions: Record<string, MenuOption>;
 
-    sizeOption?: SizeOption;
+    sliders: SliderOption[];
 
     lookOption?: LookOption;
 
-    constructor(menuOptions: Record<string, MenuOption>, sizeOption?: SizeOption, lookOption?: LookOption, options = {}) {
+    constructor(menuOptions: Record<string, MenuOption>, sliders: SliderOption[] = [], lookOption?: LookOption, options = {}) {
         super(options);
 
         this.menuOptions = menuOptions;
-        this.sizeOption = sizeOption;
+        this.sliders = sliders;
         this.lookOption = lookOption;
     }
 
@@ -65,21 +73,28 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
             .filter(([key]) => key !== 'left' && key !== 'right')
             .map(([key, option]) => ({ key, ...option }));
         const look = this.lookOption;
-        return { menuOptions: this.menuOptions, extras, size: this.sizeOption, look, below: !!(this.sizeOption || look) };
+        return { menuOptions: this.menuOptions, extras, sliders: this.sliders, look, below: !!(this.sliders.length || look) };
     }
 
     _onRender(context, options) {
         super._onRender?.(context, options);
-        const slider = this.element.querySelector('input[name="size"]');
-        if (!slider || !this.sizeOption) return;
-        slider.addEventListener("input", () => this.sizeOption?.input(Number(slider.value)));
-        slider.addEventListener("change", () => this.sizeOption?.commit());
+        for (const option of this.sliders) {
+            const slider = this.element.querySelector(`input[name="${option.name}"]`);
+            if (!slider) continue;
+            slider.addEventListener("input", () => option.input(Number(slider.value)));
+            slider.addEventListener("change", () => option.commit());
+            slider.addEventListener("dblclick", () => {
+                slider.value = String(option.reset);
+                option.input(option.reset);
+                option.commit();
+            });
+        }
     }
 
     /** A slide the pointer carried off the menu closes it before any change event: record it now. */
     _onClose(options) {
         super._onClose?.(options);
-        this.sizeOption?.commit();
+        for (const option of this.sliders) option.commit();
     }
 
     _attachFrameListeners() {

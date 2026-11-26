@@ -21,6 +21,8 @@ export interface TextData extends ObjectData {
     size?: number | null;
     /** The UUID of a document it links to, or null. */
     link?: string | null;
+    /** Degrees, -180 to 180, turned on top of the direction of a line it is on; null at 0. */
+    rotation?: number | null;
 }
 
 export class Text extends ObjectType {
@@ -33,6 +35,8 @@ export class Text extends ObjectType {
     size = 1;
     /** The UUID of a document this label opens (DocumentLinks), or null. */
     link: string | null = null;
+    /** Degrees the label is turned in place (the right-click menu's slider), on top of a line's direction. */
+    rotation = 0;
 
     sprite: any;
 
@@ -53,6 +57,19 @@ export class Text extends ObjectType {
         );
         this.size = this.clampSize(data.size);
         this.link = typeof data.link === "string" && data.link ? data.link : null;
+        this.rotation = Text.clampRotation(data.rotation);
+    }
+
+    /** An angle in degrees, from -180 to 180 in tenths; anything unreadable (an older save's null) is 0. */
+    static clampRotation(value: any): number {
+        const n = Number(value);
+        if (value == null || !Number.isFinite(n)) return 0;
+        const turned = ((n + 180) % 360 + 360) % 360 - 180;
+        return Math.round(turned * 10) / 10 || 0;
+    }
+
+    get _rotationRadians(): number {
+        return this.rotation * Math.PI / 180;
     }
 
     static moveData(data: TextData, move: PointMover): TextData {
@@ -70,7 +87,8 @@ export class Text extends ObjectType {
             text: this.text,
             style: this.style,
             size: this.size === 1 ? null : this.size,
-            link: this.link
+            link: this.link,
+            rotation: this.rotation === 0 ? null : this.rotation
         }};
     }
 
@@ -78,8 +96,10 @@ export class Text extends ObjectType {
         return [0.5, 4];
     }
 
+    /** From the label's own frame to the anchor's: turned in place, put at its offset, along the line. */
     get _transform(): any {
         return new PIXI.Matrix()
+            .rotate(this._rotationRadians)
             .translate(...this.offset)
             .rotate(this._adjustedOrientation);
     }
@@ -184,7 +204,7 @@ export class Text extends ObjectType {
         const [offset, orientation] = this._transformedProperties;
         text.x = pt[0] + offset[0];
         text.y = pt[1] + offset[1];
-        text.rotation = orientation;
+        text.rotation = orientation + this._rotationRadians;
 
         this.sprite = text;
 

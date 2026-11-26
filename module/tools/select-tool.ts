@@ -167,7 +167,7 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            }, this._sizeOption(), lookOption(this.layer, this.layer.selection));
+            }, [this._sizeOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection));
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };
@@ -185,14 +185,48 @@ export class SelectTool extends Tool {
         const max = Math.max(...sized.map(o => o.sizeRange[1]));
         let dirty = false;
         return {
+            name: 'size',
             label: 'linemap.menu.size',
+            icon: 'fa-up-right-and-down-left-from-center',
             min, max, step: 0.25,
+            reset: 1,
             value: (sized[0] as any).size,
             input: (size: number) => {
                 if (this.layer.resizeObjects(sized, () => size)) {
                     dirty = true;
                     this.layer.redraw();
                 }
+            },
+            commit: () => {
+                if (!dirty) return;
+                dirty = false;
+                this.layer.registerHistory();
+            }
+        };
+    }
+
+    /**
+     * The menu's rotation slider, for a selection with labels: degrees on top of a line's direction.
+     * Recorded once, like the size slider.
+     */
+    _rotationOption(): SizeOption | undefined {
+        const labels = this.layer.selection.filter(o => o instanceof Text) as Text[];
+        if (!labels.length) return undefined;
+        let dirty = false;
+        return {
+            name: 'rotation',
+            label: 'linemap.menu.rotation',
+            icon: 'fa-rotate',
+            min: -180, max: 180, step: 1,
+            reset: 0,
+            value: labels[0].rotation,
+            input: (degrees: number) => {
+                const r = Text.clampRotation(degrees);
+                const changed = labels.filter(t => t.rotation !== r);
+                if (!changed.length) return;
+                changed.forEach(t => { t.rotation = r; });
+                dirty = true;
+                this.layer.redraw();
             },
             commit: () => {
                 if (!dirty) return;

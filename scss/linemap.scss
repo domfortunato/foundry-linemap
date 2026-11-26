@@ -195,8 +195,13 @@
         }
     }
 
-    .linemap-menu-size {
+    .linemap-menu-slider {
         width: 140px;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+        color: white;
+        font-size: 11px;
         padding: 4px 10px;
         background: rgba(0, 0, 0, .8);
         border-radius: 14px;
