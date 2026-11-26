@@ -104,8 +104,13 @@ export class Text extends ObjectType {
     }
 
     get _pixiOptions(): any {
+        // The halo is a stroke round the glyphs, under their fill: twice as thick as it reaches out.
+        const halo = canvas.linemap?.halo
+            ? { stroke: canvas.linemap._haloColorHex, strokeThickness: 2 * canvas.linemap.constructor.haloWidth, lineJoin: 'round' }
+            : {};
         return {
             ...Text._staticPixiOptions,
+            ...halo,
             fontSize: Text._staticPixiOptions.fontSize * this.size,
             fontStyle: this.style === TextStyle.italic || this.style === TextStyle.bolditalic ? 'italic' : 'normal',
             fontWeight: this.style === TextStyle.bold || this.style === TextStyle.bolditalic ? 'bold': 'normal',
@@ -162,7 +167,7 @@ export class Text extends ObjectType {
         // The sprite is the layer's, kept across redraws while the label looks the same: rasterising
         // every label on every mouse move of a drag was most of a big map's redraw.
         const options = this._pixiOptions;
-        const key = JSON.stringify([this.text, options.fontFamily, options.fontSize, options.fontStyle, options.fontWeight, options.fill]);
+        const key = JSON.stringify([this.text, options.fontFamily, options.fontSize, options.fontStyle, options.fontWeight, options.fill, options.stroke ?? null, options.strokeThickness ?? 0]);
         const text = canvas.linemap.cachedDisplay(this.id, key, () => {
             const t = new PreciseText(this.text, options);
             t.anchor.set(0.5);

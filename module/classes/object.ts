@@ -16,6 +16,9 @@ export interface ObjectDrawLayers {
     areas?: any;
     lines?: any;
     footprints?: any;
+    // Halos behind revealed and hidden symbols, each painted in the halo colour as a whole.
+    halos?: any;
+    hiddenHalos?: any;
     // Symbols in the map colour and in the selection colour: each container is tinted as a whole.
     symbols?: any;
     selectedSymbols?: any;

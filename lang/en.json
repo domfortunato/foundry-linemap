@@ -43,6 +43,8 @@
             "contentColor": "Content color",
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
+            "halo": "Halo",
+            "haloHint": "An outline in this color behind symbols and labels, to set them apart from what lies under the map.",
             "confirmDelete": "Delete all scene content?",
             "confirmDeleteTitle": "Delete all objects",
             "freehand": "Freehand: draw a curve as you drag"

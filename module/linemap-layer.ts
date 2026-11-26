@@ -24,6 +24,10 @@ interface LayerData {
     isLightMode: boolean;
     symbolScale: number;
     labelFont?: string;
+    /** The halo behind symbols and labels: true when on, null when off. */
+    halo?: boolean | null;
+    /** The halo's colour, "#rrggbb", or null for the content colour's opposite. */
+    haloColor?: string | null;
 }
 
 interface InterfaceState {
@@ -78,8 +82,12 @@ export class LineMapLayer extends layers.InteractionLayer {
     color = LineMapLayer.defaultColor;
     symbolScale = 1.0;
     labelFont = LineMapLayer.defaultLabelFont;
+    halo = false;
+    haloColor: string | null = null;
 
     static defaultColor = "#000000";
+    /** How far the halo reaches beyond a symbol's art and a label's glyphs, in Scene pixels. */
+    static haloWidth = 4;
 
     /** A saved map's colour: its own, or, saved before there was one, the black or white it had. */
     static colorOf(data: { color?: string, isLightMode?: boolean } | undefined): string {
@@ -94,10 +102,24 @@ export class LineMapLayer extends layers.InteractionLayer {
         return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
     }
 
+    /** A saved halo colour, or null (automatic) when there is none or it is not a colour. */
+    static haloColorOf(c: any): string | null {
+        return typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c) ? c.toLowerCase() : null;
+    }
+
     /** The settings part of a map, as it is saved in flags.linemap.map. */
-    static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string }): Omit<LayerData, "objects"> {
+    static settingsOf(data: { color?: string, isLightMode?: boolean, symbolScale?: number, labelFont?: string, halo?: boolean | null, haloColor?: string | null }): Omit<LayerData, "objects"> {
         const color = LineMapLayer.colorOf(data);
-        return { color, isLightMode: LineMapLayer.isLight(color), symbolScale: data?.symbolScale, labelFont: data?.labelFont };
+        return {
+            color, isLightMode: LineMapLayer.isLight(color), symbolScale: data?.symbolScale, labelFont: data?.labelFont,
+            halo: data?.halo ? true : null,
+            haloColor: LineMapLayer.haloColorOf(data?.haloColor)
+        };
+    }
+
+    /** The halo's colour as drawn: the picked one, or the content colour's opposite of black and white. */
+    get haloColorShown(): string {
+        return this.haloColor ?? (this.isLightMode ? "#000000" : "#ffffff");
     }
 
     get isLightMode(): boolean {
@@ -118,6 +140,9 @@ export class LineMapLayer extends layers.InteractionLayer {
     // The two symbol tints, one pass each over every symbol of that colour (made in _draw).
     symbolFilter: any;
     selectedSymbolFilter: any;
+    // The halo's colour over every revealed symbol's halo, and over hidden ones' at the hidden alpha.
+    haloFilter: any;
+    hiddenHaloFilter: any;
     // Label sprites and line graphics kept across redraws, by object id. A drag redraws on every
     // mouse move, and rasterising every label and rebuilding every line each time was most of a big
     // map's redraw; now only what the drag moves is rebuilt, when its look (the key) changes.
@@ -619,6 +644,22 @@ export class LineMapLayer extends layers.InteractionLayer {
         `;
         this.symbolFilter = new PIXI.Filter(null, tint, { tintColor: this._objectColor });
         this.selectedSymbolFilter = new PIXI.Filter(null, tint, { tintColor: this._selectionColor });
+        // A halo is many copies of a symbol's art, overlapping: painted at full alpha, then made
+        // see-through as a whole, or the overlaps of a hidden symbol's copies would add up.
+        const haloTint = `
+            varying vec2 vTextureCoord;
+            uniform sampler2D uSampler;
+            uniform vec3 tintColor;
+            uniform float alpha;
+
+            void main(void)
+            {
+                float a = texture2D(uSampler, vTextureCoord).a * alpha;
+                gl_FragColor = vec4(tintColor * a, a);
+            }
+        `;
+        this.haloFilter = new PIXI.Filter(null, haloTint, { tintColor: this._haloColor, alpha: 1.0 });
+        this.hiddenHaloFilter = new PIXI.Filter(null, haloTint, { tintColor: this._haloColor, alpha: 0.4 });
 
         // In the primary group, sit just above the background of the level being viewed: v14 draws
         // each level's background at that level's bottom elevation, so at elevation 0 a raised
@@ -689,6 +730,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             areas: new PIXI.Container(),
             lines: new PIXI.Container(),
             footprints: new PIXI.Container(),
+            halos: new PIXI.Container(),
+            hiddenHalos: new PIXI.Container(),
             symbols: new PIXI.Container(),
             selectedSymbols: new PIXI.Container(),
             labels: new PIXI.Container()
@@ -704,9 +747,13 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
         layers.symbols.filters = [this.symbolFilter];
         layers.selectedSymbols.filters = [this.selectedSymbolFilter];
-        // What is rendered as "symbols": both tints, then the labels above them.
+        this.haloFilter.uniforms.tintColor = this._haloColor;
+        this.hiddenHaloFilter.uniforms.tintColor = this._haloColor;
+        if (layers.halos.children.length) layers.halos.filters = [this.haloFilter];
+        if (layers.hiddenHalos.children.length) layers.hiddenHalos.filters = [this.hiddenHaloFilter];
+        // What is rendered as "symbols": the halos, both tints, then the labels above them.
         const symbols = new PIXI.Container();
-        symbols.addChild(layers.symbols, layers.selectedSymbols, layers.labels);
+        symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, layers.selectedSymbols, layers.labels);
 
         // Areas first: a probe counts a redraw's area outlines in its first container.
         this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images];
@@ -785,6 +832,39 @@ export class LineMapLayer extends layers.InteractionLayer {
         const sel = foundry.utils.Color.from(controlled).rgb;
         const distance = Math.hypot(...content.map((v, i) => v - sel[i]));
         return distance < 0.3 ? 0xffffff ^ this._objectColorHex : controlled;
+    }
+
+    get _haloColor(): [number, number, number] {
+        return foundry.utils.Color.from(this.haloColorShown).rgb;
+    }
+
+    get _haloColorHex(): number {
+        return Number(foundry.utils.Color.from(this.haloColorShown));
+    }
+
+    /**
+     * A symbol's halo: its art (its footprint, which fills its gaps, where it has one) stamped in
+     * rings of copies around it, under every symbol, and painted in the halo colour as a whole.
+     */
+    stampHalo(layers: any, texture: any, x: number, y: number, scale: number, rotation: number, revealed: boolean) {
+        const target = revealed ? layers.halos : layers.hiddenHalos;
+        if (!target || !texture) return;
+        for (const [dx, dy] of LineMapLayer._haloOffsets(LineMapLayer.haloWidth)) {
+            const sprite = new PIXI.Sprite(texture);
+            sprite.anchor.set(0.5);
+            sprite.x = x + dx;
+            sprite.y = y + dy;
+            sprite.rotation = rotation;
+            sprite.scale = { x: scale, y: scale };
+            target.addChild(sprite);
+        }
+    }
+
+    /** The offsets of a halo's copies: rings at half and full width, so that thin art is covered between them. */
+    static _haloOffsets(r: number): Vec2[] {
+        const ring = (radius: number, n: number): Vec2[] =>
+            Array.from({ length: n }, (_, i) => [radius * Math.cos(2 * Math.PI * i / n), radius * Math.sin(2 * Math.PI * i / n)] as Vec2);
+        return [[0, 0], ...ring(r / 2, 8), ...ring(r, 16)];
     }
 
     get _objectColor(): [number, number, number] {
@@ -1167,6 +1247,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.symbolScale = data.symbolScale ?? 1.0;
             // Maps saved before the setting existed get the default font.
             this.labelFont = data.labelFont || LineMapLayer.defaultLabelFont;
+            this.halo = !!data.halo;
+            this.haloColor = LineMapLayer.haloColorOf(data.haloColor);
         } else {
             // A scene with no drawing yet starts from the defaults. The layer outlives scenes, so
             // without this the previous scene's colour and scale showed here and were saved into
@@ -1175,6 +1257,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.color = LineMapLayer.defaultColor;
             this.symbolScale = 1.0;
             this.labelFont = LineMapLayer.defaultLabelFont;
+            this.halo = false;
+            this.haloColor = null;
         }
     }
 

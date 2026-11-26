@@ -99,6 +99,10 @@ export class Symbol extends ObjectType {
             sprite.scale = { x: scale, y: scale };
             sprite.alpha = this.isRevealed ? 1.0 : 0.4;
 
+            if (canvas.linemap.halo) {
+                canvas.linemap.stampHalo(layers, footprint ?? icon, pt[0], pt[1], scale, this.orientation, this.isRevealed);
+            }
+
             // Tinted by the container it goes in (the layer's map or selection colour).
             (this.isSelected ? layers.selectedSymbols : layers.symbols)?.addChild(sprite);
             this.sprite = sprite;

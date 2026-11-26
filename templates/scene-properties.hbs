@@ -12,6 +12,14 @@
         </div>
     </div>
     <div class="form-group">
+        <label>{{localize "linemap.ui.halo"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="halo" {{checked halo}}>
+            <color-picker name="haloColor" value="{{haloColor}}"></color-picker>
+        </div>
+        <p class="hint">{{localize "linemap.ui.haloHint"}}</p>
+    </div>
+    <div class="form-group">
         <label>{{localize "linemap.ui.labelFont"}}</label>
         <div class="form-fields">
             <select name="labelFont">
