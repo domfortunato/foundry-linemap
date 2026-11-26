@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Change an object's look.** The right-click menu of selected lines, symbols, waypoints or areas
+  has a row of styles, kinds or patterns: pick one to change them in place, keeping their points
+  and links, instead of deleting and redrawing.
 - **Travel routes.** With two symbols or waypoints selected, the route between them along linked
   lines that passes the fewest waypoints (days of travel) is highlighted, with its count. Lines
   branch where one ends on another. The route shows on the Gamemaster's screen only and is never

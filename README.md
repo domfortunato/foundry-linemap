@@ -103,6 +103,15 @@ symbol stays sharp, lines still meet its edge, it is as easy to link to, and the
 it move out to stay clear of it. The scene's icon scale (see *Other settings*) multiplies every
 symbol's size.
 
+### Changing a look
+
+To give an object another look without redrawing it, select it with the select tool (hotkey V) and
+right-click: under the menu is a row with a line's styles, a symbol's kinds, a waypoint's kinds or
+an area's patterns, the current one marked. Pick another and the object changes in place, keeping
+its points, its links and everything linked to it, so a road can become a rough path and keep its
+waypoints and name. Several objects of one kind change together, as one edit for undo; a selection
+of mixed kinds has no row. The row offers what the drawing tools offer for the scene's theme.
+
 ### Flipping waypoints
 
 Some waypoints are directional. You can flip their direction by selecting the waypoint using the select tool (hotkey V) and pressing **D**.

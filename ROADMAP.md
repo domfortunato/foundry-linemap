@@ -152,7 +152,9 @@ lead somewhere; the editing items are independent conveniences.
    another branches there, and `api.route` gives the route to macros.
 5. **Change an existing object's look.** The right-click menu changes a line's style, a symbol's
    kind, a waypoint's kind and an area's pattern, instead of deleting and redrawing. Probe: a line
-   changes from major to rough and keeps its points and links.
+   changes from major to rough and keeps its points and links. *Done on `dev`* (probe `dev:look`): a
+   row under the menu, for a selection all of one kind, with the theme's choices; several objects
+   change as one edit.
 6. **Redo.** Undo keeps the undone edits for redo until a new edit is made. Probe: undo, redo, and
    the object is back; undo, edit, and redo does nothing.
 7. **Duplicate, copy and paste.** A selection is copied with the links among the copied objects
