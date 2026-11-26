@@ -2,6 +2,7 @@ import { ObjectData, ObjectType } from "./classes/object.js";
 import { Vec2 } from "./dto.js";
 import { generateId } from "./helpers/generate-id.js";
 import { LineMapLayer } from "./linemap-layer.js";
+import { findRoute } from "./classes/routes.js";
 
 /** Where an edit or a read applies: a Scene document or its id. The viewed Scene when left out. */
 interface SceneOption {
@@ -22,7 +23,8 @@ interface Common {
 /**
  * The scripting API, at `game.modules.get("linemap").api` (README, "Scripting").
  *
- * - Reading: `objects` and `get` hand back copies of a Scene's saved objects.
+ * - Reading: `objects` and `get` hand back copies of a Scene's saved objects; `route` finds the travel
+ *   route between two symbols.
  * - Editing: `add`, `update`, `delete`, `hide` and `reveal`. On the viewed Scene an edit is drawn at
  *   once and goes through the tools' undo record, so the tools see the objects and Ctrl+Z (or `undo`)
  *   takes the edit back. Another Scene's map is saved directly, without an undo record.
@@ -44,6 +46,20 @@ export class LineMapApi {
     /** A copy of one object's saved data, or null. */
     get(id: string, options: SceneOption | string = {}): ObjectData | null {
         return this.objects(options).find(o => o.id === id) ?? null;
+    }
+
+    /**
+     * The travel route between two symbols or waypoints, by id: along linked lines, passing the
+     * fewest waypoints, then the shortest. The ids of the waypoints passed and of the lines
+     * travelled, in order, and its length in pixels; null when no lines join them.
+     */
+    route(from: string, to: string, options: SceneOption | string = {}): { waypoints: string[], lines: string[], length: number } | null {
+        const scene = this._scene(options);
+        const objects: ObjectType[] = this._viewed(scene)
+            ? canvas.linemap.objects
+            : LineMapLayer.buildObjects(this._current(scene).objects);
+        const route = findRoute(objects, objects.find(o => o.id === from), objects.find(o => o.id === to));
+        return route ? { waypoints: route.waypoints, lines: route.lines, length: route.length } : null;
     }
 
     // ---- editing

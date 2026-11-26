@@ -14,6 +14,7 @@ import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
 import { DocumentLinks } from "./classes/links.js";
+import { TravelRoutes } from "./classes/routes.js";
 
 const { layers } = foundry.canvas;
 
@@ -73,6 +74,8 @@ export class LineMapLayer extends layers.InteractionLayer {
     activeTool: Tool;
     /** Document links: the pointer on linked objects on every layer, the link dialog, drops. */
     links = new DocumentLinks(this);
+    /** The travel route between two selected symbols, drawn over the map in this client only. */
+    routes = new TravelRoutes(this);
     revealNewObjects = true;
     adjustLinked = true;
 
@@ -427,6 +430,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         // Takes the tool's option bar and preview off screen; the tool's own onChange(true)
         // re-activates it when the GM comes back to the control.
         this.clearTool();
+        this.routes.clear();
         this.undoHistory = [];
     }
 
@@ -736,6 +740,8 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         this.renderSprite = this.addChild(new PIXI.Sprite());
 
+        this.routes.container = this.addChild(new PIXI.Container());
+
         this.preview = this.addChild(new PIXI.Container());
 
         await this._texturesLoaded();
@@ -824,6 +830,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             obj.draw(layers);
         });
         this._pruneDisplays();
+        this.routes.update();
 
         this.symbolFilter.uniforms.tintColor = this._objectColor;
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
@@ -876,8 +883,10 @@ export class LineMapLayer extends layers.InteractionLayer {
         this._pruneDisplays(true);
         this.objectContainer?.destroy({ children: true });
         this.objectContainer = undefined;
-        // Destroys renderSprite and preview with their children (not their textures).
+        this.routes.clear();
+        // Destroys renderSprite, the route's container and preview with their children (not their textures).
         await super._tearDown(options);
+        this.routes.container = null;
         for (const texture of [this.renderTexture, this.lineTexture, this.maskTexture]) texture?.destroy(true);
         this.renderTexture = this.lineTexture = this.maskTexture = undefined;
         // Asked for again through the loader on the next draw, which may have freed them meanwhile.

@@ -34,6 +34,11 @@
             "shrinkObjects": "Make selected symbols, waypoints and labels smaller (select and text tools)",
             "toggleLinked": "Toggle whether adjusting linked points preserves links"
         },
+        "route": {
+            "one": "{n} waypoint",
+            "other": "{n} waypoints",
+            "none": "No route"
+        },
         "ui": {
             "enterTextTitle": "Text",
             "imageNotLoaded": "Line Map could not load the image {path}.",
