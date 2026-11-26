@@ -45,6 +45,8 @@ try {
   const gm = await p.gmPage()
   await sweep(gm)
   const sceneId = await probeScene(p, gm, 'look')
+  // The pause banner covers the middle of the screenshots.
+  await gm.addStyleTag({ content: '#pause { display: none !important; }' })
 
   const ids = await gm.evaluate(async ({ A, B, AREA_AT }) => {
     const api = game.modules.get('linemap').api

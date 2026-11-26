@@ -22,7 +22,7 @@
             {{#if look}}
                 <div class="linemap-menu-look" role="group" aria-label="{{localize look.label}}">
                     {{#each look.options}}
-                        <a class="{{#if area}}area{{/if}} {{#if active}}active{{/if}}" data-action="selectLook" data-look="{{key}}" data-tooltip="{{label}}" aria-label="{{localize label}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">
+                        <a class="{{#if area}}area{{/if}} {{#if wide}}wide{{/if}} {{#if active}}active{{/if}}" data-action="selectLook" data-look="{{key}}" data-tooltip="{{label}}" aria-label="{{localize label}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">
                             {{#if image}}<img src="{{image}}" alt="" />{{else}}<span class="linemap-area-placeholder" style="height: {{lineWidth}}px"></span>{{/if}}
                         </a>
                     {{/each}}

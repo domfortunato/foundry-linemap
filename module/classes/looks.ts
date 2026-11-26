@@ -49,6 +49,7 @@ export function lookOption(layer: any, selection: ObjectType[]): LookOption | un
             image: image(entry),
             lineWidth: entry.lineWidth ?? 4,
             area: kind === "area",
+            wide: kind === "line",
             active: current.size === 1 && current.has(key)
         })),
         pick: (key: string) => setLook(layer, selection, key)

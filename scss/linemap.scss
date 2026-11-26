@@ -171,6 +171,17 @@
                 object-fit: cover;
             }
 
+            // Line styles are wide strips: a pill, not a circle.
+            &.wide {
+                flex-basis: 64px;
+                border-radius: 17px;
+
+                img {
+                    width: 56px;
+                    height: 16px;
+                }
+            }
+
             .linemap-area-placeholder {
                 width: 100%;
                 background: black;

@@ -3,7 +3,7 @@ const { api } = foundry.applications;
 /** A row of looks under the menu (a line's styles, a symbol's kinds...): pick(key) gives the selection one. */
 export interface LookOption {
     label: string,
-    options: { key: string, label: string, image?: string, lineWidth: number, area: boolean, active: boolean }[],
+    options: { key: string, label: string, image?: string, lineWidth: number, area: boolean, wide: boolean, active: boolean }[],
     pick: (key: string) => void
 }
 
