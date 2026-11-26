@@ -28,7 +28,8 @@
         "dev:links": "node tools/dev/e2e-links.mjs",
         "dev:routes": "node tools/dev/e2e-routes.mjs",
         "dev:look": "node tools/dev/e2e-look.mjs",
-        "dev:redo": "node tools/dev/e2e-redo.mjs"
+        "dev:redo": "node tools/dev/e2e-redo.mjs",
+        "dev:copy": "node tools/dev/e2e-copy.mjs"
     },
     "private": true,
     "devDependencies": {
