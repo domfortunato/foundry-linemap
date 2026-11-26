@@ -6,6 +6,8 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Redo.** Ctrl+Y or Ctrl+Shift+Z makes again what Ctrl+Z took back, until you make a new edit;
+  macros have `api.redo()`.
 - **Change an object's look.** The right-click menu of selected lines, symbols, waypoints or areas
   has a row of styles, kinds or patterns: pick one to change them in place, keeping their points
   and links, instead of deleting and redrawing.

@@ -129,6 +129,8 @@ Controls.
 - **N:** toggle whether adjusting linked points preserves links
 - **Delete or Backspace:** delete the selected objects
 - **Ctrl+Z:** undo your own last edit, one edit at a time
+- **Ctrl+Y or Ctrl+Shift+Z:** redo what you undid, until you make a new edit (leaving the layer
+  forgets both)
 
 ## Themes
 
@@ -194,7 +196,7 @@ await api.undo();
   the ids of the waypoints passed and of the lines travelled, in order, and its length in pixels, or
   null when no lines join them.
 - **Editing:** `add(data)`, `update({ id, ...changes })`, `delete(ids)`, `hide(ids)`, `reveal(ids)` and
-  `undo()`. On the scene being viewed, an edit is drawn at once and joins your undo record, so
+  `undo()` and `redo()`. On the scene being viewed, an edit is drawn at once and joins your undo record, so
   Ctrl+Z takes it back, even if the macro ran while another layer was active.
 - **Other scenes:** pass `{ scene }` (a scene or its id) to read or edit a scene that is not being
   viewed. Its map is saved directly, with no undo.

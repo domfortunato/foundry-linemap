@@ -156,7 +156,8 @@ lead somewhere; the editing items are independent conveniences.
    row under the menu, for a selection all of one kind, with the theme's choices; several objects
    change as one edit.
 6. **Redo.** Undo keeps the undone edits for redo until a new edit is made. Probe: undo, redo, and
-   the object is back; undo, edit, and redo does nothing.
+   the object is back; undo, edit, and redo does nothing. *Done on `dev`* (probe `dev:redo`): Ctrl+Y
+   and Ctrl+Shift+Z (core has no redo key), and `api.redo()`.
 7. **Duplicate, copy and paste.** A selection is copied with the links among the copied objects
    and without links to objects outside it, and can be pasted into another scene. Probe: two
    linked objects copied to a second scene are linked there, with new ids.
