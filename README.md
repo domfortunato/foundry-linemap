@@ -112,6 +112,16 @@ its points, its links and everything linked to it, so a road can become a rough 
 waypoints and name. Several objects of one kind change together, as one edit for undo; a selection
 of mixed kinds has no row. The row offers what the drawing tools offer for the scene's theme.
 
+### Copying and pasting
+
+Select objects with the select tool (hotkey V) and press **Ctrl+C** to copy them, or **Ctrl+X** to
+cut them. **Ctrl+V** pastes them centred on the pointer, selected, ready to move: in the same scene,
+or in another one, since the copy lasts until you reload. The links among the copied objects come
+with them (a road still runs between its two towns, with its waypoints and names), and a point that
+was linked to something left behind is pinned where it was. **Duplicate** in the right-click menu
+copies the selection beside itself in one step. Pasted objects keep whether they were hidden, and
+one undo takes a paste back.
+
 ### Flipping waypoints
 
 Some waypoints are directional. You can flip their direction by selecting the waypoint using the select tool (hotkey V) and pressing **D**.
@@ -128,6 +138,7 @@ Controls.
 - **] and [:** make the selected symbols, waypoints and labels bigger and smaller (select and text tools)
 - **N:** toggle whether adjusting linked points preserves links
 - **Delete or Backspace:** delete the selected objects
+- **Ctrl+C, Ctrl+X and Ctrl+V:** copy, cut and paste the selected objects (paste puts them at the pointer)
 - **Ctrl+Z:** undo your own last edit, one edit at a time
 - **Ctrl+Y or Ctrl+Shift+Z:** redo what you undid, until you make a new edit (leaving the layer
   forgets both)

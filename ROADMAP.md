@@ -160,7 +160,8 @@ lead somewhere; the editing items are independent conveniences.
    and Ctrl+Shift+Z (core has no redo key), and `api.redo()`.
 7. **Duplicate, copy and paste.** A selection is copied with the links among the copied objects
    and without links to objects outside it, and can be pasted into another scene. Probe: two
-   linked objects copied to a second scene are linked there, with new ids.
+   linked objects copied to a second scene are linked there, with new ids. *Done on `dev`* (probe
+   `dev:copy`): core's Ctrl+C, Ctrl+X and Ctrl+V, paste at the pointer, and Duplicate in the menu.
 8. **Nudge.** The arrow keys move the selection a pixel, ten with shift, and linked objects
    follow. Probe: one press moves a symbol by one pixel, and the line linked to it.
 

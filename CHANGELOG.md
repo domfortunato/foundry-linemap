@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Copy, cut, paste and duplicate.** Ctrl+C, Ctrl+X and Ctrl+V copy, cut and paste the selected
+  objects, keeping the links among them; paste puts them at the pointer, in the same scene or
+  another. Duplicate in the right-click menu copies the selection beside itself.
 - **Redo.** Ctrl+Y or Ctrl+Shift+Z makes again what Ctrl+Z took back, until you make a new edit;
   macros have `api.redo()`.
 - **Change an object's look.** The right-click menu of selected lines, symbols, waypoints or areas
