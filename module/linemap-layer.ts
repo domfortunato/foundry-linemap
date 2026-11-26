@@ -752,7 +752,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         // Symbols are painted in one colour each: one filter per colour, over a container of every
         // symbol in it. A filter per sprite cost a render pass per symbol on every redraw.
-        const tint = `
+        const tint = this.tintShader = `
             varying vec2 vTextureCoord;
             uniform sampler2D uSampler;
             uniform vec3 tintColor;
@@ -860,6 +860,19 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.renderSprite.texture = this.renderTexture;
     }
 
+    /** The symbols' tint shader, and one filter per colour of its own in use, kept for the canvas's life. */
+    tintShader: string;
+    tintFilters = new Map<string, any>();
+
+    tintFilter(color: string): any {
+        let filter = this.tintFilters.get(color);
+        if (!filter || filter.destroyed) {
+            filter = new PIXI.Filter(null, this.tintShader, { tintColor: foundry.utils.Color.from(color).rgb });
+            this.tintFilters.set(color, filter);
+        }
+        return filter;
+    }
+
     redraw(highQuality = true) {
         // Nothing to draw into before the canvas has drawn this layer (_draw makes the containers).
         if (!this.objectContainer) return;
@@ -869,7 +882,13 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
         this._disposeDrawn();
 
+        // Symbols in colours of their own: a container per colour, each painted by its own filter.
+        const tinted = new Map<string, any>();
         const layers = {
+            tinted: (color: string) => {
+                if (!tinted.has(color)) tinted.set(color, new PIXI.Container());
+                return tinted.get(color);
+            },
             images: new PIXI.Container(),
             areas: new PIXI.Container(),
             lines: new PIXI.Container(),
@@ -892,13 +911,14 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
         layers.symbols.filters = [this.symbolFilter];
         layers.selectedSymbols.filters = [this.selectedSymbolFilter];
+        for (const [color, container] of tinted) container.filters = [this.tintFilter(color)];
         this.haloFilter.uniforms.tintColor = this._haloColor;
         this.hiddenHaloFilter.uniforms.tintColor = this._haloColor;
         if (layers.halos.children.length) layers.halos.filters = [this.haloFilter];
         if (layers.hiddenHalos.children.length) layers.hiddenHalos.filters = [this.hiddenHaloFilter];
         // What is rendered as "symbols": the halos, both tints, then the labels above them.
         const symbols = new PIXI.Container();
-        symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, layers.selectedSymbols, layers.labels);
+        symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, ...tinted.values(), layers.selectedSymbols, layers.labels);
 
         // Areas first: a probe counts a redraw's area outlines in its first container.
         this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images];
@@ -949,6 +969,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.renderTexture = this.lineTexture = this.maskTexture = undefined;
         // Asked for again through the loader on the next draw, which may have freed them meanwhile.
         this.imageTextures.clear();
+        this.tintFilters.clear();
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]): SnapPoint[] {

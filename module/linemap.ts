@@ -308,6 +308,8 @@ Hooks.on("init", () => {
     if (module) module.api = new LineMapApi();
 
     CONFIG.linemap = {
+        // The right-click menu's colours for objects, besides the scene's own and a custom one.
+        colors: ["#000000", "#ffffff", "#7a4a1e", "#b3261e", "#d9822b", "#c9a227", "#2e7d32", "#00838f", "#1f5fa8", "#6a3d9a", "#777777"],
         // The scene setting's choices; the first is the default.
         labelFonts: ["Alegreya", "IM Fell English", "Orbitron"],
         snap: {

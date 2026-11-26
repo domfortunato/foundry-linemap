@@ -130,24 +130,26 @@ export class LineMapApi {
     // ---- building
 
     /** A symbol at a point. `symbol` is a CONFIG.linemap.symbols key; size 1 to 4; `link` a document's UUID. */
-    symbol({ x, y, symbol, size, link, revealed, id }: { x: number, y: number, symbol?: string, size?: number, link?: string } & Common): ObjectData {
+    symbol({ x, y, symbol, size, link, color, revealed, id }: { x: number, y: number, symbol?: string, size?: number, link?: string, color?: string } & Common): ObjectData {
         return {
             ...this._common("symbol", revealed, id),
             point: { point: [x, y], sourceId: null, sourceT: null },
             symbol: symbol ?? Object.keys(CONFIG.linemap.symbols)[0],
             size: size ?? null,
-            link: link ?? null
+            link: link ?? null,
+            color: color ?? null
         } as ObjectData;
     }
 
     /** A waypoint on a line, at `t` along it (0 its start, 1 its end). */
-    waypoint({ line, t, symbol, size, link, revealed, id }: { line: string, t?: number, symbol?: string, size?: number, link?: string } & Common): ObjectData {
+    waypoint({ line, t, symbol, size, link, color, revealed, id }: { line: string, t?: number, symbol?: string, size?: number, link?: string, color?: string } & Common): ObjectData {
         return {
             ...this._common("waypoint", revealed, id),
             point: { point: null, sourceId: line, sourceT: t ?? 0.5 },
             symbol: symbol ?? Object.keys(CONFIG.linemap.waypoints)[0],
             size: size ?? null,
-            link: link ?? null
+            link: link ?? null,
+            color: color ?? null
         } as ObjectData;
     }
 
@@ -155,14 +157,15 @@ export class LineMapApi {
      * A line from one point to another, each a position or an object's id to link to. With `via`
      * (positions between), or `smooth`, it is a smooth curve through them all.
      */
-    line({ from, to, via, style, smooth, size, revealed, id }: { from: PointOrId, to: PointOrId, via?: Vec2[], style?: string, smooth?: boolean, size?: number } & Common): ObjectData {
+    line({ from, to, via, style, smooth, size, color, revealed, id }: { from: PointOrId, to: PointOrId, via?: Vec2[], style?: string, smooth?: boolean, size?: number, color?: string } & Common): ObjectData {
         const points = [this._point(from), ...(via ?? []).map(pt => this._point(pt)), this._point(to)];
         return {
             ...this._common("line", revealed, id),
             points,
             style: style ?? Object.keys(CONFIG.linemap.lineStyles)[0],
             smooth: points.length > 2 || smooth ? true : null,
-            size: size ?? null
+            size: size ?? null,
+            color: color ?? null
         } as ObjectData;
     }
 
@@ -171,7 +174,7 @@ export class LineMapApi {
      * (above it when left out). `t` places it along a line it is on. Style: normal, bold, italic,
      * bolditalic; size 0.5 to 4.
      */
-    label({ text, x, y, on, t, offset, style, size, link, rotation, revealed, id }: { text: string, x?: number, y?: number, on?: string, t?: number, offset?: Vec2, style?: string, size?: number, link?: string, rotation?: number } & Common): ObjectData {
+    label({ text, x, y, on, t, offset, style, size, link, rotation, color, revealed, id }: { text: string, x?: number, y?: number, on?: string, t?: number, offset?: Vec2, style?: string, size?: number, link?: string, rotation?: number, color?: string } & Common): ObjectData {
         return {
             ...this._common("text", revealed, id),
             point: on ? { point: null, sourceId: on, sourceT: t ?? 0.5 } : { point: [x, y], sourceId: null, sourceT: null },
@@ -180,16 +183,18 @@ export class LineMapApi {
             style: style ?? "normal",
             size: size ?? null,
             link: link ?? null,
-            rotation: rotation ?? null
+            rotation: rotation ?? null,
+            color: color ?? null
         } as ObjectData;
     }
 
     /** An area: a polygon of three or more points, filled with a CONFIG.linemap.patterns pattern. */
-    area({ points, pattern, revealed, id }: { points: Vec2[], pattern?: string } & Common): ObjectData {
+    area({ points, pattern, color, revealed, id }: { points: Vec2[], pattern?: string, color?: string } & Common): ObjectData {
         return {
             ...this._common("area", revealed, id),
             points: points?.map(pt => [pt[0], pt[1]]),
-            pattern: pattern ?? Object.keys(CONFIG.linemap.patterns)[0]
+            pattern: pattern ?? Object.keys(CONFIG.linemap.patterns)[0],
+            color: color ?? null
         } as ObjectData;
     }
 

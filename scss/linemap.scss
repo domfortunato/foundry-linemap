@@ -195,6 +195,44 @@
         }
     }
 
+    .linemap-menu-colors {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 3px;
+        width: max-content;
+        max-width: 360px;
+        margin-top: 2px;
+        padding: 4px;
+        background: rgba(0, 0, 0, .8);
+        border-radius: 12px;
+
+        .linemap-menu-color {
+            flex: 0 0 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, .6);
+            border-radius: 50%;
+            font-size: 11px;
+
+            i {
+                color: white;
+                text-shadow: 0 0 2px black;
+            }
+
+            &.active {
+                border: 2px solid var(--color-warm-2);
+                box-shadow: 0 0 4px var(--color-warm-3);
+            }
+        }
+
+        .linemap-menu-color-custom {
+            background: conic-gradient(#e33, #ec3, #3c3, #3cc, #33e, #c3c, #e33);
+        }
+    }
+
     .linemap-menu-slider {
         width: 140px;
         align-items: center;

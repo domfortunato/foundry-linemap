@@ -53,6 +53,10 @@ export class Line extends ObjectType {
         return [1, 4];
     }
 
+    get colorable(): boolean {
+        return true;
+    }
+
     /** How far from the line's middle a click selects it: the style's tolerance, grown with the line. */
     get selectTolerance(): number {
         return (CONFIG.linemap.lineStyles[this.style]?.selectTolerance ?? 5) * this.size;

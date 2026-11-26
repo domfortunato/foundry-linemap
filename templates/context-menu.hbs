@@ -29,6 +29,13 @@
                     {{/each}}
                 </div>
             {{/if}}
+            {{#if colors}}
+                <div class="linemap-menu-colors" role="group" aria-label="{{localize colors.label}}">
+                    {{#each colors.options}}
+                        <a class="linemap-menu-color linemap-menu-color-{{key}} {{#if active}}active{{/if}}" data-action="selectColor" data-color="{{key}}" data-tooltip="{{label}}" aria-label="{{localize label}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}" {{#if color}}style="background-color: {{color}}"{{/if}}>{{#if icon}}<i class="fas {{icon}}" aria-hidden="true"></i>{{/if}}</a>
+                    {{/each}}
+                </div>
+            {{/if}}
         </div>
     {{/if}}
 </div>

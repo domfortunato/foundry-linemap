@@ -6,6 +6,8 @@ export interface ObjectData {
     id: string;
     type: string;
     isRevealed: boolean;
+    /** A colour of its own (#rrggbb); null or absent: the scene's content colour. */
+    color?: string | null;
     /** Drawing order, lowest first; set once when the object is made. */
     sort?: number;
 }
@@ -22,6 +24,8 @@ export interface ObjectDrawLayers {
     // Symbols in the map colour and in the selection colour: each container is tinted as a whole.
     symbols?: any;
     selectedSymbols?: any;
+    /** The container for symbols in a colour of their own (one per colour, each tinted as a whole). */
+    tinted?: (color: string) => any;
     labels?: any;
 }
 
@@ -38,6 +42,18 @@ export class ObjectType {
     isSelected = false;
     isRevealed = false;
     sort = 0;
+    /** A colour of its own (#rrggbb), or null for the scene's content colour. */
+    color: string | null = null;
+
+    /** Whether this type takes a colour of its own (lines, symbols, waypoints, areas, labels; not images). */
+    get colorable(): boolean {
+        return false;
+    }
+
+    /** A saved colour, or null when there is none or it is not a #rrggbb colour. */
+    static colorOf(value: any): string | null {
+        return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+    }
 
     constructor(id?: string) {
         this.id = id ?? generateId();
@@ -76,14 +92,17 @@ export class ObjectType {
     deserialize(data: any, objectMap: ObjectIdMapping) {
         this.isRevealed = data.isRevealed;
         this.sort = data.sort ?? this.sort;
+        this.color = this.colorable ? ObjectType.colorOf(data.color) : null;
     }
 
     get _currentColor(): [number, number, number] {
-        return this.isSelected ? canvas.linemap._selectionColor : canvas.linemap._objectColor;
+        if (this.isSelected) return canvas.linemap._selectionColor;
+        return this.color ? foundry.utils.Color.from(this.color).rgb : canvas.linemap._objectColor;
     }
 
     get _currentColorHex(): number {
-        return this.isSelected ? canvas.linemap._selectionColorHex : canvas.linemap._objectColorHex;
+        if (this.isSelected) return canvas.linemap._selectionColorHex;
+        return this.color ? Number(foundry.utils.Color.from(this.color)) : canvas.linemap._objectColorHex;
     }
 
     get serialized(): ObjectData {
@@ -91,7 +110,9 @@ export class ObjectType {
             id: this.id,
             type: (this.constructor as typeof ObjectType).type,
             isRevealed: this.isRevealed,
-            sort: this.sort
+            sort: this.sort,
+            // Null when it follows the scene's colour: a save merges each object into the saved one.
+            ...(this.colorable ? { color: this.color } : {})
         };
     }
 

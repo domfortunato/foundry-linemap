@@ -1,5 +1,6 @@
 import { DocumentLinks } from "../classes/links.js";
 import { lookOption } from "../classes/looks.js";
+import { colorOption } from "../classes/colors.js";
 import { ObjectType } from "../classes/object.js";
 import { Tool, ToolHotkey } from "../classes/tool.js";
 import { AdjustmentPoint, SnapPoint, Vec2 } from "../dto.js";
@@ -167,7 +168,7 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            }, [this._sizeOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection));
+            }, [this._sizeOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection), colorOption(this.layer, this.layer.selection));
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };

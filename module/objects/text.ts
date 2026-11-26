@@ -96,6 +96,10 @@ export class Text extends ObjectType {
         return [0.5, 4];
     }
 
+    get colorable(): boolean {
+        return true;
+    }
+
     /** From the label's own frame to the anchor's: turned in place, put at its offset, along the line. */
     get _transform(): any {
         return new PIXI.Matrix()

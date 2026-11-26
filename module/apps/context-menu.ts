@@ -32,6 +32,13 @@ export interface SliderOption {
 
 export type SizeOption = SliderOption;
 
+/** A row of colours under the menu: pick(key) gives the selection one ("default": the scene's; "custom": ask). */
+export interface ColorOption {
+    label: string,
+    options: { key: string, color: string, label: string, icon: string, active: boolean }[],
+    pick: (key: string) => void
+}
+
 export class ContextMenu extends api.HandlebarsApplicationMixin(
 	api.ApplicationV2
 ) {
@@ -43,7 +50,8 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
         },
 		actions: {
 			selectOption: ContextMenu.selectOption,
-			selectLook: ContextMenu.selectLook
+			selectLook: ContextMenu.selectLook,
+			selectColor: ContextMenu.selectColor
 		}
 	};
 
@@ -59,12 +67,15 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
 
     lookOption?: LookOption;
 
-    constructor(menuOptions: Record<string, MenuOption>, sliders: SliderOption[] = [], lookOption?: LookOption, options = {}) {
+    colorOption?: ColorOption;
+
+    constructor(menuOptions: Record<string, MenuOption>, sliders: SliderOption[] = [], lookOption?: LookOption, colorOption?: ColorOption, options = {}) {
         super(options);
 
         this.menuOptions = menuOptions;
         this.sliders = sliders;
         this.lookOption = lookOption;
+        this.colorOption = colorOption;
     }
 
     _prepareContext(options) {
@@ -73,7 +84,8 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
             .filter(([key]) => key !== 'left' && key !== 'right')
             .map(([key, option]) => ({ key, ...option }));
         const look = this.lookOption;
-        return { menuOptions: this.menuOptions, extras, sliders: this.sliders, look, below: !!(this.sliders.length || look) };
+        const colors = this.colorOption;
+        return { menuOptions: this.menuOptions, extras, sliders: this.sliders, look, colors, below: !!(this.sliders.length || look || colors) };
     }
 
     _onRender(context, options) {
@@ -112,6 +124,11 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
     static selectLook(event, target) {
         this.close({ animate: false });
         this.lookOption?.pick(target.dataset.look);
+    }
+
+    static selectColor(event, target) {
+        this.close({ animate: false });
+        this.colorOption?.pick(target.dataset.color);
     }
 
 }

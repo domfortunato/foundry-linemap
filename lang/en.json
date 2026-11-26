@@ -77,6 +77,11 @@
             "bringForward": "Bring forward",
             "sendBack": "Send back",
             "duplicate": "Duplicate",
+            "color": {
+                "label": "Colour",
+                "default": "The scene's colour",
+                "custom": "Another colour…"
+            },
             "linkDocument": "Link document",
             "look": {
                 "line": "Line style",

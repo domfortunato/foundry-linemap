@@ -27,6 +27,10 @@ export class Area extends ObjectType {
         );
     }
 
+    get colorable(): boolean {
+        return true;
+    }
+
     static moveData(data: AreaData, move: PointMover): AreaData {
         return { ...data, points: data.points?.map(move) };
     }

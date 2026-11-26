@@ -47,6 +47,10 @@ export class Symbol extends ObjectType {
         return [this.point];
     }
 
+    get colorable(): boolean {
+        return true;
+    }
+
     get serialized(): SymbolData {
         return { ...super.serialized, ...{
             point: this.point.serialized,
@@ -109,8 +113,9 @@ export class Symbol extends ObjectType {
                 canvas.linemap.stampHalo(layers, icon, footprint, pt[0], pt[1], scale, this.orientation, this.isRevealed);
             }
 
-            // Tinted by the container it goes in (the layer's map or selection colour).
-            (this.isSelected ? layers.selectedSymbols : layers.symbols)?.addChild(sprite);
+            // Tinted by the container it goes in: the selection colour, its own, or the map's.
+            const container = this.isSelected ? layers.selectedSymbols : this.color ? (layers.tinted?.(this.color) ?? layers.symbols) : layers.symbols;
+            container?.addChild(sprite);
             this.sprite = sprite;
 
             if (footprint) {
