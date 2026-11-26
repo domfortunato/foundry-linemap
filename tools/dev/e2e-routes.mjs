@@ -45,6 +45,13 @@ const overlayAlpha = (page, points) => page.evaluate((points) => {
   rt.destroy(true)
   return out
 }, points)
+/** A screenshot of the whole Scene, without the pause banner. */
+const overview = async (page, name) => {
+  await page.evaluate(() => { canvas.pan({ x: 1500, y: 1000, scale: 0.45 }); document.getElementById('pause')?.style.setProperty('display', 'none') })
+  await page.waitForTimeout(scaled(400))
+  await p.shot(page, name)
+  await page.evaluate(() => document.getElementById('pause')?.style.removeProperty('display'))
+}
 const same = (a, b) => Array.isArray(a) && a.length === b.length && [...a].sort().join() === [...b].sort().join()
 
 try {
@@ -76,7 +83,7 @@ try {
   p.check(s.texts.includes('1 waypoint'), 'the count is shown: "1 waypoint"', s.texts)
   const [onRoute, offRoute] = await overlayAlpha(gm, [{ x: 825, y: 850 }, { x: 1680, y: 1000 }])
   p.check(onRoute > 100 && offRoute === 0, 'the highlight is drawn along the road through the third symbol, not the direct road', { onRoute, offRoute })
-  await p.shot(gm, 'route')
+  await overview(gm, 'route')
 
   const fromApi = await gm.evaluate(({ a, b }) => game.modules.get('linemap').api.route(a, b), ids)
   p.check(same(fromApi?.waypoints, [ids.wc]) && same(fromApi?.lines, [ids.ac, ids.cb]) && fromApi.length > 0,
@@ -101,7 +108,7 @@ try {
   s = await shown(gm)
   p.check(same(s.waypoints, [ids.w1]) && same(s.lines, [ids.ab, dj]) && s.texts.includes('1 waypoint'),
     'a road added while selected joins the direct road at its middle; the route counts only the waypoint passed', s)
-  await p.shot(gm, 'junction')
+  await overview(gm, 'junction')
 
   // Another layer shows nothing.
   await gm.evaluate(() => ui.controls.activate({ control: 'tokens', tool: 'select' }))
