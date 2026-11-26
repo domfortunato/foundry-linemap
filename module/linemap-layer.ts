@@ -62,6 +62,9 @@ export class LineMapLayer extends layers.InteractionLayer {
     // back that edit and leaves alone whatever another Gamemaster drew meanwhile; whole-map
     // snapshots wiped it.
     undoHistory: HistoryEntry[] = [];
+    // Edits undone, newest last, each held as what it put back (so redoing is undoing the undo).
+    // A new edit clears it.
+    redoHistory: HistoryEntry[] = [];
     // The map as last saved or loaded, deep-copied: an edit is the difference from it.
     baseline: LayerData;
     /** The save running or last run, which the next one waits for, and how many are queued or running. */
@@ -432,6 +435,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.clearTool();
         this.routes.clear();
         this.undoHistory = [];
+        this.redoHistory = [];
     }
 
     activateTool(tool: string) {
@@ -879,6 +883,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.clear(false);
         // Another Scene, or this one drawn again: the record names this map's objects.
         this.undoHistory = [];
+        this.redoHistory = [];
         this._disposeDrawn();
         this._pruneDisplays(true);
         this.objectContainer?.destroy({ children: true });
@@ -1137,6 +1142,8 @@ export class LineMapLayer extends layers.InteractionLayer {
         if (entry.changes.length) {
             this.undoHistory.push(entry);
             if (this.undoHistory.length > LineMapLayer.MaxUndo) this.undoHistory.shift();
+            // A new edit: what was undone can no longer be redone.
+            this.redoHistory = [];
         }
         await this._saveData();
     }
@@ -1160,7 +1167,32 @@ export class LineMapLayer extends layers.InteractionLayer {
     async undo() {
         const entry = this.undoHistory.pop();
         if (!entry) return;
+        const { opposite, saved } = this._revert(entry);
+        this.redoHistory.push(opposite);
+        await saved;
+    }
+
+    /** Make again the edit last undone, until a new edit is made. */
+    async redo() {
+        const entry = this.redoHistory.pop();
+        if (!entry) return;
+        const { opposite, saved } = this._revert(entry);
+        this.undoHistory.push(opposite);
+        if (this.undoHistory.length > LineMapLayer.MaxUndo) this.undoHistory.shift();
+        await saved;
+    }
+
+    /**
+     * Put the objects a record names back as it holds them (a null one removed), and save. Returns
+     * at once the opposite record, the objects as they were just before, for redo or undo (so a
+     * redo pressed straight after an undo finds it), and the save.
+     */
+    _revert(entry: HistoryEntry): { opposite: HistoryEntry, saved: Promise<void> } {
         const state = this._captureState();
+        const current = new Map(this.serialized.objects.map((o, index) => [o.id, { o, index }]));
+        const opposite: HistoryEntry = {
+            changes: structuredClone(entry.changes.map(c => ({ id: c.id, index: current.get(c.id)?.index ?? -1, before: current.get(c.id)?.o ?? null })))
+        };
         // What the undo removes may have been linked to since (by another Gamemaster): pin those points.
         const removed = new Set(entry.changes.filter(c => !c.before).map(c => c.id));
         const gone = new Set(this.objects.filter(o => removed.has(o.id)));
@@ -1178,8 +1210,11 @@ export class LineMapLayer extends layers.InteractionLayer {
         for (const c of pending.values()) if (c.before) objects.push(c.before);
         this.applyData({ ...data, objects: structuredClone(objects) });
         this.redraw();
-        await this._saveData();
-        this._stateInvalidated(state);
+        const saved = (async () => {
+            await this._saveData();
+            this._stateInvalidated(state);
+        })();
+        return { opposite, saved };
     }
 
     _captureState(): InterfaceState {

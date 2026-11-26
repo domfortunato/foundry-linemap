@@ -27,7 +27,7 @@ interface Common {
  *   route between two symbols.
  * - Editing: `add`, `update`, `delete`, `hide` and `reveal`. On the viewed Scene an edit is drawn at
  *   once and goes through the tools' undo record, so the tools see the objects and Ctrl+Z (or `undo`)
- *   takes the edit back. Another Scene's map is saved directly, without an undo record.
+ *   takes the edit back, and Ctrl+Y (or `redo`) makes it again. Another Scene's map is saved directly, without an undo record.
  * - Building: `symbol`, `waypoint`, `line`, `label`, `area` and `image` make an object's data, for
  *   `add`. Lines, labels and waypoints link to objects by id, and follow them as they move.
  *
@@ -120,6 +120,11 @@ export class LineMapApi {
     /** Take back this user's last edit on the viewed Scene, as Ctrl+Z does. */
     async undo(): Promise<void> {
         await canvas.linemap?.undo();
+    }
+
+    /** Make again the edit last undone on the viewed Scene, as Ctrl+Y does; nothing after a new edit. */
+    async redo(): Promise<void> {
+        await canvas.linemap?.redo();
     }
 
     // ---- building

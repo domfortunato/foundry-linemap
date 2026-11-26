@@ -240,6 +240,22 @@ Hooks.on("init", () => {
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
+    // Core has no redo. Ctrl+Y and Ctrl+Shift+Z, as most editors (Control is Cmd on a Mac).
+    game.keybindings.register("linemap", "redo", {
+        restricted: true,
+        name: "linemap.keybindings.redo",
+        uneditable: [
+            { key: "KeyY", modifiers: ["Control"] },
+            { key: "KeyZ", modifiers: ["Control", "Shift"] }
+        ],
+        onDown: (event: any) => {
+            if (canvas.linemap?.active) {
+                canvas.linemap.redo();
+                return true;
+            }
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+    });
 
     // Label fonts shipped with the module (SIL OFL 1.1, licences beside the files). Registered here
     // so Foundry loads them for every client before the canvas draws; `??=` leaves a definition

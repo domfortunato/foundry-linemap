@@ -16,6 +16,7 @@
             "control": "Line Map"
         },
         "keybindings": {
+            "redo": "Redo",
             "selectTool": "Activate the select tool",
             "adjustTool": "Activate the adjust tool",
             "drawLineTool": "Activate the draw lines tool",
