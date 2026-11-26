@@ -240,6 +240,27 @@ Hooks.on("init", () => {
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
+    // The arrow keys nudge the Line Map selection a pixel, ten with Shift, linked objects following.
+    // With nothing selected they fall through to core, which pans the canvas.
+    const nudges: [string, string, [number, number]][] = [
+        ["nudgeUp", "ArrowUp", [0, -1]], ["nudgeDown", "ArrowDown", [0, 1]],
+        ["nudgeLeft", "ArrowLeft", [-1, 0]], ["nudgeRight", "ArrowRight", [1, 0]]
+    ];
+    for (const [action, key, [dx, dy]] of nudges) {
+        game.keybindings.register("linemap", action, {
+            restricted: true,
+            name: `linemap.keybindings.${action}`,
+            editable: [{ key }, { key, modifiers: ["Shift"] }],
+            repeat: true,
+            onDown: (context: any) => {
+                if (!canvas.linemap?.active) return false;
+                const step = context.isShift ? 10 : 1;
+                return canvas.linemap.tools.selectObject?.nudge([dx * step, dy * step]) ?? false;
+            },
+            precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+        });
+    }
+
     // Core has no redo. Ctrl+Y and Ctrl+Shift+Z, as most editors (Control is Cmd on a Mac).
     game.keybindings.register("linemap", "redo", {
         restricted: true,

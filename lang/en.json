@@ -17,6 +17,10 @@
         },
         "keybindings": {
             "redo": "Redo",
+            "nudgeUp": "Nudge the selected objects up (Shift: ten pixels)",
+            "nudgeDown": "Nudge the selected objects down (Shift: ten pixels)",
+            "nudgeLeft": "Nudge the selected objects left (Shift: ten pixels)",
+            "nudgeRight": "Nudge the selected objects right (Shift: ten pixels)",
             "selectTool": "Activate the select tool",
             "adjustTool": "Activate the adjust tool",
             "drawLineTool": "Activate the draw lines tool",

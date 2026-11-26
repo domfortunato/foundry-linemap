@@ -213,20 +213,45 @@ export class SelectTool extends Tool {
         this.dragOperation = (!objects.length || !selected) ? DragOperation.select : DragOperation.move;
 
         if (this.dragOperation === DragOperation.move) {
-            const pts = selection.flatMap(obj => obj.getAdjustmentPoints());
-            const otherPts = this.layer.objects
-                .filter(obj => !selection.includes(obj))
-                .flatMap(obj => obj.getAdjustmentPoints())
-                .filter(candidate => pts.find(pt => eq2(pt.original, candidate.original)));
-            if (this.layer.adjustLinked) {
-                pts.push(...otherPts);
-            } else {
-                otherPts
-                    .filter(pt => pt.isConstrained)
-                    .forEach(pt => pt.object.setAdjustmentPoint(pt.index, new ConstrainedPoint(pt.object.pointType, pt.original), false));
-            }
-            this.adjustmentPoints = pts;
+            this.adjustmentPoints = this._movePoints(selection);
         }
+    }
+
+    /**
+     * The points a move of the selection takes along: its own, and the other objects' points on
+     * them, unless linking is off (then those are unlinked, and stay).
+     */
+    _movePoints(selection: ObjectType[]): AdjustmentPoint[] {
+        const pts = selection.flatMap(obj => obj.getAdjustmentPoints());
+        const otherPts = this.layer.objects
+            .filter(obj => !selection.includes(obj))
+            .flatMap(obj => obj.getAdjustmentPoints())
+            .filter(candidate => pts.find(pt => eq2(pt.original, candidate.original)));
+        if (this.layer.adjustLinked) {
+            pts.push(...otherPts);
+        } else {
+            otherPts
+                .filter(pt => pt.isConstrained)
+                .forEach(pt => pt.object.setAdjustmentPoint(pt.index, new ConstrainedPoint(pt.object.pointType, pt.original), false));
+        }
+        return pts;
+    }
+
+    /**
+     * Move the selection by a few pixels (the arrow keys), as a drag would, linked objects following.
+     * A burst of presses is saved once, when they stop. Whether there was a selection to move.
+     */
+    nudge(d: Vec2): boolean {
+        const selection = this.layer.selection;
+        if (!selection.length || this.dragOperation !== undefined) return false;
+        this.adjustmentPoints = this._movePoints(selection);
+        for (const apt of this.affectedAdjustmentPoints) {
+            apt.object.setAdjustmentPoint(apt.index, new ConstrainedPoint(apt.type, add2(apt.original, d)), true);
+        }
+        this.adjustmentPoints = undefined;
+        this.layer.redraw();
+        this.layer.recordSoon();
+        return true;
     }
 
     onDragLeftMove(event: any): void {

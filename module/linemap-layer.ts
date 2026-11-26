@@ -428,6 +428,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     _deactivate() {
+        this.recordNow();
         this._detachStageHandlers();
         this.interactionData = undefined;
         this.interactionDataRight = undefined;
@@ -930,6 +931,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     async _tearDown(options) {
+        this.recordNow();
         this.links.clear();
         this.clear(false);
         // Another Scene, or this one drawn again: the record names this map's objects.
@@ -1188,6 +1190,22 @@ export class LineMapLayer extends layers.InteractionLayer {
      * taken before the save is awaited: callers do not await this, and a record pushed after the
      * await held whatever the map looked like by then, so two quick edits came back as one.
      */
+    /** A record due once a burst of quick edits (nudges) stops; recordNow() makes it at once. */
+    _recordTimer: any = null;
+
+    recordSoon(ms = 400) {
+        clearTimeout(this._recordTimer);
+        this._recordTimer = setTimeout(() => this.recordNow(), ms);
+    }
+
+    /** Make a record that is due now: before an undo, a redo, or leaving the map. */
+    recordNow() {
+        if (!this._recordTimer) return;
+        clearTimeout(this._recordTimer);
+        this._recordTimer = null;
+        this.registerHistory();
+    }
+
     async registerHistory() {
         const entry = this._diff(this.baseline, this.serialized);
         if (entry.changes.length) {
@@ -1216,6 +1234,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     /** Take back this user's last edit: what it made goes, what it changed or removed comes back. */
     async undo() {
+        this.recordNow();
         const entry = this.undoHistory.pop();
         if (!entry) return;
         const { opposite, saved } = this._revert(entry);
@@ -1225,6 +1244,7 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     /** Make again the edit last undone, until a new edit is made. */
     async redo() {
+        this.recordNow();
         const entry = this.redoHistory.pop();
         if (!entry) return;
         const { opposite, saved } = this._revert(entry);
