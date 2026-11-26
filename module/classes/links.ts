@@ -2,11 +2,12 @@ import { Vec2 } from "../dto.js";
 import { ObjectType } from "./object.js";
 
 /**
- * Document links on symbols, waypoints and labels, working like core's map notes (ROADMAP 7.2).
- * Players have no Line Map control, so a linked object answers the pointer on every layer: hovering
- * it shows a pointer and the document's name, and a double-click opens the document. Nothing answers
- * for a hidden object, a document the user may not see, or while map notes are toggled off. On the
- * Line Map layer itself the tools own the pointer.
+ * Document links on symbols, waypoints and labels, working like core's map notes (ROADMAP 7.2), and
+ * hover tooltips (7.3). Players have no Line Map control, so the map answers the pointer on every
+ * layer: hovering a linked object shows a pointer and the document's name, and a double-click opens
+ * the document; hovering a symbol, waypoint or line with labels shows their text, so a crowded map
+ * can be read. Nothing answers for a hidden object or label, a document the user may not see, or
+ * while map notes are toggled off. On the Line Map layer itself the tools own the pointer.
  */
 export class DocumentLinks {
     layer: any;
@@ -73,6 +74,32 @@ export class DocumentLinks {
         return null;
     }
 
+    /**
+     * What hovering a point shows: the topmost symbol, waypoint or label (then line) with a document
+     * this user may open or labels this user sees, with that document and the labels' text.
+     */
+    hoverAt(pt: Vec2): { object: any, doc: any, labels: string[] } | null {
+        const objects = this.layer.objects;
+        const passes = [(o: any) => DocumentLinks.linkable(o) && !!o.sprite, (o: any) => (o.constructor as any).type === "line"];
+        for (const pass of passes) {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const o: any = objects[i];
+                if (!pass(o) || !o.isVisible || !o.testSelection(pt)) continue;
+                const doc = DocumentLinks.viewable(o);
+                const labels = this.labelsOf(o);
+                if (doc || labels.length) return { object: o, doc, labels };
+            }
+        }
+        return null;
+    }
+
+    /** The text of the labels linked to an object that this user sees. */
+    labelsOf(o: any): string[] {
+        return this.layer.objects
+            .filter((t: any) => (t.constructor as any).type === "text" && t !== o && t.point?.sourceObject === o && t.isVisible && t.text?.trim())
+            .map((t: any) => t.text.trim());
+    }
+
     /** Whether a pointer event is on a placeable (a token, a note): those answer it themselves. */
     static onPlaceable(event: any): boolean {
         for (let t = event.target; t; t = t.parent) {
@@ -87,10 +114,11 @@ export class DocumentLinks {
     }
 
     _onMove(event: any) {
-        const o = this.enabled && !DocumentLinks.onPlaceable(event) ? this.linkedAt(this._point(event)) : null;
-        if (o === this.hovered) return;
+        const pt = this._point(event);
+        const hit = this.enabled && !DocumentLinks.onPlaceable(event) ? this.hoverAt(pt) : null;
+        if ((hit?.object ?? null) === this.hovered) return;
         this.clear();
-        if (o) this._show(o);
+        if (hit) this._show(hit, pt);
     }
 
     _onDown(event: any) {
@@ -109,13 +137,15 @@ export class DocumentLinks {
         }
     }
 
-    /** The pointer cue and the document's name over the object. */
-    _show(o: any) {
-        const doc = DocumentLinks.viewable(o);
-        if (!doc) return;
+    /**
+     * Over the object, its labels' text and the name of the document it opens; the pointer cue only
+     * when there is a document. A line's tooltip is at the pointer.
+     */
+    _show(hit: { object: any, doc: any, labels: string[] }, pt: Vec2) {
+        const { object: o, doc, labels } = hit;
         this.hovered = o;
-        document.body.classList.add("linemap-link-hover");
-        const b = o.sprite.getBounds();
+        if (doc) document.body.classList.add("linemap-link-hover");
+        const b = o.sprite ? o.sprite.getBounds() : { x: pt[0], y: pt[1] - 8, width: 1, height: 1 };
         const a = canvas.clientCoordinatesFromCanvas({ x: b.x, y: b.y });
         const c = canvas.clientCoordinatesFromCanvas({ x: b.x + b.width, y: b.y + b.height });
         if (!this.anchor) {
@@ -126,7 +156,9 @@ export class DocumentLinks {
         Object.assign(this.anchor.style, {
             left: `${a.x}px`, top: `${a.y}px`, width: `${Math.max(c.x - a.x, 1)}px`, height: `${Math.max(c.y - a.y, 1)}px`
         });
-        game.tooltip.activate(this.anchor, { text: doc.name, direction: "UP" });
+        const lines = [...labels, ...(doc ? [doc.name] : [])];
+        if (lines.length === 1) game.tooltip.activate(this.anchor, { text: lines[0], direction: "UP" });
+        else game.tooltip.activate(this.anchor, { html: lines.map(l => foundry.utils.escapeHTML(l)).join("<br>"), direction: "UP" });
     }
 
     clear() {
