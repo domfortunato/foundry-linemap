@@ -46,6 +46,19 @@ To break these links, toggle the **Adjusting linked points preserves links** opt
 
 All drawing objects are visible to players by default. As the GM, you can select to hide and reveal objects during play. To make new objects appear hidden, toggle the **Created objects are revealed** option in the layer control buttons. Objects can be toggled by either selecting them with the select tool (shift select or area select to select multiple) and either using the context menu (right mouse button) or using the hotkeys **R** (to reveal) and **H** (to hide).
 
+## Document links
+
+A symbol, waypoint or label can open a document: a journal entry or page, a scene, an actor, or
+anything else with a sheet. Link one by dropping the document from the sidebar onto the object
+while the Line Map tools are active, or by choosing **Link document** in the object's right-click
+menu and pasting the document's UUID (copy it from the sheet's header). **Unlink document** in the
+same menu removes the link.
+
+On the map, linked objects work like Foundry's map notes, on any layer: hovering one shows a
+pointer and the document's name, and a double-click opens it (a journal at the linked page, a
+scene by viewing it). Players see this only for revealed objects and for documents they may see,
+and not while they have map notes turned off.
+
 ## Object details
 
 ### Text offset and orientation

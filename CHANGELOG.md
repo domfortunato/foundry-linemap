@@ -6,6 +6,11 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Document links.** A symbol, waypoint or label can link to a journal page, scene or other
+  document, by dropping it on the object or from the right-click menu. Like map notes, hovering a
+  linked object on any layer shows the document's name, and a double-click opens it, for players
+  too when they may see it and the object is revealed. Earlier versions keep the links but do
+  nothing with them.
 - **A scripting API** for macros and other modules, at `game.modules.get("linemap").api`: read a
   scene's map, and add, update, delete, hide and reveal its objects, with builders for each kind of
   object and links by id. Edits on the viewed scene join the undo record; hooks announce the map

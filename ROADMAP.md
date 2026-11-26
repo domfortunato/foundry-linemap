@@ -135,11 +135,13 @@ lead somewhere; the editing items are independent conveniences.
    Gamemaster from the right-click menu or by dropping the document from the sidebar onto the
    object. A player who may see the document gets a cue on the object (a pointer cursor and the
    document's name as a tooltip) and opens it with a click. A hidden object, or a document the
-   player cannot see, shows nothing. **To design first:** players have no Line Map tools, and the
-   layer attaches its pointer handlers only while it is active, so a player's click must come
-   either from a read-only Line Map control players can switch to, or from a handler on the stage
-   that hit-tests the map's objects. Probe: a Gamemaster links a journal page; a player client sees
-   the cue, clicks, and the page's sheet opens; the same object hidden shows no cue.
+   player cannot see, shows nothing. **Decided (2026-11-26): like core's map notes.** A handler on
+   the stage hit-tests the map's linked objects on every layer but Line Map's own (where the tools
+   own the pointer): hovering shows the cue and a double-click opens, so a single click still goes
+   to tokens, and the players' map-notes toggle turns it off. A read-only control for players, and a
+   single click on any layer, were the alternatives set aside. Probe: a Gamemaster links a journal
+   page; a player client sees the cue, double-clicks, and the page's sheet opens; the same object
+   hidden shows no cue. *Done on `dev`* (probe `dev:links`).
 3. **Hover tooltips** for every labelled object, not only linked ones: the label's text, so a
    crowded map can be read. Comes with 2, since it shares the hover path.
 4. **Travel routes.** With two symbols selected, the route along linked lines with the fewest
