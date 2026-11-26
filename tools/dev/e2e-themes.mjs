@@ -145,6 +145,8 @@ try {
   p.check(drawn.length === 2 && drawn.every(d => d.pixels > 40), 'the sci-fi symbols draw in the map colour over the starfield', drawn)
   const orbitron = await labelInfo(gm)
   p.check(orbitron.family === 'Orbitron' && orbitron.loaded, 'labels are set in Orbitron, loaded', orbitron)
+  await tool(gm, 'selectObject')
+  await p.shot(gm, 'scifi')
 
   // Fantasy, over the same map.
   const appliedF = await pickTheme(gm, 'fantasy')
@@ -162,6 +164,8 @@ try {
   p.check(back.alpha > 240 && back.luma > 150 && back.rgb[0] > back.rgb[2], 'the parchment is drawn: an empty spot is light and warm', back)
   const fell = await labelInfo(gm)
   p.check(fell.family === 'IM Fell English' && Math.abs(fell.width - orbitron.width) > 4, 'the label is set again, in IM Fell English', { fell, orbitron })
+  await tool(gm, 'selectObject')
+  await p.shot(gm, 'fantasy')
   const fsymbols = await shelf(gm, 'drawSymbol', 'set-symbol')
   p.check(fsymbols.length >= 6 && fsymbols.every(k => !k.includes(':')) && fsymbols.includes('major-settlement'), "the symbol tool shows today's symbols", fsymbols)
   drawn = await symbolsDrawn(gm)
