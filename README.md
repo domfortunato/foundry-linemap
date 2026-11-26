@@ -112,6 +112,18 @@ thick. The whole style grows: a road's width, a trail's dashes, a river's waves,
 dots, a barrier and its end ticks. A thick line is as easy to click as it looks, and the waypoints
 and labels on it stay where they are.
 
+### Colours
+
+The scene's content color (see *Other settings*) colors the whole map, and any line, symbol,
+waypoint, area or label can have a color of its own: a brown road, a blue river, a red border, one
+place name picked out. Select objects with the select tool (hotkey V) and right-click: the row of
+colors at the bottom of the menu has the scene's color first (the object follows the scene again),
+eleven map colors, and a rainbow swatch for any other color. Several objects change together, as
+one edit for undo. Objects without a color of their own follow the scene's color when it changes;
+colored ones keep theirs. Duplicating, copying and changing a line's style keep the color, and
+selected objects still show in the selection color. Another module can change the colors offered
+in `CONFIG.linemap.colors`.
+
 ### Changing a look
 
 To give an object another look without redrawing it, select it with the select tool (hotkey V) and
@@ -173,7 +185,8 @@ A map with no theme offers the fantasy symbols and paths.
 Access other scene specific settings using the settings layer control button.
 
 - Change the icon scale from 100% to 200% to represent lower or higher levels of scale detail
-- Pick the content color, any color, for contrast with the scene background. Selected objects show
+- Pick the content color, any color, for contrast with the scene background (objects can also have
+  their own: see *Colours*). Selected objects show
   in Foundry's selection color, or in the content color's opposite when the two are close
 - Choose the label font: Alegreya (the default), IM Fell English or Orbitron
 - Turn on the halo: an outline behind symbols, waypoints and labels that sets them apart from an

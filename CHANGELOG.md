@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Per-object colours.** Lines, symbols, waypoints, areas and labels can each have a colour of
+  their own, picked from a row of colours in the right-click menu or any colour through the
+  rainbow swatch. Uncoloured objects follow the scene's content colour as before. The API's
+  builders take a `color`. Earlier versions draw every object in the scene's colour.
 - **Line thickness.** A selected line, straight or freehand, takes the size slider and **]** and
   **[** to be drawn up to four times as thick, with its whole style scaled: widths, dashes, waves,
   dots and a barrier's ticks. The API's line builder takes a `size`.
