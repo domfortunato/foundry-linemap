@@ -6,6 +6,12 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Themes.** The scene settings offer a fantasy and a sci-fi theme. Picking one sets the color,
+  label font, halo and a background picture, and the symbols and lines the tools offer; everything
+  stays editable. Sci-fi brings six symbols from game-icons.net (credited in the README), lane and
+  jump lines, a starfield and the Orbitron font; fantasy brings a parchment and IM Fell English.
+  Earlier versions draw sci-fi symbols as a major settlement (and keep them), lanes and jumps as
+  major paths, and Orbitron labels in a fallback font.
 - **A halo.** Turned on in the scene settings, a halo outlines symbols, waypoints and labels in a
   contrasting color, so they stay legible over an image or a busy background. Its color follows the
   content color until another is picked. Earlier versions draw the map without it.

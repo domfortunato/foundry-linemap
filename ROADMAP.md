@@ -117,7 +117,9 @@ a hidden one not drawn for a player; they survive a reload; a missing file does 
   maintainer.
 
 Probe: applying each theme changes the colour, font and background pixels; the sci-fi symbols draw
-and link; a map made in one theme still loads after switching to the other.
+and link; a map made in one theme still loads after switching to the other. *Done on `dev`* (probe
+`dev:themes`): themes are `CONFIG.linemap.themes` entries, so another package can add one; a theme's
+background is an image object fitted to the Scene, under the map.
 
 ## 7. Play utility and editing
 

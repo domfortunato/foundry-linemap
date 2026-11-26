@@ -105,6 +105,20 @@ Controls.
 - **Delete or Backspace:** delete the selected objects
 - **Ctrl+Z:** undo your own last edit, one edit at a time
 
+## Themes
+
+The scene settings offer two themes. Picking one sets the map's color, label font, halo and a
+background picture covering the scene, and picks the symbols and lines the drawing tools offer.
+Everything a theme sets can still be changed afterwards, and switching themes replaces its
+background picture rather than adding another. A map keeps whatever it has drawn: symbols from
+one theme still show after switching to the other.
+
+- **Fantasy:** the classic symbols and paths, dark brown on parchment, labels in IM Fell English.
+- **Sci-fi:** stations, planets, starports, asteroid fields, jump gates and derelicts, joined by
+  lanes and jumps; pale blue on a starfield, labels in Orbitron.
+
+A map with no theme offers the fantasy symbols and paths.
+
 ## Other settings
 
 Access other scene specific settings using the settings layer control button.
@@ -112,7 +126,7 @@ Access other scene specific settings using the settings layer control button.
 - Change the icon scale from 100% to 200% to represent lower or higher levels of scale detail
 - Pick the content color, any color, for contrast with the scene background. Selected objects show
   in Foundry's selection color, or in the content color's opposite when the two are close
-- Choose the label font: Alegreya (the default) or IM Fell English
+- Choose the label font: Alegreya (the default), IM Fell English or Orbitron
 - Turn on the halo: an outline behind symbols, waypoints and labels that sets them apart from an
   image or a busy scene background under the map. It is the content color's opposite (white for a
   dark map) until you pick another color beside the switch. A symbol's halo also fills its gaps
@@ -126,3 +140,12 @@ beside it in `assets/fonts/`:
   (https://github.com/huertatipografica/Alegreya), compressed to WOFF2 from the Google Fonts release.
 - **IM Fell English**, copyright 2010 Igino Marini (www.iginomarini.com), the Google Fonts files
   unmodified.
+- **Orbitron**, copyright 2018 The Orbitron Project Authors
+  (https://github.com/theleagueof/orbitron), the Google Fonts file unmodified.
+
+## Theme art
+
+The sci-fi symbols are icons made by Lorc and Delapouite, available on https://game-icons.net,
+under the Creative Commons Attribution 3.0 licence (https://creativecommons.org/licenses/by/3.0/).
+Some are changed; `assets/themes/scifi/CREDITS.md` lists each icon, its author and the changes.
+The starfield and the parchment were written for this module.
