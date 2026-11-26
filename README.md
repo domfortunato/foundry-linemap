@@ -131,6 +131,41 @@ Access other scene specific settings using the settings layer control button.
   image or a busy scene background under the map. It is the content color's opposite (white for a
   dark map) until you pick another color beside the switch. A symbol's halo also fills its gaps
 
+## Scripting
+
+Macros and other modules reach the map through `game.modules.get("linemap").api`. Editing needs a
+user who may update the scene (a Gamemaster); anything the module cannot draw is refused before
+anything is saved.
+
+```js
+const api = game.modules.get("linemap").api;
+// Two settlements, a road between them, a name and a waypoint halfway.
+const [town, keep] = await api.add([
+  api.symbol({ x: 600, y: 900, symbol: "major-settlement" }),
+  api.symbol({ x: 1400, y: 900, symbol: "minor-site", size: 2 })
+]);
+const [road] = await api.add(api.line({ from: town, to: keep, style: "minor" }));
+await api.add([api.label({ text: "Greyhaven", on: town }), api.waypoint({ line: road, t: 0.5 })]);
+// Move the town (the road and the name follow), hide the keep, then take the hiding back.
+await api.update({ id: town, point: { point: [600, 500] } });
+await api.hide(keep);
+await api.undo();
+```
+
+- **Reading:** `objects()` and `get(id)` return copies of the saved objects.
+- **Editing:** `add(data)`, `update({ id, ...changes })`, `delete(ids)`, `hide(ids)`, `reveal(ids)` and
+  `undo()`. On the scene being viewed, an edit is drawn at once and joins your undo record, so
+  Ctrl+Z takes it back, even if the macro ran while another layer was active.
+- **Other scenes:** pass `{ scene }` (a scene or its id) to read or edit a scene that is not being
+  viewed. Its map is saved directly, with no undo.
+- **Building:** `symbol`, `waypoint`, `line`, `label`, `area` and `image` make the data `add` takes.
+  A line's `from` and `to`, a label's `on` and a waypoint's `line` take an object's id and link to
+  it, so they follow it as it moves. Symbols are `CONFIG.linemap.symbols` keys, line styles
+  `CONFIG.linemap.lineStyles` keys and patterns `CONFIG.linemap.patterns` keys.
+- **Hooks:** `linemapReady` (layer, scene) when a scene's map has been drawn, and
+  `linemapObjectsChanged` (scene, { changed, deleted, settings, userId }) whenever a map is saved,
+  by the API, by the tools, or by another user.
+
 ## Fonts
 
 The label fonts ship with the module, each under the SIL Open Font License 1.1, with its licence

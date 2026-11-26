@@ -130,7 +130,7 @@ lead somewhere; the editing items are independent conveniences.
    updates, deletes, reveals and hides them, through the same undo record as the tools. Hooks
    announce the layer being ready and objects changing. Upstream's issue #1 asked for a way to do
    this from a macro. Probe: a macro-style call creates an object the tools can see, and undo
-   removes it.
+   removes it. *Done on `dev`* (probe `dev:api`).
 2. **Document links.** A symbol, waypoint or label can hold the UUID of a document, set by the
    Gamemaster from the right-click menu or by dropping the document from the sidebar onto the
    object. A player who may see the document gets a cue on the object (a pointer cursor and the

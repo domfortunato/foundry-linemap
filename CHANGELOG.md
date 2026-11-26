@@ -6,6 +6,12 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **A scripting API** for macros and other modules, at `game.modules.get("linemap").api`: read a
+  scene's map, and add, update, delete, hide and reveal its objects, with builders for each kind of
+  object and links by id. Edits on the viewed scene join the undo record; hooks announce the map
+  being drawn and changing. The README's *Scripting* section has an example. An edit made while
+  another layer was active can now be undone after switching to Line Map; the undo record used to
+  be cleared on coming to the layer.
 - **Themes.** The scene settings offer a fantasy and a sci-fi theme. Picking one sets the color,
   label font, halo and a background picture, and the symbols and lines the tools offer; everything
   stays editable. Sci-fi brings six symbols from game-icons.net (credited in the README), lane and
