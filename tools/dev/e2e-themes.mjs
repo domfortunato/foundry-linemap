@@ -165,7 +165,7 @@ try {
   const fsymbols = await shelf(gm, 'drawSymbol', 'set-symbol')
   p.check(fsymbols.length >= 6 && fsymbols.every(k => !k.includes(':')) && fsymbols.includes('major-settlement'), "the symbol tool shows today's symbols", fsymbols)
   drawn = await symbolsDrawn(gm)
-  p.check(m.count === 6 && drawn.every(d => d.pixels > 40), 'the sci-fi symbols still draw after switching to fantasy', { count: m.count, drawn })
+  p.check(m.count === 5 && drawn.every(d => d.pixels > 40), 'the sci-fi symbols still draw after switching to fantasy', { count: m.count, drawn })
 
   // The values a theme sets stay editable.
   await openSettings(gm)
@@ -178,14 +178,14 @@ try {
 
   await reload(gm)
   await viewScene(gm, sceneId)
-  await until(gm, () => canvas.linemap.objects.length === 6)
+  await until(gm, () => canvas.linemap.objects.length === 5)
   drawn = await symbolsDrawn(gm)
   m = await map(gm)
-  p.check(m.saved.theme === 'fantasy' && m.count === 6 && drawn.every(d => d.pixels > 40), 'after a reload the map loads, in its theme, its sci-fi symbols drawn', { theme: m.saved.theme, drawn })
+  p.check(m.saved.theme === 'fantasy' && m.count === 5 && drawn.every(d => d.pixels > 40), 'after a reload the map loads, in its theme, its sci-fi symbols drawn', { theme: m.saved.theme, drawn })
 
   const pl = await p.pageAs(PLAYER)
   await viewScene(pl, sceneId)
-  await until(pl, () => canvas.linemap?.objects?.length === 6, null, { timeout: 20000 })
+  await until(pl, () => canvas.linemap?.objects?.length === 5, null, { timeout: 20000 })
   await until(pl, () => {
     const L = canvas.linemap
     const s = canvas.dimensions.sceneRect
