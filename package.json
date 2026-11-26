@@ -22,7 +22,8 @@
         "dev:curves": "node tools/dev/e2e-curves.mjs",
         "dev:sizes": "node tools/dev/e2e-sizes.mjs",
         "dev:images": "node tools/dev/e2e-images.mjs",
-        "dev:halo": "node tools/dev/e2e-halo.mjs"
+        "dev:halo": "node tools/dev/e2e-halo.mjs",
+        "dev:themes": "node tools/dev/e2e-themes.mjs"
     },
     "private": true,
     "devDependencies": {
