@@ -21,7 +21,8 @@
         "dev:polish": "node tools/dev/e2e-polish.mjs",
         "dev:curves": "node tools/dev/e2e-curves.mjs",
         "dev:sizes": "node tools/dev/e2e-sizes.mjs",
-        "dev:images": "node tools/dev/e2e-images.mjs"
+        "dev:images": "node tools/dev/e2e-images.mjs",
+        "dev:halo": "node tools/dev/e2e-halo.mjs"
     },
     "private": true,
     "devDependencies": {
