@@ -43,6 +43,8 @@
             "contentColor": "Content color",
             "symbolScale": "Symbol scale",
             "labelFont": "Label font",
+            "linkHint": "Paste the UUID of a journal entry, page, scene or other document (copy it from its sheet's header), or drop the document from the sidebar onto the object. Players who may see it open it with a double-click on the map.",
+            "linkNotFound": "No document has the UUID {uuid}.",
             "theme": "Theme",
             "themeHint": "Picking a theme sets the color, label font, halo and background picture, and the symbols and lines the tools offer. Everything it sets can still be changed.",
             "halo": "Halo",
@@ -61,7 +63,9 @@
             "size": "Size",
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",
-            "sendBack": "Send back"
+            "sendBack": "Send back",
+            "linkDocument": "Link document",
+            "unlinkDocument": "Unlink document"
         },
         "lineStyles": {
             "major": "Major path",

@@ -145,3 +145,14 @@ textarea.linemap-text-content {
     padding: 0.3rem;
     text-align: center;
 }
+
+// Document links: over a linked object, on any layer, the board shows a pointer (core sets the
+// board's cursor inline on every pointer move, so this one has to be !important).
+body.linemap-link-hover #board {
+    cursor: pointer !important;
+}
+
+#linemap-link-anchor {
+    position: fixed;
+    pointer-events: none;
+}

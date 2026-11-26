@@ -108,23 +108,25 @@ export class LineMapApi {
 
     // ---- building
 
-    /** A symbol at a point. `symbol` is a CONFIG.linemap.symbols key; size 1 to 4. */
-    symbol({ x, y, symbol, size, revealed, id }: { x: number, y: number, symbol?: string, size?: number } & Common): ObjectData {
+    /** A symbol at a point. `symbol` is a CONFIG.linemap.symbols key; size 1 to 4; `link` a document's UUID. */
+    symbol({ x, y, symbol, size, link, revealed, id }: { x: number, y: number, symbol?: string, size?: number, link?: string } & Common): ObjectData {
         return {
             ...this._common("symbol", revealed, id),
             point: { point: [x, y], sourceId: null, sourceT: null },
             symbol: symbol ?? Object.keys(CONFIG.linemap.symbols)[0],
-            size: size ?? null
+            size: size ?? null,
+            link: link ?? null
         } as ObjectData;
     }
 
     /** A waypoint on a line, at `t` along it (0 its start, 1 its end). */
-    waypoint({ line, t, symbol, size, revealed, id }: { line: string, t?: number, symbol?: string, size?: number } & Common): ObjectData {
+    waypoint({ line, t, symbol, size, link, revealed, id }: { line: string, t?: number, symbol?: string, size?: number, link?: string } & Common): ObjectData {
         return {
             ...this._common("waypoint", revealed, id),
             point: { point: null, sourceId: line, sourceT: t ?? 0.5 },
             symbol: symbol ?? Object.keys(CONFIG.linemap.waypoints)[0],
-            size: size ?? null
+            size: size ?? null,
+            link: link ?? null
         } as ObjectData;
     }
 
@@ -147,14 +149,15 @@ export class LineMapApi {
      * (above it when left out). `t` places it along a line it is on. Style: normal, bold, italic,
      * bolditalic; size 0.5 to 4.
      */
-    label({ text, x, y, on, t, offset, style, size, revealed, id }: { text: string, x?: number, y?: number, on?: string, t?: number, offset?: Vec2, style?: string, size?: number } & Common): ObjectData {
+    label({ text, x, y, on, t, offset, style, size, link, revealed, id }: { text: string, x?: number, y?: number, on?: string, t?: number, offset?: Vec2, style?: string, size?: number, link?: string } & Common): ObjectData {
         return {
             ...this._common("text", revealed, id),
             point: on ? { point: null, sourceId: on, sourceT: t ?? 0.5 } : { point: [x, y], sourceId: null, sourceT: null },
             offset: offset ?? (on ? [0, -50] : [0, 0]),
             text: String(text ?? ""),
             style: style ?? "normal",
-            size: size ?? null
+            size: size ?? null,
+            link: link ?? null
         } as ObjectData;
     }
 

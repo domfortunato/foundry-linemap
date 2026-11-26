@@ -13,6 +13,7 @@ import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
+import { DocumentLinks } from "./classes/links.js";
 
 const { layers } = foundry.canvas;
 
@@ -70,6 +71,8 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     tools: Record<string, Tool> = {};
     activeTool: Tool;
+    /** Document links: the pointer on linked objects on every layer, the link dialog, drops. */
+    links = new DocumentLinks(this);
     revealNewObjects = true;
     adjustLinked = true;
 
@@ -262,6 +265,8 @@ export class LineMapLayer extends layers.InteractionLayer {
                 })
         );
 
+        Hooks.on("dropCanvasData", (board, data) => this.links.onDrop(data));
+
         // Another user's save: take in the objects it names. This client's own saves are already on
         // its canvas, and so are any of its edits still on their way to the server.
         Hooks.on("updateScene", (obj, updates, options, userId) => {
@@ -277,6 +282,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         // The tool too: Canvas#tearDown deactivated the layer (clearTool), and activating it again with
         // the same control and tool calls no tool's onChange, so nothing else would bring it back.
         Hooks.on("canvasReady", () => {
+            this.links.attach();
             if (this.active) {
                 this._attachStageHandlers();
                 if (!this.activeTool && this.tools[game.activeTool]) this.activateTool(game.activeTool);
@@ -862,6 +868,7 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     async _tearDown(options) {
+        this.links.clear();
         this.clear(false);
         // Another Scene, or this one drawn again: the record names this map's objects.
         this.undoHistory = [];

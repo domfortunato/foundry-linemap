@@ -9,6 +9,8 @@ export interface SymbolData extends ObjectData {
     symbol: string;
     /** 1 to 4, multiplying the scene's symbol scale; null at 1. */
     size?: number | null;
+    /** The UUID of a document it links to, or null. */
+    link?: string | null;
 }
 
 export class Symbol extends ObjectType {
@@ -17,6 +19,8 @@ export class Symbol extends ObjectType {
     point: ConstrainedPoint;
     symbol: string;
     size = 1;
+    /** The UUID of a document this symbol opens (DocumentLinks), or null. */
+    link: string | null = null;
 
     sprite: any;
 
@@ -32,6 +36,7 @@ export class Symbol extends ObjectType {
             data.symbol
         );
         this.size = this.clampSize(data.size);
+        this.link = typeof data.link === "string" && data.link ? data.link : null;
     }
 
     static moveData(data: SymbolData, move: PointMover): SymbolData {
@@ -46,7 +51,8 @@ export class Symbol extends ObjectType {
         return { ...super.serialized, ...{
             point: this.point.serialized,
             symbol: this.symbol,
-            size: this.size === 1 ? null : this.size
+            size: this.size === 1 ? null : this.size,
+            link: this.link
         }};
     }
 

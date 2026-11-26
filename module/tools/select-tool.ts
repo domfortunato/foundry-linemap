@@ -1,3 +1,4 @@
+import { DocumentLinks } from "../classes/links.js";
 import { ObjectType } from "../classes/object.js";
 import { Tool, ToolHotkey } from "../classes/tool.js";
 import { AdjustmentPoint, SnapPoint, Vec2 } from "../dto.js";
@@ -116,8 +117,24 @@ export class SelectTool extends Tool {
                     handler: () => this.layer.reorderImages(images, -1)
                 }
             } : {};
+            const single: any = this.layer.selection.length === 1 ? this.layer.selection[0] : null;
+            const linkOptions = DocumentLinks.linkable(single) ? {
+                linkDocument: {
+                    icon: 'fa-link',
+                    label: 'linemap.menu.linkDocument',
+                    handler: () => this.layer.links.prompt(single)
+                },
+                ...(single.link ? {
+                    unlinkDocument: {
+                        icon: 'fa-link-slash',
+                        label: 'linemap.menu.unlinkDocument',
+                        handler: () => this.layer.links.setLink([single], null)
+                    }
+                } : {})
+            } : {};
             const menu = new ContextMenu({
                 ...imageOptions,
+                ...linkOptions,
                 left: {
                     icon: 'fa-eye-slash',
                     label: 'linemap.menu.hide',

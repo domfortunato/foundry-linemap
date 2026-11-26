@@ -14,3 +14,7 @@ declare function fetch(target: string): any;
 declare function btoa(arg: string): string;
 declare function setTimeout(...args: any[]): any;
 declare function clearTimeout(...args: any[]): any;
+declare function fromUuid(uuid: string): Promise<any>;
+declare function fromUuidSync(uuid: string): any;
+declare const document: any;
+declare const performance: any;

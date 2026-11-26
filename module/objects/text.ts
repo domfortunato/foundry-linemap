@@ -19,6 +19,8 @@ export interface TextData extends ObjectData {
     style: TextStyle;
     /** 0.5 to 4, multiplying the font size; null at 1. */
     size?: number | null;
+    /** The UUID of a document it links to, or null. */
+    link?: string | null;
 }
 
 export class Text extends ObjectType {
@@ -29,6 +31,8 @@ export class Text extends ObjectType {
     text: string;
     style: TextStyle;
     size = 1;
+    /** The UUID of a document this label opens (DocumentLinks), or null. */
+    link: string | null = null;
 
     sprite: any;
 
@@ -48,6 +52,7 @@ export class Text extends ObjectType {
             data.style
         );
         this.size = this.clampSize(data.size);
+        this.link = typeof data.link === "string" && data.link ? data.link : null;
     }
 
     static moveData(data: TextData, move: PointMover): TextData {
@@ -64,7 +69,8 @@ export class Text extends ObjectType {
             offset: this.offset,
             text: this.text,
             style: this.style,
-            size: this.size === 1 ? null : this.size
+            size: this.size === 1 ? null : this.size,
+            link: this.link
         }};
     }
 
