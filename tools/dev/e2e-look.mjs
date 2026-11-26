@@ -66,6 +66,7 @@ try {
   await tool(gm, 'selectObject')
   await clickAt(gm, LINE_AT)
   let looks = await looksOn(gm, LINE_AT)
+  await p.shot(gm, 'line-menu')
   const keys = looks.map(l => l[0])
   p.check(keys.includes('rough') && looks.some(([k, active]) => k === 'major' && active),
     "the menu of a selected line offers the line styles, the line's own marked", looks)
@@ -94,6 +95,7 @@ try {
   // A symbol's kind.
   await clickAt(gm, A)
   looks = await looksOn(gm, A)
+  await p.shot(gm, 'symbol-menu')
   const other = looks.find(([k, active]) => !active && k !== 'minor-site')?.[0]
   p.check(looks.some(([k, active]) => k === 'minor-site' && active) && !!other, "the menu of a symbol offers the symbols, its own marked", looks)
   await pick(gm, other)
