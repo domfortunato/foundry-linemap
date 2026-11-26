@@ -7,6 +7,8 @@
 //   document's name, and a double-click opens it; a single click does not.
 // - Nothing shows for a hidden object, for a document the player may not see, or while the player
 //   has map notes toggled off.
+// - Hover tooltips (7.3): hovering a symbol or line with labels shows their text, so a crowded map can
+//   be read; a hidden label's text is not shown.
 import { PROBE_TAG, clickAt, moduleWarnings, probe, probeScene, reload, scaled, sweep, tool, until, viewScene, writeLabel } from './lib.mjs'
 
 const p = probe('dev:links', { watchdogMs: 400000 })
@@ -122,6 +124,24 @@ try {
   await pl.mouse.dblclick(s.x, s.y)
   await pl.waitForTimeout(scaled(800))
   p.check(h.cursor !== 'pointer' && h.tooltip === null && (await openSheets(pl)).length === 0, 'a label linked to a document the player may not see shows nothing and opens nothing', { h, sheets: await openSheets(pl) })
+
+  // Hover tooltips (ROADMAP 7.3): a labelled symbol or line shows its labels' text, with no pointer.
+  const more = await gm.evaluate(async () => {
+    const api = game.modules.get('linemap').api
+    const [b] = await api.add(api.symbol({ x: 1000, y: 1300, symbol: 'minor-site' }))
+    const [road] = await api.add(api.line({ from: [1300, 1300], to: [1900, 1300] }))
+    const [mire, oldRoad] = await api.add([api.label({ text: 'Mirefen', on: b }), api.label({ text: 'Old Road', on: road, t: 0.5 })])
+    return { b, road, mire, oldRoad }
+  })
+  await until(pl, (id) => !!canvas.linemap.objects.find(o => o.id === id)?.sprite, more.oldRoad, { timeout: 15000 })
+  h = await hover(pl, { x: 1000, y: 1300 })
+  p.check(h.tooltip === 'Mirefen' && h.cursor !== 'pointer', "hovering a labelled symbol shows the player its label's text, with no pointer", h)
+  h = await hover(pl, { x: 1420, y: 1300 })
+  p.check(h.tooltip === 'Old Road', "hovering a line shows its label's text", h)
+  await gm.evaluate(async (id) => { await game.modules.get('linemap').api.hide(id) }, more.mire)
+  await until(pl, (id) => canvas.linemap.objects.find(o => o.id === id)?.isRevealed === false, more.mire)
+  h = await hover(pl, { x: 1000, y: 1300 })
+  p.check(h.tooltip === null, "a hidden label's text is not shown", h)
 
   // Map notes toggled off: no cue.
   await pl.evaluate(async () => { await game.settings.set('core', 'notesDisplayToggle', false) })
