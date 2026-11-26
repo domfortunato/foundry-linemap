@@ -113,6 +113,9 @@ Access other scene specific settings using the settings layer control button.
 - Pick the content color, any color, for contrast with the scene background. Selected objects show
   in Foundry's selection color, or in the content color's opposite when the two are close
 - Choose the label font: Alegreya (the default) or IM Fell English
+- Turn on the halo: an outline behind symbols, waypoints and labels that sets them apart from an
+  image or a busy scene background under the map. It is the content color's opposite (white for a
+  dark map) until you pick another color beside the switch. A symbol's halo also fills its gaps
 
 ## Fonts
 

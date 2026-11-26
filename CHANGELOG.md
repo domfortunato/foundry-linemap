@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **A halo.** Turned on in the scene settings, a halo outlines symbols, waypoints and labels in a
+  contrasting color, so they stay legible over an image or a busy background. Its color follows the
+  content color until another is picked. Earlier versions draw the map without it.
 - **Images in the map.** A new image tool (hotkey G) places a picture from Foundry's file picker,
   drawn under the map's lines, symbols and labels in its own colors. Images move with the select
   tool, resize by their corners with the adjust tool (Shift keeps their proportions), and can be

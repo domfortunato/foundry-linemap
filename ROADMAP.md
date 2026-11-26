@@ -102,7 +102,7 @@ a hidden one not drawn for a player; they survive a reload; a missing file does 
   with its own colour. It is needed once images sit behind the map. The footprint shapes, which
   already keep lines out of a symbol's gaps, are the natural source of a symbol's halo. Probe:
   with the halo on, the pixels just outside a symbol's stroke and a label's glyphs are the halo
-  colour; with it off they are the background.
+  colour; with it off they are the background. *Done on `dev`* (probe `dev:halo`).
 - **A theme** is a preset shipped with the module. It sets the colour, label font, halo,
   background images, a symbol set and line styles. Applying one in the scene settings sets those
   values, which stay editable afterwards.
