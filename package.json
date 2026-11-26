@@ -29,7 +29,8 @@
         "dev:routes": "node tools/dev/e2e-routes.mjs",
         "dev:look": "node tools/dev/e2e-look.mjs",
         "dev:redo": "node tools/dev/e2e-redo.mjs",
-        "dev:copy": "node tools/dev/e2e-copy.mjs"
+        "dev:copy": "node tools/dev/e2e-copy.mjs",
+        "dev:nudge": "node tools/dev/e2e-nudge.mjs"
     },
     "private": true,
     "devDependencies": {
