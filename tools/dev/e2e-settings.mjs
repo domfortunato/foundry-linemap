@@ -52,7 +52,7 @@ try {
   }, FORM)
   p.check(form0.color === '#000000' && form0.symbolScale === 1 && form0.labelFont === 'Alegreya',
     'a new map starts in black, at scale 1, in Alegreya', form0)
-  p.check(JSON.stringify(form0.fonts) === JSON.stringify(['Alegreya', 'IM Fell English']), 'the label font choices are the two shipped fonts', form0.fonts)
+  p.check(JSON.stringify(form0.fonts) === JSON.stringify(['Alegreya', 'IM Fell English', 'Orbitron']), 'the label font choices are the three shipped fonts', form0.fonts)
   p.check((await values(page)).labelSprite?.includes('Alegreya'), 'the label is drawn in Alegreya', (await values(page)).labelSprite)
 
   await page.evaluate((FORM) => {

@@ -30,7 +30,7 @@ try {
   p.check(r.layer === 'LineMapLayer', 'CONFIG.Canvas.layers.linemap is the LineMapLayer', r.layer)
   p.check(['line', 'symbol', 'waypoint', 'area', 'text'].every(t => r.objectTypes.includes(t)), 'the five object types are registered', r.objectTypes)
   p.check(r.symbols > 0 && r.lineStyles > 0, 'symbols and line styles are configured', { symbols: r.symbols, lineStyles: r.lineStyles })
-  p.check(JSON.stringify(Object.keys(r.fonts)) === JSON.stringify(['Alegreya', 'IM Fell English']), 'the label fonts are Alegreya, then IM Fell English', Object.keys(r.fonts))
+  p.check(JSON.stringify(Object.keys(r.fonts)) === JSON.stringify(['Alegreya', 'IM Fell English', 'Orbitron']), 'the label fonts are Alegreya, IM Fell English, then Orbitron', Object.keys(r.fonts))
   for (const [font, n] of Object.entries(r.fonts)) p.check(n >= 1, `${font} is in CONFIG.fontDefinitions`, n)
 
   // Core loads every font definition at startup (FontConfig.loadFont adds a face to document.fonts only
