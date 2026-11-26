@@ -37,6 +37,7 @@ try {
   const gm = await p.gmPage()
   await sweep(gm)
   const sceneId = await probeScene(p, gm, 'rotate')
+  await gm.addStyleTag({ content: '#pause { display: none !important; }' })
   await gm.evaluate(async (name) => { await foundry.documents.User.create({ name, role: 1 }) }, PLAYER)
   p.cleanup(() => gm.evaluate(async (name) => { await game.users.getName(name)?.delete() }, PLAYER))
 
@@ -62,6 +63,7 @@ try {
   p.check(has > 0 && Number(start) === 0, "a label's right-click menu has a rotation slider, at 0", { has, start })
   if (!has) throw new Error('there is no rotation slider')
   await slider(gm, 'rotation').fill('45')
+  await p.shot(gm, 'menu')
   await closeMenu(gm)
   await until(gm, (id) => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).find(o => o.id === id)?.rotation === 45, ids.free)
   const turned = await sprite(gm, ids.free)
