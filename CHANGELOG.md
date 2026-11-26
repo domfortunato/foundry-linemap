@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Travel routes.** With two symbols or waypoints selected, the route between them along linked
+  lines that passes the fewest waypoints (days of travel) is highlighted, with its count. Lines
+  branch where one ends on another. The route shows on the Gamemaster's screen only and is never
+  saved; macros get it from `api.route`.
 - **Document links.** A symbol, waypoint or label can link to a journal page, scene or other
   document, by dropping it on the object or from the right-click menu. Like map notes, hovering a
   linked object on any layer shows the document's name, and a double-click opens it, for players

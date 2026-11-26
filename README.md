@@ -147,6 +147,18 @@ Access other scene specific settings using the settings layer control button.
   image or a busy scene background under the map. It is the content color's opposite (white for a
   dark map) until you pick another color beside the switch. A symbol's halo also fills its gaps
 
+## Travel routes
+
+Waypoints mark days of travel. With the select tool, select two symbols or waypoints (shift-click
+the second): the route between them along linked lines that passes the fewest waypoints is
+highlighted in the selection color, with its count ("3 waypoints"). Of routes with as many
+waypoints, the shorter is shown. Lines join where their ends are linked: to a symbol, to a waypoint,
+or to a point along another line, which then branches there. Two symbols with no linked lines
+between them say "No route".
+
+The route shows only on your screen, while the Line Map tools are active, and follows the map as you
+edit it. It is never saved. Hidden objects count, since only the Gamemaster can select.
+
 ## Scripting
 
 Macros and other modules reach the map through `game.modules.get("linemap").api`. Editing needs a
@@ -168,7 +180,10 @@ await api.hide(keep);
 await api.undo();
 ```
 
-- **Reading:** `objects()` and `get(id)` return copies of the saved objects.
+- **Reading:** `objects()` and `get(id)` return copies of the saved objects. `route(from, to)`
+  finds the travel route between two symbols or waypoints by id: `{ waypoints, lines, length }`,
+  the ids of the waypoints passed and of the lines travelled, in order, and its length in pixels, or
+  null when no lines join them.
 - **Editing:** `add(data)`, `update({ id, ...changes })`, `delete(ids)`, `hide(ids)`, `reveal(ids)` and
   `undo()`. On the scene being viewed, an edit is drawn at once and joins your undo record, so
   Ctrl+Z takes it back, even if the macro ran while another layer was active.

@@ -147,7 +147,9 @@ lead somewhere; the editing items are independent conveniences.
    show their labels' text; the pointer cue stays for objects with a document.
 4. **Travel routes.** With two symbols selected, the route along linked lines with the fewest
    waypoints is highlighted and its count shown, since waypoints mark days of travel. Probe: a
-   three-symbol map with two routes of different length picks the shorter.
+   three-symbol map with two routes of different length picks the shorter. *Done on `dev`* (probe
+   `dev:routes`): waypoints can be the ends too, ties go to the shorter route, a line ending on
+   another branches there, and `api.route` gives the route to macros.
 5. **Change an existing object's look.** The right-click menu changes a line's style, a symbol's
    kind, a waypoint's kind and an area's pattern, instead of deleting and redrawing. Probe: a line
    changes from major to rough and keeps its points and links.
