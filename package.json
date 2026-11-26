@@ -31,7 +31,8 @@
         "dev:redo": "node tools/dev/e2e-redo.mjs",
         "dev:copy": "node tools/dev/e2e-copy.mjs",
         "dev:nudge": "node tools/dev/e2e-nudge.mjs",
-        "dev:rotate": "node tools/dev/e2e-rotate.mjs"
+        "dev:rotate": "node tools/dev/e2e-rotate.mjs",
+        "dev:thick": "node tools/dev/e2e-thick.mjs"
     },
     "private": true,
     "devDependencies": {
