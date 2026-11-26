@@ -143,7 +143,8 @@ lead somewhere; the editing items are independent conveniences.
    page; a player client sees the cue, double-clicks, and the page's sheet opens; the same object
    hidden shows no cue. *Done on `dev`* (probe `dev:links`).
 3. **Hover tooltips** for every labelled object, not only linked ones: the label's text, so a
-   crowded map can be read. Comes with 2, since it shares the hover path.
+   crowded map can be read. Comes with 2, since it shares the hover path. *Done on `dev`* (in probe `dev:links`): symbols, waypoints and lines
+   show their labels' text; the pointer cue stays for objects with a document.
 4. **Travel routes.** With two symbols selected, the route along linked lines with the fewest
    waypoints is highlighted and its count shown, since waypoints mark days of travel. Probe: a
    three-symbol map with two routes of different length picks the shorter.

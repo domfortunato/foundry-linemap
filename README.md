@@ -59,6 +59,9 @@ pointer and the document's name, and a double-click opens it (a journal at the l
 scene by viewing it). Players see this only for revealed objects and for documents they may see,
 and not while they have map notes turned off.
 
+Hovering a symbol, waypoint or line that has labels also shows their text, so a crowded or
+zoomed-out map can still be read. Hidden labels are left out for players.
+
 ## Object details
 
 ### Text offset and orientation

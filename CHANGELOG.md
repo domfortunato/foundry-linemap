@@ -11,6 +11,8 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
   linked object on any layer shows the document's name, and a double-click opens it, for players
   too when they may see it and the object is revealed. Earlier versions keep the links but do
   nothing with them.
+- **Hover tooltips.** Hovering a symbol, waypoint or line shows the text of its labels, so a
+  crowded or zoomed-out map can be read.
 - **A scripting API** for macros and other modules, at `game.modules.get("linemap").api`: read a
   scene's map, and add, update, delete, hide and reveal its objects, with builders for each kind of
   object and links by id. Edits on the viewed scene join the undo record; hooks announce the map
