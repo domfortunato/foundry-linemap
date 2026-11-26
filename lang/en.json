@@ -51,6 +51,7 @@
             "labelFont": "Label font",
             "linkHint": "Paste the UUID of a journal entry, page, scene or other document (copy it from its sheet's header), or drop the document from the sidebar onto the object. Players who may see it open it with a double-click on the map.",
             "linkNotFound": "No document has the UUID {uuid}.",
+            "copied": "Copied {count} Line Map objects. Paste them with Ctrl+V, in this scene or another.",
             "theme": "Theme",
             "themeHint": "Picking a theme sets the color, label font, halo and background picture, and the symbols and lines the tools offer. Everything it sets can still be changed.",
             "halo": "Halo",
@@ -70,6 +71,7 @@
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",
             "sendBack": "Send back",
+            "duplicate": "Duplicate",
             "linkDocument": "Link document",
             "look": {
                 "line": "Line style",

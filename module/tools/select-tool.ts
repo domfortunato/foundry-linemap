@@ -136,6 +136,11 @@ export class SelectTool extends Tool {
                 } : {})
             } : {};
             const menu = new ContextMenu({
+                duplicate: {
+                    icon: 'fa-clone',
+                    label: 'linemap.menu.duplicate',
+                    handler: () => this.layer.duplicateSelection()
+                },
                 ...imageOptions,
                 ...linkOptions,
                 left: {

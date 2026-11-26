@@ -15,6 +15,7 @@ import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
 import { DocumentLinks } from "./classes/links.js";
 import { TravelRoutes } from "./classes/routes.js";
+import { MapClipboard } from "./classes/clipboard.js";
 
 const { layers } = foundry.canvas;
 
@@ -634,6 +635,56 @@ export class LineMapLayer extends layers.InteractionLayer {
 
         this.registerHistory();
         this.redraw();
+    }
+
+    // Core sends Ctrl+C, Ctrl+X and Ctrl+V to the active layer's handlers; each says whether it acted.
+
+    _onCopyKey(event): boolean {
+        return this.copySelection();
+    }
+
+    _onCutKey(event): boolean {
+        if (!this.copySelection()) return false;
+        this.deleteObjects(...this.selection);
+        return true;
+    }
+
+    _onPasteKey(event): boolean {
+        if (!MapClipboard.objects?.length) return false;
+        const { x, y } = canvas.mousePosition;
+        this.pasteObjects(MapClipboard.objects, { at: [x, y] });
+        return true;
+    }
+
+    /** Copy the selection to this client's clipboard; whether there was one. */
+    copySelection(): boolean {
+        const selection = this.selection;
+        if (!selection.length) return false;
+        MapClipboard.objects = MapClipboard.copyOf(this, selection);
+        ui.notifications.info(game.i18n.format("linemap.ui.copied", { count: selection.length }));
+        return true;
+    }
+
+    /** Copy the selection beside itself, half a grid space down and right, and select the copy. */
+    async duplicateSelection() {
+        const selection = this.selection;
+        if (!selection.length) return;
+        const step = (canvas.grid?.size || 100) / 2;
+        await this.pasteObjects(MapClipboard.copyOf(this, selection), { offset: [step, step] });
+    }
+
+    /** Add copied objects (MapClipboard) as one edit, with new ids, above everything, selected. */
+    async pasteObjects(objects: ObjectData[], where: { at?: Vec2, offset?: Vec2 }) {
+        const sort = this.objects.reduce((m, o) => Math.max(m, o.sort ?? 0), 0) + 1;
+        const pasted = MapClipboard.place(objects, { ...where, sort });
+        const data = structuredClone(this.serialized);
+        data.objects.push(...pasted);
+        const ids = new Set(pasted.map(o => o.id));
+        this.applyData(data);
+        const saved = this.registerHistory();
+        this.setSelection(...this.objects.filter(o => ids.has(o.id)));
+        this.tools[game.activeTool]?.stateInvalidated();
+        await saved;
     }
 
     deleteObjects(...obj: ObjectType[]) {
