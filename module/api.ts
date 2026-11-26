@@ -155,13 +155,14 @@ export class LineMapApi {
      * A line from one point to another, each a position or an object's id to link to. With `via`
      * (positions between), or `smooth`, it is a smooth curve through them all.
      */
-    line({ from, to, via, style, smooth, revealed, id }: { from: PointOrId, to: PointOrId, via?: Vec2[], style?: string, smooth?: boolean } & Common): ObjectData {
+    line({ from, to, via, style, smooth, size, revealed, id }: { from: PointOrId, to: PointOrId, via?: Vec2[], style?: string, smooth?: boolean, size?: number } & Common): ObjectData {
         const points = [this._point(from), ...(via ?? []).map(pt => this._point(pt)), this._point(to)];
         return {
             ...this._common("line", revealed, id),
             points,
             style: style ?? Object.keys(CONFIG.linemap.lineStyles)[0],
-            smooth: points.length > 2 || smooth ? true : null
+            smooth: points.length > 2 || smooth ? true : null,
+            size: size ?? null
         } as ObjectData;
     }
 

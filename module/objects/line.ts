@@ -8,6 +8,8 @@ export interface LineData extends ObjectData {
     style: string;
     /** A freehand line: a smooth curve through all its points. null (saved) or absent: straight. */
     smooth?: boolean | null;
+    /** 1 to 4, multiplying the style's widths, dashes, waves and dots; null at 1. */
+    size?: number | null;
 }
 
 export class Line extends ObjectType {
@@ -21,6 +23,8 @@ export class Line extends ObjectType {
      * always had (none of the path code below runs for it).
      */
     smooth = false;
+    /** Thickness: every measure of the style's drawing is multiplied by it (the size slider, ] and [). */
+    size = 1;
     _centerlineKey: string;
     _centerline: Vec2[];
 
@@ -42,6 +46,16 @@ export class Line extends ObjectType {
             data.style,
             !!data.smooth
         );
+        this.size = this.clampSize(data.size);
+    }
+
+    get sizeRange(): [number, number] {
+        return [1, 4];
+    }
+
+    /** How far from the line's middle a click selects it: the style's tolerance, grown with the line. */
+    get selectTolerance(): number {
+        return (CONFIG.linemap.lineStyles[this.style]?.selectTolerance ?? 5) * this.size;
     }
 
     /** The line as drawn, before any style's own shape: the curve of a smooth line, else its points. */
@@ -68,7 +82,8 @@ export class Line extends ObjectType {
         return { ...super.serialized, ...{
             points: this.points.map(pt => pt.serialized),
             style: this.style,
-            smooth: this.smooth ? true : null
+            smooth: this.smooth ? true : null,
+            size: this.size === 1 ? null : this.size
         }};
     }
 
@@ -84,7 +99,7 @@ export class Line extends ObjectType {
 
     /** What the line's graphics depend on: a change of any of it rebuilds them. */
     get _drawKey(): string {
-        return JSON.stringify([this.style, this._currentColorHex, this.smooth, this.points.map(pt => pt.point)]);
+        return JSON.stringify([this.style, this._currentColorHex, this.smooth, this.size, this.points.map(pt => pt.point)]);
     }
 
     draw(layers: ObjectDrawLayers) {
@@ -106,8 +121,9 @@ export class Line extends ObjectType {
         return PointType.line;
     }
 
+    /** How far above the line a label put on it starts: further on a thicker line. */
     get textAscent(): number {
-        return 15;
+        return 15 * this.size;
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]) {
@@ -162,15 +178,14 @@ export class Line extends ObjectType {
         if (this.smooth) {
             const path = this.centerline;
             if (pt2) return path.slice(1).some((p, i) => lineIntersectsBox([path[i], p], [pt1, pt2]));
-            return nearestOnPath(path, pt1).dist <= (CONFIG.linemap.lineStyles[this.style]?.selectTolerance ?? 5);
+            return nearestOnPath(path, pt1).dist <= this.selectTolerance;
         }
         if (pt2) {
             return lineIntersectsBox(this.points.map(pt => pt.point), [pt1, pt2]);
         } else {
             const dist = distanceToLine(pt1, this.points[0].point, this.points[1].point, true);
             // A style this build does not know is drawn as the first style (getType), and selected like one.
-            const threshold = CONFIG.linemap.lineStyles[this.style]?.selectTolerance ?? 5;
-            return dist <= threshold;
+            return dist <= this.selectTolerance;
         }
     }
 

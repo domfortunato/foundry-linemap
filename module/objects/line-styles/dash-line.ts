@@ -7,10 +7,10 @@ export class DashLine extends Line {
         {
             let coverage = 0;
             const config = CONFIG.linemap.lineStyles[this.style];
-            const [on, off]: [number, number] = config?.dash ?? [12, 8];
+            const [on, off] = (config?.dash ?? [12, 8]).map((v: number) => v * this.size) as [number, number];
             const period = on + off;
             const gfx = new PIXI.Graphics()
-                .lineStyle(config?.width ?? 4, this._currentColorHex);
+                .lineStyle((config?.width ?? 4) * this.size, this._currentColorHex);
 
             const drawSegment = (pt: Vec2, u: Vec2, l: number, coverage: number) => {
                 let first = true;

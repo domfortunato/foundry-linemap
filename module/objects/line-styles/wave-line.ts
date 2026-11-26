@@ -13,17 +13,18 @@ export class WaveLine extends Line {
             const [l, u] = lengthAndUnitVector(d);
             let n = normal(u);
 
-            const intermediateCount = Math.max(Math.floor((l - 16.0) / 32.0), 0);
+            const step = 32.0 * this.size;
+            const intermediateCount = Math.max(Math.floor((l - step / 2) / step), 0);
             const pts = [
-                ...[...Array(intermediateCount).keys()].map(j => add2(pt1, mult2(u, 32.0 * (j+1)))),
+                ...[...Array(intermediateCount).keys()].map(j => add2(pt1, mult2(u, step * (j+1)))),
                 pt2
             ];
 
             gfx.moveTo(...pt1);
             let prevPt = pt1;
             for (const nextPt of pts) {
-                const cp1 = add2(prevPt, mult2(add2(u, n), 8.0));
-                const cp2 = add2(nextPt, mult2(add2(mult2(u, -1), n), 8.0));
+                const cp1 = add2(prevPt, mult2(add2(u, n), 8.0 * this.size));
+                const cp2 = add2(nextPt, mult2(add2(mult2(u, -1), n), 8.0 * this.size));
                 gfx.bezierCurveTo(...cp1, ...cp2, ...nextPt);
 
                 prevPt = nextPt;
@@ -41,8 +42,9 @@ export class WaveLine extends Line {
     _curvedPath(): Vec2[] {
         const base = this.centerline;
         const l = pathLength(base);
-        const count = Math.max(Math.floor((l - 16.0) / 32.0), 0);
-        const stops = [...[...Array(count).keys()].map(j => 32.0 * (j + 1) / l), 1].map(t => pointAlongPath(base, t).pt);
+        const step = 32.0 * this.size;
+        const count = Math.max(Math.floor((l - step / 2) / step), 0);
+        const stops = [...[...Array(count).keys()].map(j => step * (j + 1) / l), 1].map(t => pointAlongPath(base, t).pt);
         const gfx = new PIXI.Graphics();
         let prevPt = base[0];
         let side = 1;
@@ -50,8 +52,8 @@ export class WaveLine extends Line {
         for (const nextPt of stops) {
             const [, u] = lengthAndUnitVector(sub2(nextPt, prevPt));
             const n = mult2(normal(u), side);
-            const cp1 = add2(prevPt, mult2(add2(u, n), 8.0));
-            const cp2 = add2(nextPt, mult2(add2(mult2(u, -1), n), 8.0));
+            const cp1 = add2(prevPt, mult2(add2(u, n), 8.0 * this.size));
+            const cp2 = add2(nextPt, mult2(add2(mult2(u, -1), n), 8.0 * this.size));
             gfx.bezierCurveTo(...cp1, ...cp2, ...nextPt);
             prevPt = nextPt;
             side = -side;
@@ -62,14 +64,14 @@ export class WaveLine extends Line {
 
     makeGraphics(): any {
         const gfx = new PIXI.Graphics()
-            .lineStyle(3, this._currentColorHex);
+            .lineStyle(3 * this.size, this._currentColorHex);
         const poly = new PIXI.Polygon(...this.path.flatMap(p => p));
         poly.closeStroke = false;
         return gfx.drawPolygon(poly);
     }
 
     getSnapPoints(pt: Vec2, types: SnapType[]) {
-        // A smooth line snaps to its curve's centre (Line); the waves are 8 px either side of it.
+        // A smooth line snaps to its curve's centre (Line); the waves are 8 px (times its size) either side of it.
         if (this.smooth) return super.getSnapPoints(pt, types);
         const result: SnapPoint[] = [];
         const config = CONFIG.linemap.snap;
