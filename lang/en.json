@@ -70,6 +70,12 @@
             "bringForward": "Bring forward",
             "sendBack": "Send back",
             "linkDocument": "Link document",
+            "look": {
+                "line": "Line style",
+                "symbol": "Symbol",
+                "waypoint": "Waypoint",
+                "area": "Pattern"
+            },
             "unlinkDocument": "Unlink document"
         },
         "lineStyles": {

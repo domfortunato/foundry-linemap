@@ -12,9 +12,22 @@
     {{#if menuOptions.right}}
         <a class="linemap-menu-item linemap-menu-item-right" data-action="selectOption" data-option="right" data-tooltip="{{menuOptions.right.label}}" aria-label="{{localize menuOptions.right.label}}"><i class="fas {{menuOptions.right.icon}}" aria-hidden="true"></i></a>
     {{/if}}
-    {{#if size}}
-        <label class="linemap-menu-size" data-tooltip="{{size.label}}">
-            <input type="range" name="size" min="{{size.min}}" max="{{size.max}}" step="{{size.step}}" value="{{size.value}}" aria-label="{{localize size.label}}">
-        </label>
+    {{#if below}}
+        <div class="linemap-menu-below">
+            {{#if size}}
+                <label class="linemap-menu-size" data-tooltip="{{size.label}}">
+                    <input type="range" name="size" min="{{size.min}}" max="{{size.max}}" step="{{size.step}}" value="{{size.value}}" aria-label="{{localize size.label}}">
+                </label>
+            {{/if}}
+            {{#if look}}
+                <div class="linemap-menu-look" role="group" aria-label="{{localize look.label}}">
+                    {{#each look.options}}
+                        <a class="{{#if area}}area{{/if}} {{#if active}}active{{/if}}" data-action="selectLook" data-look="{{key}}" data-tooltip="{{label}}" aria-label="{{localize label}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">
+                            {{#if image}}<img src="{{image}}" alt="" />{{else}}<span class="linemap-area-placeholder" style="height: {{lineWidth}}px"></span>{{/if}}
+                        </a>
+                    {{/each}}
+                </div>
+            {{/if}}
+        </div>
     {{/if}}
 </div>

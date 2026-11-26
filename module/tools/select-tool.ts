@@ -1,4 +1,5 @@
 import { DocumentLinks } from "../classes/links.js";
+import { lookOption } from "../classes/looks.js";
 import { ObjectType } from "../classes/object.js";
 import { Tool, ToolHotkey } from "../classes/tool.js";
 import { AdjustmentPoint, SnapPoint, Vec2 } from "../dto.js";
@@ -82,6 +83,8 @@ export class SelectTool extends Tool {
      * the canvas well away from it closes it too. The menu reaches 80 px either side of its centre.
      */
     closeMenuIfAway(pt: { x: number, y: number }) {
+        // Over the menu itself (its row of looks reaches further): it stays.
+        if (document.elementFromPoint(pt.x, pt.y)?.closest?.(".linemap-menu")) return;
         if (this.menu && this.menuAt && Math.hypot(pt.x - this.menuAt.x, pt.y - this.menuAt.y) > 110) this.closeMenu();
     }
 
@@ -159,7 +162,7 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            }, this._sizeOption());
+            }, this._sizeOption(), lookOption(this.layer, this.layer.selection));
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };

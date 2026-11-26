@@ -123,11 +123,68 @@
         font-size: 15px;
     }
 
-    // Under the two buttons, centred on the click and well inside the 110 px the menu is kept open for.
-    .linemap-menu-size {
+    // Under the two buttons, centred on the click, touching the circle so the pointer can reach it
+    // without leaving the menu: the size slider, then the row of looks.
+    .linemap-menu-below {
         position: absolute;
         top: 86px;
-        left: -20px;
+        left: 50px;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .linemap-menu-look {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 3px;
+        width: max-content;
+        max-width: 300px;
+        margin-top: 2px;
+        padding: 4px;
+        background: rgba(0, 0, 0, .8);
+        border-radius: 12px;
+
+        a {
+            flex: 0 0 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid black;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .6);
+
+            img {
+                width: 26px;
+                height: 26px;
+                object-fit: contain;
+                border: 0;
+            }
+
+            &.area img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .linemap-area-placeholder {
+                width: 100%;
+                background: black;
+                scale: 1.0 0.5;
+            }
+
+            &.active {
+                border: 2px solid var(--color-warm-2);
+                box-shadow: 0 0 4px var(--color-warm-3);
+            }
+        }
+    }
+
+    .linemap-menu-size {
         width: 140px;
         padding: 4px 10px;
         background: rgba(0, 0, 0, .8);

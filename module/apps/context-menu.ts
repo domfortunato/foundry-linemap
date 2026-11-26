@@ -1,5 +1,12 @@
 const { api } = foundry.applications;
 
+/** A row of looks under the menu (a line's styles, a symbol's kinds...): pick(key) gives the selection one. */
+export interface LookOption {
+    label: string,
+    options: { key: string, label: string, image?: string, lineWidth: number, area: boolean, active: boolean }[],
+    pick: (key: string) => void
+}
+
 export interface MenuOption {
     icon: string,
     label: string,
@@ -27,7 +34,8 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
             frame: false
         },
 		actions: {
-			selectOption: ContextMenu.selectOption
+			selectOption: ContextMenu.selectOption,
+			selectLook: ContextMenu.selectLook
 		}
 	};
 
@@ -41,11 +49,14 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
 
     sizeOption?: SizeOption;
 
-    constructor(menuOptions: Record<string, MenuOption>, sizeOption?: SizeOption, options = {}) {
+    lookOption?: LookOption;
+
+    constructor(menuOptions: Record<string, MenuOption>, sizeOption?: SizeOption, lookOption?: LookOption, options = {}) {
         super(options);
 
         this.menuOptions = menuOptions;
         this.sizeOption = sizeOption;
+        this.lookOption = lookOption;
     }
 
     _prepareContext(options) {
@@ -53,7 +64,8 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
         const extras = Object.entries(this.menuOptions)
             .filter(([key]) => key !== 'left' && key !== 'right')
             .map(([key, option]) => ({ key, ...option }));
-        return { menuOptions: this.menuOptions, extras, size: this.sizeOption };
+        const look = this.lookOption;
+        return { menuOptions: this.menuOptions, extras, size: this.sizeOption, look, below: !!(this.sizeOption || look) };
     }
 
     _onRender(context, options) {
@@ -80,6 +92,11 @@ export class ContextMenu extends api.HandlebarsApplicationMixin(
     static selectOption(event, target) {
         this.close({ animate: false });
         this.menuOptions[target.dataset.option]?.handler();
+    }
+
+    static selectLook(event, target) {
+        this.close({ animate: false });
+        this.lookOption?.pick(target.dataset.look);
     }
 
 }
