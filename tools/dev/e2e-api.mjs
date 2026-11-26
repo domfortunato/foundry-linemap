@@ -57,7 +57,6 @@ try {
   p.check(JSON.stringify(selected) === JSON.stringify([id]), 'the select tool picks it with a click', selected)
   const heard = await until(gm, (id) => window.__lm.changed.some(c => c.changed?.includes(id)), id)
   p.check(!!heard, 'linemapObjectsChanged announces it, with its id', await gm.evaluate(() => window.__lm.changed))
-  await gm.keyboard.press('Escape')
   await gm.keyboard.press('Control+z')
   const undone = await until(gm, (id) => !canvas.linemap.objects.some(o => o.id === id) && !(canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).some(o => o.id === id), id)
   p.check(!!undone, 'Ctrl+Z takes the added symbol back, on the canvas and in the Scene')
