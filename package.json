@@ -24,7 +24,8 @@
         "dev:images": "node tools/dev/e2e-images.mjs",
         "dev:halo": "node tools/dev/e2e-halo.mjs",
         "dev:themes": "node tools/dev/e2e-themes.mjs",
-        "dev:api": "node tools/dev/e2e-api.mjs"
+        "dev:api": "node tools/dev/e2e-api.mjs",
+        "dev:links": "node tools/dev/e2e-links.mjs"
     },
     "private": true,
     "devDependencies": {
