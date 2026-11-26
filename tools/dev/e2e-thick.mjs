@@ -123,6 +123,10 @@ try {
   const barrierAfter = await drawn(gm, ids.barrier)
   p.check((await saved(gm, ids.barrier))?.size === 1.5 && barrierAfter.h >= before.barrier.h * 1.4, '] grows a selected barrier by half a size, ticks and all', { before: before.barrier, after: barrierAfter })
 
+  await gm.addStyleTag({ content: '#pause { display: none !important; }' })
+  await gm.evaluate(() => { canvas.linemap.setSelection(); canvas.pan({ x: 1050, y: 1100, scale: 0.7 }) })
+  await gm.waitForTimeout(scaled(500))
+  await p.shot(gm, 'lines')
   await gm.evaluate(async () => { await game.modules.get('linemap').api.undo() })
   await until(gm, (id) => (canvas.linemap.constructor.readFlag(canvas.scene)?.objects ?? []).find(o => o.id === id)?.size === null, ids.barrier)
   p.check((await saved(gm, ids.barrier))?.size === null, 'one undo takes it back (saved as null at 1)')
