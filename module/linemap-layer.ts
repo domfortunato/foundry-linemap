@@ -1120,14 +1120,14 @@ export class LineMapLayer extends layers.InteractionLayer {
             this.exportScale = s;
             // A first draw starts the finer symbol art loading; wait for it, then draw for real.
             const warm = this._buildDraw(include);
-            containers.push(...Object.values(warm.layers), warm.symbols);
+            containers.push(...Object.values(warm.layers).filter(c => c instanceof PIXI.Container), warm.symbols);
             dispose();
             const end = Date.now() + 8000;
             while (Date.now() < end && [...this.sharpTextures.values()].some(t => (t.icon && !t.icon.baseTexture.valid) || (t.footprint && !t.footprint.baseTexture.valid))) {
                 await new Promise(resolve => setTimeout(resolve, 50));
             }
             const { layers, symbols } = this._buildDraw(include);
-            containers.push(...Object.values(layers), symbols);
+            containers.push(...Object.values(layers).filter(c => c instanceof PIXI.Container), symbols);
             for (const label of labels) {
                 const sprite = label.sprite;
                 if (!sprite || resolutions.has(sprite)) continue;
