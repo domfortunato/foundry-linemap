@@ -13,6 +13,7 @@ import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { LayersApp } from "./apps/layers.js";
 import { ExportApp } from "./apps/export.js";
+import { PaletteApp } from "./apps/palette.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
 import { Area } from "./objects/area.js";
@@ -451,6 +452,8 @@ export class LineMapLayer extends layers.InteractionLayer {
         if (this.activeTool) this.activeTool.activation = {};
         this.activeTool?.activate();
         this.redraw();
+        // Foundry marks the tool on the left bar in place, without a render: the palette follows here.
+        PaletteApp.refresh();
     }
 
     clearTool() {
@@ -1896,6 +1899,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         active: canvas.linemap?.revealNewObjects ?? true,
                         onChange: (event, active) => {
                             canvas.linemap.revealNewObjects = active;
+                            PaletteApp.refresh();
                         }
                     },
                     adjustLinked: {
@@ -1909,6 +1913,7 @@ export class LineMapLayer extends layers.InteractionLayer {
                         // argument, which left adjustLinked undefined.
                         onChange: (event, active) => {
                             canvas.linemap.adjustLinked = active;
+                            PaletteApp.refresh();
                         }
                     },
                     linemapLayers: {

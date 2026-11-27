@@ -100,6 +100,11 @@ export class PaletteApp extends api.HandlebarsApplicationMixin(api.ApplicationV2
         document.body.classList.remove("linemap-palette-on");
     }
 
+    /** Show the current tool and toggles again, when the palette is open. */
+    static refresh() {
+        if (PaletteApp.instance?.rendered) PaletteApp.instance.render();
+    }
+
     /**
      * Show the palette while it is turned on and the Line Map control is active, and hide the left bar's
      * tools column meanwhile; otherwise close it. Called when the scene controls render (a tool, a toggle
