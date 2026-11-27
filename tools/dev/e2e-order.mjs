@@ -132,7 +132,26 @@ try {
   await deselect(gm)
   p.check(near(await colorAt(gm, crossing, 3), RED), 'a newer area is still drawn under the lines (order is within a group)')
 
-  await gm.evaluate(() => canvas.pan({ x: 1050, y: 1100, scale: 0.55 }))
+  // Symbols: an uncoloured one brought in front of a newer red one (each colour is painted apart).
+  const syms = await gm.evaluate(async (RED) => {
+    const api = game.modules.get('linemap').api
+    const [plain] = await api.add(api.symbol({ x: 1800, y: 1500, symbol: 'major-settlement', size: 3 }))
+    const [red] = await api.add(api.symbol({ x: 1810, y: 1500, symbol: 'major-settlement', size: 3, color: RED }))
+    return { plain, red }
+  }, RED)
+  await until(gm, (id) => !!canvas.linemap.objects.find(o => o.id === id)?.sprite, syms.red)
+  await deselect(gm)
+  const content = await gm.evaluate(() => canvas.linemap.color)
+  const symPt = { x: 1805, y: 1500 }
+  const symBefore = await colorAt(gm, symPt, 6)
+  const plainSort = await sortOf(gm, syms.plain)
+  const symFront = await menuPick(gm, { x: 1795, y: 1500 }, 'bringToFront', syms.plain)
+  await sortChanged(gm, syms.plain, plainSort)
+  await deselect(gm)
+  const symAfter = await colorAt(gm, symPt, 6)
+  p.check(symFront && near(symBefore, RED) && near(symAfter, content), 'an uncoloured symbol brought to front is drawn over a red one', { symBefore, symAfter, content })
+
+  await gm.evaluate(() => canvas.pan({ x: 1200, y: 1100, scale: 0.5 }))
   await gm.waitForTimeout(scaled(500))
   await p.shot(gm, 'order')
 
