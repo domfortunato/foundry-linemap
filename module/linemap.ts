@@ -303,6 +303,13 @@ Hooks.on("init", () => {
             { urls: [`${fontPath}/orbitron/Orbitron-wght.ttf`], weight: "400 900" }
         ]
     };
+    // A late-70s computer terminal's raster font, for sci-fi maps (one weight; bold and italic are synthetic).
+    CONFIG.fontDefinitions["VT323"] ??= {
+        editor: false,
+        fonts: [
+            { urls: [`${fontPath}/vt323/VT323-Regular.ttf`] }
+        ]
+    };
     CONFIG.fontDefinitions["IM Fell English"] ??= {
         editor: false,
         fonts: [
@@ -319,7 +326,7 @@ Hooks.on("init", () => {
         // The right-click menu's colours for objects, besides the scene's own and a custom one.
         colors: ["#000000", "#ffffff", "#7a4a1e", "#b3261e", "#d9822b", "#c9a227", "#2e7d32", "#00838f", "#1f5fa8", "#6a3d9a", "#777777"],
         // The scene setting's choices; the first is the default.
-        labelFonts: ["Alegreya", "IM Fell English", "Orbitron"],
+        labelFonts: ["Alegreya", "IM Fell English", "Orbitron", "VT323"],
         snap: {
             lineEnd: 10,
             line: 5,
@@ -466,6 +473,17 @@ Hooks.on("init", () => {
                 halo: true,
                 haloColor: '#070b18',
                 background: 'modules/linemap/assets/themes/scifi/starfield.svg',
+                symbols: ['scifi:station', 'scifi:planet', 'scifi:starport', 'scifi:asteroid', 'scifi:jump-gate', 'scifi:derelict'],
+                lineStyles: ['lane', 'jump', 'dotted', 'barrier']
+            },
+            // A ship's computer terminal: phosphor green on a dark screen, in a terminal's raster font.
+            terminal: {
+                label: 'linemap.themes.terminal',
+                color: '#4dff7a',
+                labelFont: 'VT323',
+                halo: true,
+                haloColor: '#031a08',
+                background: 'modules/linemap/assets/themes/terminal/screen.svg',
                 symbols: ['scifi:station', 'scifi:planet', 'scifi:starport', 'scifi:asteroid', 'scifi:jump-gate', 'scifi:derelict'],
                 lineStyles: ['lane', 'jump', 'dotted', 'barrier']
             }

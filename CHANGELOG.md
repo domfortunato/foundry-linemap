@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Terminal theme and VT323.** A retro computer-terminal look for sci-fi maps: a Terminal theme
+  (phosphor green on a dark screen with scanlines, the sci-fi symbols and lines) and a new label
+  font, VT323, after a late-70s terminal's raster font.
 - **Bring to front, send to back.** The right-click menu moves the selected objects to the top or
   bottom of their layer (images, areas, lines, then symbols and labels). Symbols with colours of
   their own now keep their stacking against uncoloured ones.

@@ -178,7 +178,8 @@ points around its middle, since an area has no size of its own; and a **solid ar
 fill opacity slider for any pattern (probe `dev:solid`); **bring to front and send to back** within
 an object's layer (probe `dev:order`), symbols drawn in runs of one colour so their stacking holds;
 **areas over lines** (probe `dev:over`); and a **Layers window** that hides or locks a layer for the
-user editing, kept in a client setting (probe `dev:groups`).
+user editing, kept in a client setting (probe `dev:groups`); a **Terminal theme** with the VT323
+label font, for a retro computer-terminal look (probe `dev:terminal`).
 
 ## Set aside
 

@@ -136,7 +136,8 @@
         "themes": {
             "none": "None",
             "fantasy": "Fantasy",
-            "scifi": "Sci-fi"
+            "scifi": "Sci-fi",
+            "terminal": "Terminal"
         },
         "waypoints": {
             "waypoint": "Waypoint",

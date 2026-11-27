@@ -201,7 +201,7 @@ Controls.
 
 ## Themes
 
-The scene settings offer two themes. Picking one sets the map's color, label font, halo and a
+The scene settings offer three themes. Picking one sets the map's color, label font, halo and a
 background picture covering the scene, and picks the symbols and lines the drawing tools offer.
 Everything a theme sets can still be changed afterwards, and switching themes replaces its
 background picture rather than adding another. A map keeps whatever it has drawn: symbols from
@@ -210,6 +210,9 @@ one theme still show after switching to the other.
 - **Fantasy:** the classic symbols and paths, dark brown on parchment, labels in IM Fell English.
 - **Sci-fi:** stations, planets, starports, asteroid fields, jump gates and derelicts, joined by
   lanes and jumps; pale blue on a starfield, labels in Orbitron.
+- **Terminal:** the sci-fi symbols and lines in phosphor green on a dark screen with faint
+  scanlines, labels in VT323, the raster font of a late-70s computer terminal: a ship's computer
+  showing the way through a station or a star system.
 
 A map with no theme offers the fantasy symbols and paths.
 
@@ -288,6 +291,8 @@ beside it in `assets/fonts/`:
   unmodified.
 - **Orbitron**, copyright 2018 The Orbitron Project Authors
   (https://github.com/theleagueof/orbitron), the Google Fonts file unmodified.
+- **VT323**, copyright 2011 The VT323 Project Authors (Peter Hull), the Google Fonts file
+  unmodified. It has one weight: bold and italic labels in it are drawn by the browser.
 
 ## Theme art
 
