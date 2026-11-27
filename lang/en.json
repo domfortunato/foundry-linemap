@@ -73,6 +73,7 @@
             "hide": "Hide objects",
             "size": "Size (double-click: back to 1)",
             "scale": "Area size (double-click: as it was)",
+            "opacity": "Fill opacity (double-click: the pattern's own)",
             "rotation": "Rotation (double-click: back to 0)",
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",
@@ -132,6 +133,7 @@
             "diagonal2": "Diagonal lines, crossed",
             "dots": "Dots",
             "waves": "Waves",
+            "solid": "Solid",
             "barrier": "Barrier outline"
         }
     }

@@ -169,7 +169,7 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            }, [this._sizeOption(), this._scaleOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection), colorOption(this.layer, this.layer.selection));
+            }, [this._sizeOption(), this._scaleOption(), this._opacityOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection), colorOption(this.layer, this.layer.selection));
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };
@@ -229,6 +229,44 @@ export class SelectTool extends Tool {
                 if (!Number.isFinite(f) || f <= 0 || f === factor) return;
                 factor = f;
                 areas.forEach(a => a.scale(f, start.get(a)));
+                dirty = true;
+                this.layer.redraw();
+            },
+            commit: () => {
+                if (!dirty) return;
+                dirty = false;
+                this.layer.registerHistory();
+            }
+        };
+    }
+
+    /**
+     * The menu's fill opacity slider, for a selection with areas. A value that is an area's pattern's
+     * own opacity is saved as null, so the area follows its pattern; a double-click puts every selected
+     * area back to its pattern's. Recorded once, like the size slider.
+     */
+    _opacityOption(): SizeOption | undefined {
+        const areas = this.layer.selection.filter(o => o instanceof Area) as Area[];
+        if (!areas.length) return undefined;
+        const reset = Area.patternOpacity(areas[0].pattern);
+        let dirty = false;
+        return {
+            name: 'opacity',
+            label: 'linemap.menu.opacity',
+            icon: 'fa-droplet',
+            min: 0.05, max: 1, step: 0.05,
+            reset,
+            value: areas[0].fillOpacity,
+            input: (value: number) => {
+                const v = Area.clampOpacity(value);
+                let changed = false;
+                for (const a of areas) {
+                    const next = v === null || v === Area.patternOpacity(a.pattern) ? null : v;
+                    if (a.opacity === next) continue;
+                    a.opacity = next;
+                    changed = true;
+                }
+                if (!changed) return;
                 dirty = true;
                 this.layer.redraw();
             },

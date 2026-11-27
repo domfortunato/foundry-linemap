@@ -479,6 +479,12 @@ Hooks.on("init", () => {
                 label: 'linemap.patterns.waves',
                 texture: 'modules/linemap/assets/patterns/waves.svg'
             },
+            // An even wash in the area's colour; `opacity` is a pattern's fill opacity when the area sets none.
+            solid: {
+                label: 'linemap.patterns.solid',
+                texture: 'modules/linemap/assets/patterns/solid.svg',
+                opacity: 0.35
+            },
             barrier: {
                 label: 'linemap.patterns.barrier',
                 lineWidth: 12

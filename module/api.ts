@@ -3,6 +3,7 @@ import { Vec2 } from "./dto.js";
 import { generateId } from "./helpers/generate-id.js";
 import { LineMapLayer } from "./linemap-layer.js";
 import { findRoute } from "./classes/routes.js";
+import { Area } from "./objects/area.js";
 
 /** Where an edit or a read applies: a Scene document or its id. The viewed Scene when left out. */
 interface SceneOption {
@@ -189,12 +190,13 @@ export class LineMapApi {
     }
 
     /** An area: a polygon of three or more points, filled with a CONFIG.linemap.patterns pattern. */
-    area({ points, pattern, color, revealed, id }: { points: Vec2[], pattern?: string, color?: string } & Common): ObjectData {
+    area({ points, pattern, color, opacity, revealed, id }: { points: Vec2[], pattern?: string, color?: string, opacity?: number } & Common): ObjectData {
         return {
             ...this._common("area", revealed, id),
             points: points?.map(pt => [pt[0], pt[1]]),
             pattern: pattern ?? Object.keys(CONFIG.linemap.patterns)[0],
-            color: color ?? null
+            color: color ?? null,
+            opacity: Area.clampOpacity(opacity)
         } as ObjectData;
     }
 

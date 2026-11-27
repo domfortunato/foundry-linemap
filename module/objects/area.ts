@@ -6,6 +6,8 @@ import { add2, distanceToLine, dotProduct, lengthAndUnitVector, mult2, sub2 } fr
 export interface AreaData extends ObjectData {
     points: Vec2[];
     pattern: string;
+    /** The fill's opacity, 0.05 to 1; null or absent: the pattern's own (solid 35%, the others 100%). */
+    opacity?: number | null;
 }
 
 export class Area extends ObjectType {
@@ -13,6 +15,24 @@ export class Area extends ObjectType {
 
     points: Vec2[];
     pattern: string;
+    opacity: number | null = null;
+
+    /** A fill opacity in steps of 5%, from 5% to 100%; anything unreadable is null (the pattern's own). */
+    static clampOpacity(value: any): number | null {
+        const n = Number(value);
+        if (value == null || value === "" || !Number.isFinite(n)) return null;
+        return Math.min(Math.max(Math.round(n * 20) / 20, 0.05), 1);
+    }
+
+    /** A pattern's own fill opacity. */
+    static patternOpacity(pattern: string): number {
+        return CONFIG.linemap.patterns[pattern]?.opacity ?? 1;
+    }
+
+    /** How opaque the fill is drawn: the area's own opacity, or its pattern's. */
+    get fillOpacity(): number {
+        return this.opacity ?? Area.patternOpacity(this.pattern);
+    }
 
     construct(points: Vec2[], pattern: string) {
         this.points = [...points];
@@ -25,6 +45,7 @@ export class Area extends ObjectType {
             data.points,
             data.pattern
         );
+        this.opacity = Area.clampOpacity(data.opacity);
     }
 
     get colorable(): boolean {
@@ -38,7 +59,8 @@ export class Area extends ObjectType {
     get serialized(): AreaData {
         return { ...super.serialized, ...{
             points: this.points,
-            pattern: this.pattern
+            pattern: this.pattern,
+            opacity: this.opacity
         }};
     }
 
@@ -106,7 +128,7 @@ export class Area extends ObjectType {
                 geometry.addAttribute('aTextureCoord', uvs, 2);
                 geometry.addIndex(indices);
                 const mesh = new PIXI.Mesh(geometry, shader, undefined, PIXI.DRAW_MODES.TRIANGLES);
-                mesh.alpha = this.isRevealed ? 1.0 : 0.2;
+                mesh.alpha = (this.isRevealed ? 1.0 : 0.2) * this.fillOpacity;
                 layers.areas?.addChild(mesh);
             }
 
