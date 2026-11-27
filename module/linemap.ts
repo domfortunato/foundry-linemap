@@ -182,6 +182,21 @@ Hooks.on("init", () => {
         },
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
     });
+    game.keybindings.register("linemap", "finishArea", {
+        restricted: true,
+        name: "linemap.keybindings.finishArea",
+        editable: [
+            { key: "Enter" }
+        ],
+        onDown: () => {
+            // Only while an area is being drawn corner by corner: Enter goes on to everything else otherwise.
+            const tool = canvas.linemap?.active && game.activeTool === "drawArea" ? canvas.linemap.tools.drawArea : null;
+            if (!tool?.drafting) return false;
+            tool.finish();
+            return true;
+        },
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY
+    });
     game.keybindings.register("linemap", "growObjects", {
         restricted: true,
         name: "linemap.keybindings.growObjects",

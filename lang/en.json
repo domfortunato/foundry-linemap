@@ -6,7 +6,7 @@
             "drawLine": "Draw lines",
             "drawSymbol": "Draw symbols",
             "drawWaypoint": "Draw waypoints",
-            "drawArea": "Draw areas",
+            "drawArea": "Draw areas: drag a rectangle, or click corner by corner (double-click or Enter to finish)",
             "drawText": "Draw text",
             "drawImage": "Place images",
             "trash": "Delete all objects",
@@ -53,6 +53,7 @@
             "hint": "For you only, while you edit: players see the whole map."
         },
         "keybindings": {
+            "finishArea": "Finish an area drawn corner by corner",
             "redo": "Redo",
             "nudgeUp": "Nudge the selected objects up (Shift: ten pixels)",
             "nudgeDown": "Nudge the selected objects down (Shift: ten pixels)",

@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Areas corner by corner.** The area tool draws an area by clicking its corners (a trapezoid, a
+  coastline), finished with a double-click, Enter or a click on the first corner; Backspace takes back
+  a corner and Escape drops the shape. Dragging still draws a rectangle.
 - **Export map.** A button in the Line Map controls saves the whole scene, or a dragged area, as
   PNG, WebP or PDF (through the browser's print dialog), at 1×, 2× or 4×, on a transparent or white
   background or the scene's picture, with hidden objects left out unless asked for. The API has

@@ -80,7 +80,16 @@ Double click on a text object using the select tool to edit the text content. Sh
 
 ### Manipulating areas
 
-Areas are created as rectangles, but can be freely shaped using the adjust tool (hotkey A) and moving the adjustment points around. To add or remove adjustment points, switch to the area tool (hotkey P) and double click on a line or point to add or delete one.
+With the area tool (hotkey P), draw an area either way:
+
+- **Corner by corner:** click on empty map for the first corner, then click for each next one; a
+  preview follows the pointer. Finish with a **double-click** (where you double-click is the last
+  corner), **Enter**, or a click on the first corner. It takes three corners at least. **Backspace**
+  takes back the last corner, and **Escape** drops the shape.
+- **A rectangle:** drag from one corner to the opposite one.
+
+Either way, an area can be reshaped afterwards: move its corners with the adjust tool (hotkey A), or
+with the area tool double-click on an edge to add a corner, or on a corner to delete it.
 
 Besides the hatched, dotted and wavy patterns, an area can be **Solid**: an even wash in its colour,
 35% opaque by default, for a lake, a kingdom or a blighted region. A selected area's right-click menu
@@ -193,7 +202,9 @@ Controls.
 - **N:** toggle whether adjusting linked points preserves links
 - **Arrow keys:** nudge the selected objects a pixel, ten with **Shift**; linked lines and labels
   follow, and a run of presses is one edit for undo (with nothing selected, they pan the canvas)
-- **Delete or Backspace:** delete the selected objects
+- **Delete or Backspace:** delete the selected objects; while drawing an area corner by corner,
+  take back the last corner
+- **Enter and Escape:** finish or drop an area drawn corner by corner (area tool)
 - **Ctrl+C, Ctrl+X and Ctrl+V:** copy, cut and paste the selected objects (paste puts them at the pointer)
 - **Ctrl+Z:** undo your own last edit, one edit at a time
 - **Ctrl+Y or Ctrl+Shift+Z:** redo what you undid, until you make a new edit (leaving the layer

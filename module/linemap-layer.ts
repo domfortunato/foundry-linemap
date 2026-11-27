@@ -1352,6 +1352,12 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     /** Escape closes the right-click menu (core's Escape closes framed windows only). */
     _onDismissKey(event) {
+        // An area being drawn corner by corner is dropped.
+        const drawArea = this.tools.drawArea as DrawAreaTool;
+        if (game.activeTool === "drawArea" && drawArea?.drafting) {
+            drawArea.cancel();
+            return true;
+        }
         if (this.capture) {
             this.capture.cancel();
             return true;

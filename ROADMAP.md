@@ -181,7 +181,8 @@ an object's layer (probe `dev:order`), symbols drawn in runs of one colour so th
 user editing, kept in a client setting (probe `dev:groups`); a **Terminal theme** with the VT323
 label font, for a retro computer-terminal look (probe `dev:terminal`); and **Export map**: the
 scene or a dragged area as PNG, WebP or PDF through the print dialog, drawn afresh at 1×, 2× or 4×
-(probe `dev:export`).
+(probe `dev:export`); and **areas drawn corner by corner** with the area tool, besides its rectangle
+(probe `dev:corners`).
 
 ## Set aside
 
