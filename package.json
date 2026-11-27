@@ -40,7 +40,8 @@
         "dev:groups": "node tools/dev/e2e-groups.mjs",
         "dev:over": "node tools/dev/e2e-over.mjs",
         "dev:terminal": "node tools/dev/e2e-terminal.mjs",
-        "dev:export": "node tools/dev/e2e-export.mjs"
+        "dev:export": "node tools/dev/e2e-export.mjs",
+        "dev:corners": "node tools/dev/e2e-corners.mjs"
     },
     "private": true,
     "devDependencies": {
