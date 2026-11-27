@@ -37,7 +37,8 @@
         "dev:areasize": "node tools/dev/e2e-areasize.mjs",
         "dev:solid": "node tools/dev/e2e-solid.mjs",
         "dev:order": "node tools/dev/e2e-order.mjs",
-        "dev:groups": "node tools/dev/e2e-groups.mjs"
+        "dev:groups": "node tools/dev/e2e-groups.mjs",
+        "dev:over": "node tools/dev/e2e-over.mjs"
     },
     "private": true,
     "devDependencies": {
