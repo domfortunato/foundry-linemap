@@ -92,7 +92,7 @@ try {
     for (let i = 0; i < d.length; i += 4) luma += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
     return { family, width: b && Math.round(b.width), color: best, greenPixels: n, backdrop: Math.round(luma / (d.length / 4)) }
   }, id)
-  p.check(label.family === 'VT323' && near(label.color, GREEN) && label.greenPixels > 100 && label.backdrop < 40,
+  p.check(String(label.family).replace(/["']/g, '') === 'VT323' && near(label.color, GREEN) && label.greenPixels > 100 && label.backdrop < 40,
     'a label is drawn in VT323, phosphor green, on a dark screen', label)
 
   await gm.evaluate(() => canvas.pan({ x: 1200, y: 900, scale: 0.6 }))
