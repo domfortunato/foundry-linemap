@@ -25,6 +25,8 @@ export interface ObjectDrawLayers {
     symbols?: any;
     selectedSymbols?: any;
     /** The container for the next symbol in drawing order, in its own colour or (null) the map's: runs of one colour, each tinted as a whole. */
+    /** Areas drawn over the lines (still under symbols and labels). */
+    overAreas?: any;
     tinted?: (color: string | null) => any;
     labels?: any;
 }

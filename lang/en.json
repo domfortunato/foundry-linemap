@@ -90,6 +90,8 @@
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",
             "sendBack": "Send back",
+            "overLines": "Draw over lines",
+            "underLines": "Draw under lines",
             "bringToFront": "Bring to front (within its kind: areas stay under lines)",
             "sendToBack": "Send to back (within its kind)",
             "duplicate": "Duplicate",

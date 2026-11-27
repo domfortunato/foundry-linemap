@@ -8,6 +8,8 @@ export interface AreaData extends ObjectData {
     pattern: string;
     /** The fill's opacity, 0.05 to 1; null or absent: the pattern's own (solid 35%, the others 100%). */
     opacity?: number | null;
+    /** Drawn over lines (a lake over a road); null or absent: under them, as areas are. */
+    over?: boolean | null;
 }
 
 export class Area extends ObjectType {
@@ -16,6 +18,8 @@ export class Area extends ObjectType {
     points: Vec2[];
     pattern: string;
     opacity: number | null = null;
+    /** Drawn over the lines, still under symbols and labels. */
+    over = false;
 
     /** A fill opacity in steps of 5%, from 5% to 100%; anything unreadable is null (the pattern's own). */
     static clampOpacity(value: any): number | null {
@@ -46,6 +50,7 @@ export class Area extends ObjectType {
             data.pattern
         );
         this.opacity = Area.clampOpacity(data.opacity);
+        this.over = !!data.over;
     }
 
     get colorable(): boolean {
@@ -60,7 +65,8 @@ export class Area extends ObjectType {
         return { ...super.serialized, ...{
             points: this.points,
             pattern: this.pattern,
-            opacity: this.opacity
+            opacity: this.opacity,
+            over: this.over ? true : null
         }};
     }
 
@@ -89,6 +95,7 @@ export class Area extends ObjectType {
 
     draw(layers: ObjectDrawLayers) {
         if (this.isVisible && this.points) {
+            const target = this.over ? (layers.overAreas ?? layers.areas) : layers.areas;
             const poly = this._polygon;
             const texture = canvas.linemap.patternTextures[this.pattern]?.icon;
             if (texture) {
@@ -133,7 +140,7 @@ export class Area extends ObjectType {
                 geometry.addAttribute('aTextureCoord', uvs, 2);
                 geometry.addIndex(indices);
                 const mesh = new PIXI.Mesh(geometry, shader, undefined, PIXI.DRAW_MODES.TRIANGLES);
-                layers.areas?.addChild(mesh);
+                target?.addChild(mesh);
             }
 
             const lineWidth = CONFIG.linemap.patterns[this.pattern]?.lineWidth ?? 4;
@@ -141,7 +148,7 @@ export class Area extends ObjectType {
                 .lineStyle(lineWidth, this._currentColorHex)
                 .drawPolygon(poly);
             gfx.alpha = this.isRevealed ? 1.0 : 0.2;
-            layers.areas?.addChild(gfx);
+            target?.addChild(gfx);
         }
     }
 

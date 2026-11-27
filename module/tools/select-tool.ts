@@ -105,6 +105,21 @@ export class SelectTool extends Tool {
             const { x, y } = event.interactionData.origin;
             const screenCoords = this.layer.worldTransform.apply({ x, y });
             const images = this.layer.selection.filter(o => o instanceof MapImage) as MapImage[];
+            const areas = this.layer.selection.filter(o => o instanceof Area) as Area[];
+            const allOver = areas.length && areas.every(a => a.over);
+            const areaOptions = !areas.length ? {} : allOver ? {
+                underLines: {
+                    icon: 'fa-arrow-down-short-wide',
+                    label: 'linemap.menu.underLines',
+                    handler: () => this.layer.setAreasOver(areas, false)
+                }
+            } : {
+                overLines: {
+                    icon: 'fa-arrow-up-wide-short',
+                    label: 'linemap.menu.overLines',
+                    handler: () => this.layer.setAreasOver(areas, true)
+                }
+            };
             const imageOptions = images.length ? {
                 fitToScene: {
                     icon: 'fa-expand',
@@ -153,6 +168,7 @@ export class SelectTool extends Tool {
                     label: 'linemap.menu.sendToBack',
                     handler: () => this.layer.reorderObjects(this.layer.selection, "back")
                 },
+                ...areaOptions,
                 ...imageOptions,
                 ...linkOptions,
                 left: {

@@ -596,6 +596,15 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.redraw();
     }
 
+    /** Draw areas over the lines (a lake over a road) or back under them, as one edit. */
+    setAreasOver(areas: ObjectType[], over: boolean) {
+        const changed = areas.filter(a => a instanceof Area && a.over !== over) as Area[];
+        if (!changed.length) return;
+        changed.forEach(a => { a.over = over; });
+        this.registerHistory();
+        this.redraw();
+    }
+
     /** The groups the Layers window shows, bottom to top, as they are drawn. */
     static Groups = ["images", "areas", "lines", "symbols", "labels"];
 
@@ -977,6 +986,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             },
             images: new PIXI.Container(),
             areas: new PIXI.Container(),
+            overAreas: new PIXI.Container(),
             lines: new PIXI.Container(),
             footprints: new PIXI.Container(),
             halos: new PIXI.Container(),
@@ -1009,12 +1019,13 @@ export class LineMapLayer extends layers.InteractionLayer {
         symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, ...runs.map(r => r.container), layers.selectedSymbols, layers.labels);
 
         // Areas first: a probe counts a redraw's area outlines in its first container.
-        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images];
+        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images, layers.overAreas];
 
         if (!highQuality) {
             this.objectContainer.addChild(layers.images);
             this.objectContainer.addChild(layers.areas);
             this.objectContainer.addChild(layers.lines);
+            this.objectContainer.addChild(layers.overAreas);
             this.objectContainer.addChild(symbols);
             canvas.app.renderer.render(this.objectContainer, { renderTexture: this.renderTexture, clear: true });
             return;
@@ -1035,6 +1046,7 @@ export class LineMapLayer extends layers.InteractionLayer {
         canvas.app.renderer.render(layers.images, { renderTexture: this.renderTexture, clear: true });
         canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: false });
         canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
+        canvas.app.renderer.render(layers.overAreas, { renderTexture: this.renderTexture, clear: false });
         canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
     }
 
