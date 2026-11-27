@@ -41,7 +41,8 @@
         "dev:over": "node tools/dev/e2e-over.mjs",
         "dev:terminal": "node tools/dev/e2e-terminal.mjs",
         "dev:export": "node tools/dev/e2e-export.mjs",
-        "dev:corners": "node tools/dev/e2e-corners.mjs"
+        "dev:corners": "node tools/dev/e2e-corners.mjs",
+        "dev:palette": "node tools/dev/e2e-palette.mjs"
     },
     "private": true,
     "devDependencies": {
