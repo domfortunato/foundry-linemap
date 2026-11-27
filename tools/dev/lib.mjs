@@ -114,6 +114,18 @@ export function probe (label, { watchdogMs = 300000 } = {}) {
     async pageAs (name) {
       const page = await newPage()
       await joinAs(page, name)
+      // Log this user out before anything deletes it. A probe's temporary user is deleted by a cleanup
+      // registered before this page opened, and cleanups run last-first, so this runs ahead of it: close
+      // the page, then wait until another page sees the user go inactive. Foundry 14.371's server keeps a
+      // user deleted while connected in its active-user list until it restarts, and every /join after that
+      // throws "Cannot set properties of undefined (setting 'active')" (2026-11-27; 14.370 pruned it).
+      cleanups.push(async () => {
+        await page.context().close().catch(() => {})
+        const other = pages.find(pg => pg !== page && !pg.isClosed())
+        if (!other) return
+        const gone = await until(other, (n) => game.users.getName(n)?.active !== true, name, { timeout: 15000 }).catch(() => true)
+        if (!gone) console.log(`  note  cleanup: ${name} still shows as active after its page closed`)
+      })
       return page
     },
     /** A screenshot into SHOTS, named for the probe; never fails the probe. */
