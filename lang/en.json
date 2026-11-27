@@ -72,6 +72,7 @@
             "reveal": "Reveal objects",
             "hide": "Hide objects",
             "size": "Size (double-click: back to 1)",
+            "scale": "Area size (double-click: as it was)",
             "rotation": "Rotation (double-click: back to 0)",
             "fitToScene": "Fit to scene",
             "bringForward": "Bring forward",

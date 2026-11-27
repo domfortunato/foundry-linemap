@@ -12,6 +12,7 @@ import { Waypoint } from "../objects/waypoint.js";
 import { Text } from "../objects/text.js";
 import { DrawTextTool } from "./draw-text.js";
 import { MapImage } from "../objects/image.js";
+import { Area } from "../objects/area.js";
 
 /**
  * Which of the objects under a click is picked first: symbols, then lines, labels and areas, then
@@ -168,7 +169,7 @@ export class SelectTool extends Tool {
                         }
                     }
                 }
-            }, [this._sizeOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection), colorOption(this.layer, this.layer.selection));
+            }, [this._sizeOption(), this._scaleOption(), this._rotationOption()].filter(o => o), lookOption(this.layer, this.layer.selection), colorOption(this.layer, this.layer.selection));
             menu.render(true, { position: { left: screenCoords.x, top: screenCoords.y }});
             this.menu = menu;
             this.menuAt = { x: screenCoords.x, y: screenCoords.y };
@@ -197,6 +198,39 @@ export class SelectTool extends Tool {
                     dirty = true;
                     this.layer.redraw();
                 }
+            },
+            commit: () => {
+                if (!dirty) return;
+                dirty = false;
+                this.layer.registerHistory();
+            }
+        };
+    }
+
+    /**
+     * The menu's size slider for areas, which have no size of their own: it scales each selected area
+     * around its middle, from how it was when the menu opened (1, and a double-click, put it back).
+     * Recorded once, like the size slider.
+     */
+    _scaleOption(): SizeOption | undefined {
+        const areas = this.layer.selection.filter(o => o instanceof Area) as Area[];
+        if (!areas.length) return undefined;
+        const start = new Map(areas.map(a => [a, a.points.map(pt => [...pt] as Vec2)]));
+        let factor = 1;
+        let dirty = false;
+        return {
+            name: 'scale',
+            label: 'linemap.menu.scale',
+            icon: 'fa-draw-polygon',
+            min: 0.25, max: 4, step: 0.05,
+            reset: 1,
+            value: 1,
+            input: (f: number) => {
+                if (!Number.isFinite(f) || f <= 0 || f === factor) return;
+                factor = f;
+                areas.forEach(a => a.scale(f, start.get(a)));
+                dirty = true;
+                this.layer.redraw();
             },
             commit: () => {
                 if (!dirty) return;

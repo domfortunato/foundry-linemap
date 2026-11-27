@@ -42,6 +42,23 @@ export class Area extends ObjectType {
         }};
     }
 
+    /**
+     * Scale the area around the middle of its bounds: from `from` (its points as they were; its own
+     * points by default) by `factor`. An area has no size of its own, so the size slider and ] and [
+     * move its points instead.
+     */
+    scale(factor: number, from: Vec2[] = this.points) {
+        if (factor === 1) {
+            this.points = from.map(pt => [...pt] as Vec2);
+            return;
+        }
+        const xs = from.map(pt => pt[0]), ys = from.map(pt => pt[1]);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        const round = (v: number) => Math.round(v * 100) / 100;
+        this.points = from.map(([x, y]) => [round(cx + (x - cx) * factor), round(cy + (y - cy) * factor)] as Vec2);
+    }
+
     get _polygon(): any {
         const poly = new PIXI.Polygon(...this.points.flatMap(pt => pt));
         poly.closeStroke = true;

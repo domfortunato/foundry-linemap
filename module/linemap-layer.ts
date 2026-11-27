@@ -13,6 +13,7 @@ import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
+import { Area } from "./objects/area.js";
 import { DocumentLinks } from "./classes/links.js";
 import { TravelRoutes } from "./classes/routes.js";
 import { MapClipboard } from "./classes/clipboard.js";
@@ -611,9 +612,14 @@ export class LineMapLayer extends layers.InteractionLayer {
         return changed;
     }
 
-    /** Grow or shrink the sized objects of the selection by half a size, as one edit. */
+    /**
+     * Grow or shrink the sized objects of the selection by half a size, and its areas by a quarter
+     * (shrinking by the inverse, so [ takes back ]), as one edit.
+     */
     stepSizes(delta: number) {
-        if (this.resizeObjects(this.selection, size => size + delta)) {
+        const areas = this.selection.filter(o => o instanceof Area) as Area[];
+        areas.forEach(a => a.scale(delta > 0 ? 1.25 : 0.8));
+        if (this.resizeObjects(this.selection, size => size + delta) || areas.length) {
             this.registerHistory();
             this.redraw();
         }
