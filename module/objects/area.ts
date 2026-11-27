@@ -97,6 +97,9 @@ export class Area extends ObjectType {
                 const indices = PIXI.utils.earcut(points);
     
                 const tintColor = this._currentColor;
+                // A custom shader ignores the mesh's alpha: the fill's opacity (and a hidden area's
+                // dimming) goes in as a uniform.
+                const fillAlpha = (this.isRevealed ? 1.0 : 0.2) * this.fillOpacity;
                 const shader = PIXI.Shader.from(`
                     precision highp float;
                     attribute vec2 aVertexPosition;
@@ -116,19 +119,20 @@ export class Area extends ObjectType {
     
                     uniform sampler2D uSampler;
                     uniform vec3 tintColor;
+                    uniform float fillAlpha;
     
                     void main(void){
                         vec4 s = texture2D(uSampler, vTextureCoord);
-                        gl_FragColor.a = s.a;
-                        gl_FragColor.rgb = tintColor * s.a;
+                        float a = s.a * fillAlpha;
+                        gl_FragColor.a = a;
+                        gl_FragColor.rgb = tintColor * a;
                     }            
-                `, { uSampler: texture, tintColor })
+                `, { uSampler: texture, tintColor, fillAlpha })
                 const geometry = new PIXI.Geometry();
                 geometry.addAttribute('aVertexPosition', points, 2);
                 geometry.addAttribute('aTextureCoord', uvs, 2);
                 geometry.addIndex(indices);
                 const mesh = new PIXI.Mesh(geometry, shader, undefined, PIXI.DRAW_MODES.TRIANGLES);
-                mesh.alpha = (this.isRevealed ? 1.0 : 0.2) * this.fillOpacity;
                 layers.areas?.addChild(mesh);
             }
 
