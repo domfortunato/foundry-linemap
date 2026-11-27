@@ -26,9 +26,10 @@ try {
   await sweep(page)
   const sceneId = await probeScene(p, page, 'curves')
 
-  // Two symbols, then a freehand arc from one to the other.
-  const A = await at(page, 0.2, 0.55)
-  const B = await at(page, 0.7, 0.55)
+  // Two symbols, then a freehand arc from one to the other (narrow enough that the drag stays clear of
+  // the scene controls: leaving the canvas cancels a drag).
+  const A = await at(page, 0.25, 0.55)
+  const B = await at(page, 0.65, 0.55)
   await tool(page, 'drawSymbol')
   await clickAt(page, A)
   await clickAt(page, B)
