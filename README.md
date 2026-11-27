@@ -82,6 +82,11 @@ Double click on a text object using the select tool to edit the text content. Sh
 
 Areas are created as rectangles, but can be freely shaped using the adjust tool (hotkey A) and moving the adjustment points around. To add or remove adjustment points, switch to the area tool (hotkey P) and double click on a line or point to add or delete one.
 
+Besides the hatched, dotted and wavy patterns, an area can be **Solid**: an even wash in its colour,
+35% opaque by default, for a lake, a kingdom or a blighted region. A selected area's right-click menu
+has a **fill opacity** slider, from 5% to 100%, for any pattern: a faint hatch, or a solid sea that
+hides what is under it. A double-click on the slider puts the area back to its pattern's own.
+
 ### Images
 
 Pick the image tool (hotkey G) and click where the picture should go: Foundry's file picker opens,
@@ -244,7 +249,8 @@ await api.undo();
 - **Building:** `symbol`, `waypoint`, `line`, `label`, `area` and `image` make the data `add` takes.
   A line's `from` and `to`, a label's `on` and a waypoint's `line` take an object's id and link to
   it, so they follow it as it moves. Symbols are `CONFIG.linemap.symbols` keys, line styles
-  `CONFIG.linemap.lineStyles` keys and patterns `CONFIG.linemap.patterns` keys.
+  `CONFIG.linemap.lineStyles` keys and patterns `CONFIG.linemap.patterns` keys. An area takes an
+  `opacity` from 0.05 to 1.
 - **Hooks:** `linemapReady` (layer, scene) when a scene's map has been drawn, and
   `linemapObjectsChanged` (scene, { changed, deleted, settings, userId }) whenever a map is saved,
   by the API, by the tools, or by another user.

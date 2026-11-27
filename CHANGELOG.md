@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Solid areas and fill opacity.** Areas have a Solid pattern, an even wash in the area's colour
+  (35% opaque by default), and a fill opacity slider in the right-click menu for any pattern. The
+  API's area builder takes an `opacity`. A hidden area's pattern is now dimmed for the GM like its
+  outline. Earlier versions draw a solid area's fill fully opaque and ignore the opacity.
 - **Resize areas.** A selected area's right-click menu has an area size slider that scales it
   around its middle, from a quarter to four times as big; a double-click puts it back. **]** and
   **[** grow an area by a quarter and shrink it back.

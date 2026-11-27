@@ -174,7 +174,8 @@ Added afterwards, on request: a **rotation slider for labels** in the right-clic
 through the size slider (probe `dev:thick`), every style scaled as a whole; and **per-object
 colours** from a row in the right-click menu (probe `dev:colors`), null following the scene's colour;
 and **area resizing** from an area size slider and ] and [ (probe `dev:areasize`), which scales an area's
-points around its middle, since an area has no size of its own.
+points around its middle, since an area has no size of its own; and a **solid area fill** with a
+fill opacity slider for any pattern (probe `dev:solid`).
 
 ## Set aside
 
