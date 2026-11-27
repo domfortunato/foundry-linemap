@@ -1,0 +1,10 @@
+<section class="linemap-layers-list">
+    {{#each groups}}
+        <div class="linemap-layers-row" data-group="{{group}}">
+            <span class="linemap-layers-name">{{localize label}}</span>
+            <button type="button" class="icon fas {{#if hidden}}fa-eye-slash active{{else}}fa-eye{{/if}}" data-action="toggleHidden" aria-pressed="{{#if hidden}}true{{else}}false{{/if}}" data-tooltip="linemap.layers.hide" aria-label="{{localize 'linemap.layers.hide'}}"></button>
+            <button type="button" class="icon fas {{#if locked}}fa-lock active{{else}}fa-lock-open{{/if}}" data-action="toggleLocked" aria-pressed="{{#if locked}}true{{else}}false{{/if}}" data-tooltip="linemap.layers.lock" aria-label="{{localize 'linemap.layers.lock'}}"></button>
+        </div>
+    {{/each}}
+    <p class="hint">{{localize "linemap.layers.hint"}}</p>
+</section>

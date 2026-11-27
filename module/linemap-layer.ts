@@ -11,6 +11,7 @@ import { DrawImageTool } from "./tools/draw-image.js";
 import { SelectTool } from "./tools/select-tool.js";
 import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
+import { LayersApp } from "./apps/layers.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
 import { Area } from "./objects/area.js";
@@ -595,6 +596,57 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.redraw();
     }
 
+    /** The groups the Layers window shows, bottom to top, as they are drawn. */
+    static Groups = ["images", "areas", "lines", "symbols", "labels"];
+
+    /** An object's group: waypoints go with symbols; an unknown object has none. */
+    static groupOf(obj: ObjectType): string | null {
+        switch ((obj.constructor as any).type) {
+            case "image": return "images";
+            case "area": return "areas";
+            case "line": return "lines";
+            case "symbol": case "waypoint": return "symbols";
+            case "text": return "labels";
+            default: return null;
+        }
+    }
+
+    /** The groups this user hides and locks (a client setting). */
+    get groups(): { hidden: string[], locked: string[] } {
+        let value: any;
+        try { value = game.settings.get("linemap", "groups"); } catch { value = null; }
+        const list = (v: any) => Array.isArray(v) ? v.filter((g: any) => LineMapLayer.Groups.includes(g)) : [];
+        return { hidden: list(value?.hidden), locked: list(value?.locked) };
+    }
+
+    /** The objects this user's tools can click, box or grab: those in groups neither hidden nor locked. */
+    get pickable(): ObjectType[] {
+        const { hidden, locked } = this.groups;
+        if (!hidden.length && !locked.length) return this.objects;
+        return this.objects.filter(o => {
+            const group = LineMapLayer.groupOf(o);
+            return !hidden.includes(group) && !locked.includes(group);
+        });
+    }
+
+    /** Hide or lock a group for this user, or show or unlock it. */
+    async setGroup(group: string, kind: "hidden" | "locked", on: boolean) {
+        if (!LineMapLayer.Groups.includes(group)) return;
+        const groups = this.groups;
+        const list = new Set(groups[kind]);
+        if (on) list.add(group); else list.delete(group);
+        await game.settings.set("linemap", "groups", { ...groups, [kind]: [...list] });
+    }
+
+    /** The groups changed: what can no longer be picked is deselected, and the map drawn again. */
+    groupsChanged() {
+        const pickable = new Set(this.pickable);
+        if (this.selection.some(o => !pickable.has(o))) this.setSelection(...this.selection.filter(o => pickable.has(o)));
+        if (this.renderTexture) this.redraw();
+        this.activeTool?.stateInvalidated?.();
+        LayersApp.refresh();
+    }
+
     /** Make each image cover the Scene, so one can be the map's background. */
     fitImagesToScene(images: MapImage[]) {
         const r = canvas.dimensions.sceneRect;
@@ -935,8 +987,10 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
 
         this.displayUsed.clear();
+        // A group this user hides (the Layers window) is not drawn for them.
+        const hidden = this.groups.hidden;
         this.objects.forEach(obj => {
-            obj.draw(layers);
+            if (!hidden.includes(LineMapLayer.groupOf(obj))) obj.draw(layers);
         });
         this._pruneDisplays();
         this.routes.update();
@@ -1654,8 +1708,19 @@ export class LineMapLayer extends layers.InteractionLayer {
                             canvas.linemap.adjustLinked = active;
                         }
                     },
-                    linemapSettings: {
+                    linemapLayers: {
                         order: 12,
+                        name: "linemapLayers",
+                        title: "linemap.tools.layers",
+                        icon: "fas fa-layer-group",
+                        visible: true,
+                        button: true,
+                        onChange: () => {
+                            LayersApp.activate();
+                        }
+                    },
+                    linemapSettings: {
+                        order: 13,
                         name: "linemapSettings",
                         title: "linemap.tools.settings",
                         icon: "fas fa-cog",

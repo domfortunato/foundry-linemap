@@ -46,12 +46,12 @@ export class SelectTool extends Tool {
             const min: Vec2 = [Math.min(pt1[0], pt2[0]), Math.min(pt1[1], pt2[1])];
             const max: Vec2 = [Math.max(pt1[0], pt2[0]), Math.max(pt1[1], pt2[1])];
     
-            const selected = this.layer.objects
+            const selected = this.layer.pickable
                 .filter(obj => obj.testSelection(min, max))
                 .filter(obj => !selection.includes(obj));
             this.layer.setSelection(...selection, ...selected);
         } else {
-            const selected: ObjectType[] = this.layer.objects.filter(obj => obj.testSelection([pt1[0], pt1[1]]));
+            const selected: ObjectType[] = this.layer.pickable.filter(obj => obj.testSelection([pt1[0], pt1[1]]));
             selected.sort(pickOrder);
             const target = selected[0];
             if (preserve) {
@@ -321,7 +321,7 @@ export class SelectTool extends Tool {
 
     onDragLeftStart(event: any): void {
         const pt: Vec2 = [event.interactionData.origin.x, event.interactionData.origin.y];
-        const objects = this.layer.objects.filter(obj => obj.testSelection(pt));
+        const objects = this.layer.pickable.filter(obj => obj.testSelection(pt));
         objects.sort(pickOrder);
         const target = objects[0];
         const selection = this.layer.selection;

@@ -56,7 +56,7 @@ export class DrawTextTool extends Tool {
         const snapPoint = this.layer.getSnapPoint(eventPt, [SnapType.lineContour, SnapType.symbol]);
         const pt = snapPoint ? snapPoint.pt : eventPt;
 
-        const text = this.layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt));
+        const text = this.layer.pickable.find(obj => obj instanceof Text && obj.testSelection(eventPt));
         if (text) {
             this.layer.setSelection(text);
         } else {
@@ -91,7 +91,7 @@ export class DrawTextTool extends Tool {
      * while the dialog is open rebuilds the map's objects, so the label is found again by its id.
      */
     static async editTextAt(layer: any, eventPt: Vec2) {
-        const text = layer.objects.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
+        const text = layer.pickable.find(obj => obj instanceof Text && obj.testSelection(eventPt)) as Text;
         // Only a double-click on a text edits it; anywhere else there is nothing to do.
         if (!text) return;
         const { id } = text;

@@ -271,3 +271,38 @@ body.linemap-link-hover #board {
     position: fixed;
     pointer-events: none;
 }
+
+// The Layers window: a row per group, its eye and lock on the right.
+.linemap-layers {
+    .linemap-layers-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .linemap-layers-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .linemap-layers-name {
+            flex: 1;
+        }
+
+        button {
+            flex: 0 0 32px;
+            width: 32px;
+            height: 28px;
+            opacity: 0.6;
+
+            &.active {
+                opacity: 1;
+                color: var(--color-warm-1, #ee9b3a);
+            }
+        }
+    }
+
+    .hint {
+        margin: 6px 0 0;
+    }
+}

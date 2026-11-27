@@ -16,6 +16,14 @@ import { MapImage } from "./objects/image.js";
 // Every keybinding is restricted: each is a Gamemaster's action, and players have no Line Map control.
 Hooks.on("init", () => {
     CONFIG.Canvas.layers.linemap = { group: "primary", layerClass: LineMapLayer };
+    // The groups this user hides or locks while editing (the Layers window): theirs only, in this browser.
+    game.settings.register("linemap", "groups", {
+        scope: "client",
+        config: false,
+        type: Object,
+        default: { hidden: [], locked: [] },
+        onChange: () => canvas.linemap?.groupsChanged()
+    });
     Hooks.on("preUpdateScene", LineMapLayer.onPreUpdateScene);
 
     const selectTool = (tool: string) => {

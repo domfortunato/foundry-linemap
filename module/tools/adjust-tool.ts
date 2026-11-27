@@ -29,7 +29,8 @@ export class AdjustTool extends Tool {
 
     updatePoints(preserveSelection = false) {
         const prev = this.selectedAdjustmentPoints.map(pt => ({ object: pt.object, index: pt.index }));
-        const all = this.layer.objects.flatMap(obj => obj.getAdjustmentPoints());
+        // Only the groups this user can pick (the Layers window): a locked line's ends are not grabbed.
+        const all = this.layer.pickable.flatMap(obj => obj.getAdjustmentPoints());
         const sel = [];
         for (const pt of all) {
             if (preserveSelection && prev.find(item => pt.object === item.object && pt.index === item.index)) {

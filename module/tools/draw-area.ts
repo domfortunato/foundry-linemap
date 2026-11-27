@@ -108,7 +108,7 @@ export class DrawAreaTool extends Tool {
             return;
         }
 
-        for (const area of this.layer.objects.filter(o => o instanceof Area) as Area[]) {
+        for (const area of this.layer.pickable.filter(o => o instanceof Area) as Area[]) {
             if (area.lineHitTest(eventPt)) {
                 select(area, undefined);
                 return;
@@ -129,7 +129,7 @@ export class DrawAreaTool extends Tool {
             this.selectedAdjustmentPoint = undefined;
             await this.layer.registerHistory();
         } else {
-            for (const area of this.layer.objects.filter(o => o instanceof Area) as Area[]) {
+            for (const area of this.layer.pickable.filter(o => o instanceof Area) as Area[]) {
                 const hit = area.lineHitTest(eventPt);
                 if (hit) {
                     area.addVertex(...hit);
