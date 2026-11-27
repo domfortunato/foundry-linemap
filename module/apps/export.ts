@@ -55,7 +55,7 @@ export class ExportApp extends api.HandlebarsApplicationMixin(api.ApplicationV2)
             picked: !!this.rect,
             scales,
             pdf: c.format === "pdf",
-            sceneBackground: !!canvas.scene.background?.src,
+            sceneBackground: !!canvas.linemap.sceneBackground,
             pixels: game.i18n.format("linemap.export.pixels", { width: Math.round(area.width * scale), height: Math.round(area.height * scale) }),
             tooBig: Math.max(area.width, area.height) * scale > max
         };

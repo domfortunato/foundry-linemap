@@ -1080,6 +1080,11 @@ export class LineMapLayer extends layers.InteractionLayer {
     /** Symbol art and label text are rasterised this many times finer (an export at 2× or 4×). */
     exportScale = 1;
 
+    /** The background picture of the level being viewed (Foundry 14 keeps it on the Level, not the Scene). */
+    get sceneBackground(): string | null {
+        return (canvas.level ?? canvas.scene?.firstLevel)?.background?.src || null;
+    }
+
     /** The largest image side the GPU can make. */
     get maxExportSize(): number {
         const gl = canvas.app.renderer.gl;
@@ -1149,8 +1154,8 @@ export class LineMapLayer extends layers.InteractionLayer {
             if (background === "white") {
                 backdrop.addChild(new PIXI.Graphics().beginFill(0xffffff).drawRect(0, 0, width, height).endFill());
                 renderer.render(backdrop, { renderTexture: target, clear: true });
-            } else if (background === "scene" && canvas.scene.background?.src) {
-                const texture = await foundry.canvas.loadTexture(canvas.scene.background.src);
+            } else if (background === "scene" && this.sceneBackground) {
+                const texture = await foundry.canvas.loadTexture(this.sceneBackground);
                 if (texture) {
                     const sr = canvas.dimensions.sceneRect;
                     const sprite = backdrop.addChild(new PIXI.Sprite(texture));
