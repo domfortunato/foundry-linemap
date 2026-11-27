@@ -4,7 +4,9 @@ Release notes for this fork of Tero Parvinen's Line Map. `npm run release X.Y.Z`
 `## X.Y.Z` section below and publishes it as the release's notes, so write it before releasing.
 Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-linemap/releases.
 
-## Unreleased
+## 0.15.0
+
+Verified on Foundry 14.371, and tested on 14.368, 14.369 and 14.370 as well.
 
 - **Floating tool palette.** An option (Configure Settings, per browser) puts the Line Map tools in a
   small window you can drag anywhere, instead of the column on the left bar; closing it puts them back.
