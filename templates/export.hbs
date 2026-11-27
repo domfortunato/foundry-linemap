@@ -1,0 +1,52 @@
+<section class="linemap-export-form">
+    <div class="form-group">
+        <label>{{localize "linemap.export.area"}}</label>
+        <div class="form-fields linemap-export-area">
+            <label><input type="radio" name="area" value="scene" {{#if (eq choices.area "scene")}}checked{{/if}}> {{localize "linemap.export.scene"}}</label>
+            <label><input type="radio" name="area" value="picked" {{#if (eq choices.area "picked")}}checked{{/if}} {{#unless picked}}disabled{{/unless}}> {{localize "linemap.export.picked"}}</label>
+            <button type="button" data-action="pick"><i class="fas fa-vector-square" aria-hidden="true"></i> {{localize "linemap.export.pick"}}</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "linemap.export.format"}}</label>
+        <div class="form-fields">
+            <select name="format">
+                <option value="png" {{#if (eq choices.format "png")}}selected{{/if}}>{{localize "linemap.export.png"}}</option>
+                <option value="webp" {{#if (eq choices.format "webp")}}selected{{/if}}>{{localize "linemap.export.webp"}}</option>
+                <option value="pdf" {{#if (eq choices.format "pdf")}}selected{{/if}}>{{localize "linemap.export.pdf"}}</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "linemap.export.scale"}}</label>
+        <div class="form-fields">
+            <select name="scale">
+                {{#each scales}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <p class="hint linemap-export-pixels">{{pixels}}</p>
+    </div>
+    <div class="form-group">
+        <label>{{localize "linemap.export.background"}}</label>
+        <div class="form-fields">
+            <select name="background">
+                {{#unless pdf}}<option value="transparent" {{#if (eq choices.background "transparent")}}selected{{/if}}>{{localize "linemap.export.transparent"}}</option>{{/unless}}
+                <option value="white" {{#if (eq choices.background "white")}}selected{{/if}}>{{localize "linemap.export.white"}}</option>
+                {{#if sceneBackground}}<option value="scene" {{#if (eq choices.background "scene")}}selected{{/if}}>{{localize "linemap.export.sceneBackground"}}</option>{{/if}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "linemap.export.hidden"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="hidden" {{#if choices.hidden}}checked{{/if}}>
+        </div>
+        <p class="hint">{{localize "linemap.export.hiddenHint"}}</p>
+    </div>
+    {{#if tooBig}}<p class="notification warning">{{localize "linemap.export.tooBig"}}</p>{{/if}}
+    <footer class="form-footer">
+        <button type="button" data-action="export" {{#if tooBig}}disabled{{/if}}><i class="fas fa-file-export" aria-hidden="true"></i> {{localize "linemap.export.export"}}</button>
+    </footer>
+</section>

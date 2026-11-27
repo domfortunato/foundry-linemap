@@ -97,7 +97,7 @@ export class Symbol extends ObjectType {
         // A symbol this build does not know is drawn as the collection's first, and keeps its own key.
         // Rasterised for the scale it is drawn at, so a big symbol stays sharp.
         const scale = this.scale;
-        const textures = canvas.linemap.texturesAt(this.artConfig, this.textureCollection, this.symbol, scale);
+        const textures = canvas.linemap.texturesAt(this.artConfig, this.textureCollection, this.symbol, scale * (canvas.linemap.exportScale ?? 1));
         const icon = textures?.icon;
         const footprint = textures?.footprint;
         if (this.isVisible && icon) {

@@ -18,3 +18,8 @@ declare function fromUuid(uuid: string): Promise<any>;
 declare function fromUuidSync(uuid: string): any;
 declare const document: any;
 declare const performance: any;
+declare const window: any;
+declare const URL: any;
+/** An image file in memory (the export). */
+type Blob = any;
+type HTMLCanvasElement = any;

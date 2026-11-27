@@ -201,6 +201,15 @@ export class LineMapApi {
         } as ObjectData;
     }
 
+    /**
+     * The viewed scene's map, or a rectangle of it, as an image Blob: `rect` ({ x, y, width, height },
+     * the scene by default), `scale` 1, 2 or 4, `background` "transparent", "white" or "scene", `hidden`
+     * (include hidden objects), `type` "image/png" or "image/webp".
+     */
+    exportImage(options: any = {}): Promise<Blob> {
+        return canvas.linemap.exportImage(options);
+    }
+
     /** A picture under the map's lines: at `x`, `y`, `width`, `height`, or with `fit`, covering the Scene. */
     image({ src, x, y, width, height, fit, revealed, id, scene }: { src: string, x?: number, y?: number, width?: number, height?: number, fit?: boolean, scene?: any } & Common): ObjectData {
         let rect = [x, y, width, height];

@@ -12,6 +12,7 @@ import { SelectTool } from "./tools/select-tool.js";
 import { AdjustTool } from "./tools/adjust-tool.js";
 import { ScenePropertiesApp } from "./apps/scene-properties.js";
 import { LayersApp } from "./apps/layers.js";
+import { ExportApp } from "./apps/export.js";
 import { Text } from "./objects/text.js";
 import { MapImage } from "./objects/image.js";
 import { Area } from "./objects/area.js";
@@ -972,6 +973,38 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
         this._disposeDrawn();
 
+        // A group this user hides (the Layers window) is not drawn for them.
+        const hidden = this.groups.hidden;
+        const { layers, symbols } = this._buildDraw(obj => !hidden.includes(LineMapLayer.groupOf(obj)));
+        this._pruneDisplays();
+        this.routes.update();
+
+        // Areas first: a probe counts a redraw's area outlines in its first container.
+        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images, layers.overAreas];
+
+        if (!highQuality) {
+            this.objectContainer.addChild(layers.images);
+            this.objectContainer.addChild(layers.areas);
+            this.objectContainer.addChild(layers.lines);
+            this.objectContainer.addChild(layers.overAreas);
+            this.objectContainer.addChild(symbols);
+            canvas.app.renderer.render(this.objectContainer, { renderTexture: this.renderTexture, clear: true });
+            return;
+        }
+
+        // The line and mask targets are reused: a fresh pair per redraw was never freed (PIXI's texture
+        // GC skips render textures) and leaked two scene-sized textures per click.
+        const lineContainer = this._renderLayers(layers, symbols, { render: this.renderTexture, lines: this.lineTexture, mask: this.maskTexture });
+        this.drawn.push(lineContainer);
+    }
+
+    /**
+     * Draw the objects `include` accepts into a fresh set of containers, in drawing order, each painted
+     * by its filter: images, areas, areas over lines, lines and the symbols' footprints, and "symbols"
+     * (halos, symbols in runs of one colour, the selected ones, then labels). The caller renders and
+     * disposes of them.
+     */
+    _buildDraw(include: (obj: ObjectType) => boolean): { layers: any, symbols: any } {
         // Symbols, in drawing order, as runs of one colour (null: the map's), each run a container painted
         // by its colour's filter: a new run starts at each change of colour, so a symbol brought to front
         // is drawn above the others whatever their colours.
@@ -997,13 +1030,9 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
 
         this.displayUsed.clear();
-        // A group this user hides (the Layers window) is not drawn for them.
-        const hidden = this.groups.hidden;
         this.objects.forEach(obj => {
-            if (!hidden.includes(LineMapLayer.groupOf(obj))) obj.draw(layers);
+            if (include(obj)) obj.draw(layers);
         });
-        this._pruneDisplays();
-        this.routes.update();
 
         this.symbolFilter.uniforms.tintColor = this._objectColor;
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
@@ -1017,37 +1046,168 @@ export class LineMapLayer extends layers.InteractionLayer {
         // What is rendered as "symbols": the halos, both tints, then the labels above them.
         const symbols = new PIXI.Container();
         symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, ...runs.map(r => r.container), layers.selectedSymbols, layers.labels);
+        return { layers, symbols };
+    }
 
-        // Areas first: a probe counts a redraw's area outlines in its first container.
-        this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images, layers.overAreas];
-
-        if (!highQuality) {
-            this.objectContainer.addChild(layers.images);
-            this.objectContainer.addChild(layers.areas);
-            this.objectContainer.addChild(layers.lines);
-            this.objectContainer.addChild(layers.overAreas);
-            this.objectContainer.addChild(symbols);
-            canvas.app.renderer.render(this.objectContainer, { renderTexture: this.renderTexture, clear: true });
-            return;
-        }
-
-        // The line and mask targets are reused: a fresh pair per redraw was never freed (PIXI's texture
-        // GC skips render textures) and leaked two scene-sized textures per click.
-        canvas.app.renderer.render(layers.lines, { renderTexture: this.lineTexture, clear: true });
-        canvas.app.renderer.render(layers.footprints, { renderTexture: this.maskTexture, clear: true });
+    /**
+     * Render built containers into a target, lines through the line filter (cut where symbols' footprints
+     * are): images, areas, lines, areas over lines, symbols. `transform` places map coordinates in the
+     * target (an export's area and scale); the line and mask targets are the render target's size.
+     * Returns the line container, for the caller to dispose of.
+     */
+    _renderLayers(layers: any, symbols: any, targets: { render: any, lines: any, mask: any }, transform?: any, clear = true): any {
+        const renderer = canvas.app.renderer;
+        renderer.render(layers.lines, { renderTexture: targets.lines, clear: true, transform });
+        renderer.render(layers.footprints, { renderTexture: targets.mask, clear: true, transform });
 
         const lineContainer = new PIXI.Container();
-        const lineSprite = lineContainer.addChild(new PIXI.Sprite(this.lineTexture));
+        const lineSprite = lineContainer.addChild(new PIXI.Sprite(targets.lines));
         lineSprite.filters = [this.lineFilter];
-        this.lineFilter.uniforms.lineTexture = this.lineTexture;
-        this.lineFilter.uniforms.maskTexture = this.maskTexture;
-        this.drawn.push(lineContainer);
+        this.lineFilter.uniforms.lineTexture = targets.lines;
+        this.lineFilter.uniforms.maskTexture = targets.mask;
 
-        canvas.app.renderer.render(layers.images, { renderTexture: this.renderTexture, clear: true });
-        canvas.app.renderer.render(layers.areas, { renderTexture: this.renderTexture, clear: false });
-        canvas.app.renderer.render(lineContainer, { renderTexture: this.renderTexture, clear: false });
-        canvas.app.renderer.render(layers.overAreas, { renderTexture: this.renderTexture, clear: false });
-        canvas.app.renderer.render(symbols, { renderTexture: this.renderTexture, clear: false });
+        renderer.render(layers.images, { renderTexture: targets.render, clear, transform });
+        renderer.render(layers.areas, { renderTexture: targets.render, clear: false, transform });
+        renderer.render(lineContainer, { renderTexture: targets.render, clear: false });
+        renderer.render(layers.overAreas, { renderTexture: targets.render, clear: false, transform });
+        renderer.render(symbols, { renderTexture: targets.render, clear: false, transform });
+        return lineContainer;
+    }
+
+    /** Symbol art and label text are rasterised this many times finer (an export at 2× or 4×). */
+    exportScale = 1;
+
+    /** The largest image side the GPU can make. */
+    get maxExportSize(): number {
+        const gl = canvas.app.renderer.gl;
+        return gl?.getParameter(gl.MAX_TEXTURE_SIZE) ?? 4096;
+    }
+
+    /**
+     * The map, or a rectangle of it, as an image file: drawn afresh at `scale`, on a transparent or white
+     * background or the scene's background picture, without the selection, the travel route or the
+     * preview. Hidden objects are left out unless asked for (then drawn as if revealed); a group hidden
+     * in the Layers window is left out too. PNG or WebP.
+     */
+    async exportImage({ rect, scale = 1, background = "transparent", hidden = false, type = "image/png" }:
+        { rect?: { x: number, y: number, width: number, height: number }, scale?: number, background?: string, hidden?: boolean, type?: string } = {}): Promise<Blob> {
+        if (!this.objectContainer) throw new Error("The map is not drawn");
+        const r = rect ?? canvas.dimensions.sceneRect;
+        const area = { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
+        const s = [1, 2, 4].includes(Number(scale)) ? Number(scale) : 1;
+        const width = area.width * s, height = area.height * s;
+        if (area.width < 1 || area.height < 1) throw new Error("Nothing to export");
+        if (Math.max(width, height) > this.maxExportSize) throw new Error(game.i18n.localize("linemap.export.tooBig"));
+        const mime = type === "image/webp" ? "image/webp" : "image/png";
+
+        const selected = this.objects.filter(o => o.isSelected);
+        const unrevealed = hidden ? this.objects.filter(o => !o.isRevealed) : [];
+        const groupsHidden = this.groups.hidden;
+        const include = (o: ObjectType) => (hidden || o.isRevealed) && !groupsHidden.includes(LineMapLayer.groupOf(o));
+        const labels = this.objects.filter(o => o instanceof Text) as Text[];
+        const resolutions = new Map<any, number>();
+        const renderer = canvas.app.renderer;
+        const textures: any[] = [];
+        const containers: any[] = [];
+        const dispose = () => {
+            // The layer's cached sprites (labels, lines) are not ours to destroy: take them out first.
+            for (const { sprite } of this.displayCache.values()) sprite.parent?.removeChild(sprite);
+            containers.splice(0).forEach(c => c.destroy({ children: true }));
+        };
+        try {
+            selected.forEach(o => { o.isSelected = false; });
+            unrevealed.forEach(o => { o.isRevealed = true; });
+            this.exportScale = s;
+            // A first draw starts the finer symbol art loading; wait for it, then draw for real.
+            const warm = this._buildDraw(include);
+            containers.push(...Object.values(warm.layers), warm.symbols);
+            dispose();
+            const end = Date.now() + 8000;
+            while (Date.now() < end && [...this.sharpTextures.values()].some(t => (t.icon && !t.icon.baseTexture.valid) || (t.footprint && !t.footprint.baseTexture.valid))) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            const { layers, symbols } = this._buildDraw(include);
+            containers.push(...Object.values(layers), symbols);
+            for (const label of labels) {
+                const sprite = label.sprite;
+                if (!sprite || resolutions.has(sprite)) continue;
+                resolutions.set(sprite, sprite.resolution);
+                sprite.resolution = Math.max(sprite.resolution, s);
+            }
+
+            const target = PIXI.RenderTexture.create({ width, height });
+            const lines = PIXI.RenderTexture.create({ width, height });
+            const mask = PIXI.RenderTexture.create({ width, height });
+            textures.push(target, lines, mask);
+            const transform = new PIXI.Matrix().translate(-area.x, -area.y).scale(s, s);
+
+            const backdrop = new PIXI.Container();
+            containers.push(backdrop);
+            if (background === "white") {
+                backdrop.addChild(new PIXI.Graphics().beginFill(0xffffff).drawRect(0, 0, width, height).endFill());
+                renderer.render(backdrop, { renderTexture: target, clear: true });
+            } else if (background === "scene" && canvas.scene.background?.src) {
+                const texture = await foundry.canvas.loadTexture(canvas.scene.background.src);
+                if (texture) {
+                    const sr = canvas.dimensions.sceneRect;
+                    const sprite = backdrop.addChild(new PIXI.Sprite(texture));
+                    sprite.x = sr.x; sprite.y = sr.y; sprite.width = sr.width; sprite.height = sr.height;
+                }
+                renderer.render(backdrop, { renderTexture: target, clear: true, transform });
+            } else {
+                renderer.render(backdrop, { renderTexture: target, clear: true });
+            }
+            containers.push(this._renderLayers(layers, symbols, { render: target, lines, mask }, transform, false));
+
+            const out = renderer.extract.canvas(target) as HTMLCanvasElement;
+            return await new Promise<Blob>((resolve, reject) => out.toBlob(b => b ? resolve(b) : reject(new Error("The image could not be made")), mime, 0.95));
+        } finally {
+            for (const [sprite, resolution] of resolutions) if (!sprite.destroyed) sprite.resolution = resolution;
+            this.exportScale = 1;
+            unrevealed.forEach(o => { o.isRevealed = false; });
+            selected.forEach(o => { o.isSelected = true; });
+            dispose();
+            textures.forEach(t => t.destroy(true));
+            this.lineFilter.uniforms.lineTexture = this.lineTexture;
+            this.lineFilter.uniforms.maskTexture = this.maskTexture;
+            this.redraw();
+        }
+    }
+
+    /** A one-off drag that takes the mouse from the tools: the export's area, or null when cancelled. */
+    capture: { down: (pt: any) => void, move: (pt: any) => void, up: (pt: any) => void, cancel: () => void } | null = null;
+
+    pickRect(): Promise<{ x: number, y: number, width: number, height: number } | null> {
+        this.capture?.cancel();
+        return new Promise(resolve => {
+            let start: any = null;
+            const box = (a: any, b: any) => ({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), width: Math.abs(a.x - b.x), height: Math.abs(a.y - b.y) });
+            const finish = (r: any) => {
+                this.capture = null;
+                this.clearPreview();
+                resolve(r);
+            };
+            this.capture = {
+                down: pt => { start = { x: pt.x, y: pt.y }; },
+                move: pt => {
+                    if (!start) return;
+                    this.showRect(box(start, pt));
+                },
+                up: pt => {
+                    if (!start) return;
+                    const r = box(start, pt);
+                    finish(r.width > 4 && r.height > 4 ? r : null);
+                },
+                cancel: () => finish(null)
+            };
+        });
+    }
+
+    /** Outline a rectangle of the map in the preview (the export's area). */
+    showRect(r: { x: number, y: number, width: number, height: number }) {
+        this.clearPreview();
+        const width = 2 / (canvas.stage.scale.x || 1);
+        this.preview.addChild(new PIXI.Graphics().lineStyle(width, this._selectionColorHex).drawRect(r.x, r.y, r.width, r.height));
     }
 
     async _tearDown(options) {
@@ -1183,6 +1343,10 @@ export class LineMapLayer extends layers.InteractionLayer {
 
     /** Escape closes the right-click menu (core's Escape closes framed windows only). */
     _onDismissKey(event) {
+        if (this.capture) {
+            this.capture.cancel();
+            return true;
+        }
         if ((this.tools.selectObject as SelectTool)?.closeMenu()) return true;
         return super._onDismissKey(event);
     }
@@ -1190,6 +1354,10 @@ export class LineMapLayer extends layers.InteractionLayer {
     _leftMouseDown(event) {
         (this.tools.selectObject as SelectTool)?.closeMenu();
         const pt = event.data.getLocalPosition(canvas.app.stage);
+        if (this.capture) {
+            this.capture.down(pt);
+            return;
+        }
         this.interactionData = {
             screenOrigin: { x: event.global.x, y: event.global.y },
             origin: pt,
@@ -1198,6 +1366,10 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
     
     _leftMouseUp(event) {
+        if (this.capture) {
+            this.capture.up(event.data.getLocalPosition(canvas.app.stage));
+            return;
+        }
         if (this.interactionData) {
             const pt = event.data.getLocalPosition(canvas.app.stage);
             this.interactionData.destination = pt;
@@ -1255,6 +1427,10 @@ export class LineMapLayer extends layers.InteractionLayer {
     }
 
     _pointerMove(event) {
+        if (this.capture) {
+            this.capture.move(event.data.getLocalPosition(canvas.app.stage));
+            return;
+        }
         (this.tools.selectObject as SelectTool)?.closeMenuIfAway(event.global);
         if (this.interactionData) {
             const pt = event.data.getLocalPosition(canvas.app.stage);
@@ -1731,8 +1907,19 @@ export class LineMapLayer extends layers.InteractionLayer {
                             LayersApp.activate();
                         }
                     },
-                    linemapSettings: {
+                    linemapExport: {
                         order: 13,
+                        name: "linemapExport",
+                        title: "linemap.tools.export",
+                        icon: "fas fa-file-export",
+                        visible: game.user.isGM,
+                        button: true,
+                        onChange: () => {
+                            ExportApp.activate();
+                        }
+                    },
+                    linemapSettings: {
+                        order: 14,
                         name: "linemapSettings",
                         title: "linemap.tools.settings",
                         icon: "fas fa-cog",
