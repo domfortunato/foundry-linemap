@@ -235,10 +235,18 @@ Access other scene specific settings using the settings layer control button.
 - Pick the content color, any color, for contrast with the scene background (objects can also have
   their own: see *Colours*). Selected objects show
   in Foundry's selection color, or in the content color's opposite when the two are close
-- Choose the label font: Alegreya (the default), IM Fell English or Orbitron
+- Choose the label font: Alegreya (the default), IM Fell English, Orbitron or VT323
 - Turn on the halo: an outline behind symbols, waypoints and labels that sets them apart from an
   image or a busy scene background under the map. It is the content color's opposite (white for a
   dark map) until you pick another color beside the switch. A symbol's halo also fills its gaps
+
+### Floating tool palette
+
+If the tools column on Foundry's left bar is in your way, turn on **Floating tool palette** in
+Configure Settings (Line Map, for this browser). While the Line Map layer is active, its tools,
+toggles and buttons then sit in a small window you can drag anywhere, and the left bar's tools column
+is hidden; the Line Map button itself stays on the left bar, since Foundry switches to the layer
+through it. The palette remembers where you put it. Close it to put the tools back on the left bar.
 
 ## Travel routes
 

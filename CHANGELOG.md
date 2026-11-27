@@ -6,6 +6,8 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Floating tool palette.** An option (Configure Settings, per browser) puts the Line Map tools in a
+  small window you can drag anywhere, instead of the column on the left bar; closing it puts them back.
 - **Areas corner by corner.** The area tool draws an area by clicking its corners (a trapezoid, a
   coastline), finished with a double-click, Enter or a click on the first corner; Backspace takes back
   a corner and Escape drops the shape. Dragging still draws a rectangle.

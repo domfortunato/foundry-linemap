@@ -62,7 +62,12 @@ export class PaletteApp extends api.HandlebarsApplicationMixin(api.ApplicationV2
         });
         return {
             drawing: tools.filter(t => !t.toggle && !t.button).map(view),
-            others: tools.filter(t => t.toggle || t.button).map(view)
+            // Toggles, then buttons, and "delete all objects" last, away from the rest.
+            others: [
+                ...tools.filter(t => t.toggle),
+                ...tools.filter(t => t.button && t.name !== "clearObjects"),
+                ...tools.filter(t => t.name === "clearObjects")
+            ].map(view)
         };
     }
 

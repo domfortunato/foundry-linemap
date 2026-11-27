@@ -182,7 +182,8 @@ user editing, kept in a client setting (probe `dev:groups`); a **Terminal theme*
 label font, for a retro computer-terminal look (probe `dev:terminal`); and **Export map**: the
 scene or a dragged area as PNG, WebP or PDF through the print dialog, drawn afresh at 1×, 2× or 4×
 (probe `dev:export`); and **areas drawn corner by corner** with the area tool, besides its rectangle
-(probe `dev:corners`).
+(probe `dev:corners`); and a **floating tool palette**, a client setting that mirrors the Line Map
+scene controls in a draggable window and hides the left bar's tools column (probe `dev:palette`).
 
 ## Set aside
 
