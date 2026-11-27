@@ -12,10 +12,29 @@ import { DotLine } from "./objects/line-styles/dot-line.js";
 import { ToolHotkey } from "./classes/tool.js";
 import { Waypoint } from "./objects/waypoint.js";
 import { MapImage } from "./objects/image.js";
+import { PaletteApp } from "./apps/palette.js";
 
 // Every keybinding is restricted: each is a Gamemaster's action, and players have no Line Map control.
 Hooks.on("init", () => {
     CONFIG.Canvas.layers.linemap = { group: "primary", layerClass: LineMapLayer };
+    // The floating tool palette (this browser): the Line Map tools in a window you can drag anywhere.
+    game.settings.register("linemap", "floatingPalette", {
+        name: "linemap.palette.setting",
+        hint: "linemap.palette.settingHint",
+        scope: "client",
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: () => PaletteApp.sync()
+    });
+    game.settings.register("linemap", "palettePosition", {
+        scope: "client",
+        config: false,
+        type: Object,
+        default: {}
+    });
+    // Whenever the scene controls render (a tool, a toggle or a control changed), the palette follows.
+    Hooks.on("renderSceneControls", () => PaletteApp.sync());
     // The groups this user hides or locks while editing (the Layers window): theirs only, in this browser.
     game.settings.register("linemap", "groups", {
         scope: "client",

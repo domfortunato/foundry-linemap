@@ -1,0 +1,12 @@
+<div class="linemap-palette-rows">
+    <menu class="linemap-palette-row">
+        {{#each drawing}}
+            <li><button type="button" class="ui-control icon {{icon}} {{#if active}}active{{/if}}" data-action="tool" data-tool="{{name}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}" data-tooltip="{{title}}" aria-label="{{localize title}}"></button></li>
+        {{/each}}
+    </menu>
+    <menu class="linemap-palette-row">
+        {{#each others}}
+            <li><button type="button" class="ui-control icon {{icon}} {{#if active}}active{{/if}}" data-action="tool" data-tool="{{name}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}" data-tooltip="{{title}}" aria-label="{{localize title}}"></button></li>
+        {{/each}}
+    </menu>
+</div>

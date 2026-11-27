@@ -41,6 +41,11 @@
             "printTitle": "Map",
             "popupBlocked": "The print window was blocked: allow pop-ups for this site to save a PDF."
         },
+        "palette": {
+            "title": "Line Map",
+            "setting": "Floating tool palette",
+            "settingHint": "Show the Line Map tools in a small window you can drag anywhere, instead of the column on the left bar. Close the palette to put them back."
+        },
         "layers": {
             "title": "Layers",
             "images": "Images",

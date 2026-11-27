@@ -329,3 +329,45 @@ body.linemap-link-hover #board {
         margin: 2px 0 0;
     }
 }
+
+// The floating tool palette, and the left bar's tools column hidden while it shows.
+body.linemap-palette-on #scene-controls-tools {
+    display: none;
+}
+
+.linemap-palette {
+    .window-content {
+        padding: 6px;
+    }
+
+    .linemap-palette-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .linemap-palette-row {
+        display: flex;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            margin: 0;
+        }
+
+        button {
+            width: 34px;
+            height: 34px;
+            margin: 0;
+            font-size: 15px;
+
+            &.active {
+                color: var(--color-warm-1, #ee9b3a);
+                border-color: var(--color-warm-2, #ee9b3a);
+                box-shadow: 0 0 4px var(--color-warm-3, #c0530d);
+            }
+        }
+    }
+}
