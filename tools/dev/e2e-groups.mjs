@@ -36,6 +36,11 @@ const openLayers = async (page) => {
   await page.locator('#linemap-layers').first().waitFor({ timeout: scaled(10000) }).catch(() => {})
   return (await page.locator('#linemap-layers').count()) > 0
 }
+/** Close the Layers window, which opens over the middle of the screen, where the probe clicks. */
+const closeLayers = async (page) => {
+  await page.evaluate(async () => { await foundry.applications.instances.get('linemap-layers')?.close() })
+  await page.waitForTimeout(scaled(300))
+}
 const toggle = async (page, group, action) => {
   await row(page, group, action).click()
   await page.waitForTimeout(scaled(600))
@@ -81,6 +86,7 @@ try {
     'hiding areas stops drawing them for the GM; lines are still drawn; the eye shows it', { areaBefore, areaHidden })
   p.check((await selected(gm)).length === 0 && (await savedIds(gm)).includes(ids.area) && (await gm.evaluate((id) => !!canvas.linemap.objects.find(o => o.id === id), ids.area)),
     'the hidden area is deselected, but still in the map and saved')
+  await closeLayers(gm)
   await clickAt(gm, AREA)
   p.check((await selected(gm)).length === 0, 'a click where the hidden area is selects nothing', await selected(gm))
 
@@ -94,12 +100,16 @@ try {
   await toggle(gm, 'areas', 'toggleHidden')
   p.check((await inked(gm, areaBox)) > 9000, 'showing areas draws them again')
 
-  // Lock lines.
+  // Lock lines. First, unlocked, a click on the line selects it.
+  await closeLayers(gm)
+  await clickAt(gm, { x: 850, y: LINE_Y })
+  p.check(JSON.stringify(await selected(gm)) === JSON.stringify([ids.line]), 'with nothing locked, a click on the line selects it', await selected(gm))
   await openLayers(gm)
   await gm.evaluate((id) => { const L = canvas.linemap; L.setSelection(L.objects.find(o => o.id === id)) }, ids.line)
   await toggle(gm, 'lines', 'toggleLocked')
   p.check((await selected(gm)).length === 0 && (await pressed(gm, 'lines', 'toggleLocked')) === 'true' && (await inked(gm, lineBox)) > 0,
     'locking lines deselects them and keeps them drawn; the lock shows it')
+  await closeLayers(gm)
   await clickAt(gm, { x: 850, y: LINE_Y })
   p.check((await selected(gm)).length === 0, 'a click on a locked line selects nothing', await selected(gm))
   await dragThrough(gm, [{ x: 450, y: LINE_Y - 100 }, { x: 1000, y: LINE_Y }, { x: 1600, y: LINE_Y + 100 }])
@@ -117,11 +127,13 @@ try {
   await viewScene(gm, sceneId)
   await until(gm, (id) => !!canvas.linemap.objects.find(o => o.id === id)?.sprite, ids.sym)
   await tool(gm, 'selectObject')
+  await closeLayers(gm)
   await clickAt(gm, { x: 850, y: LINE_Y })
   const afterReload = await selected(gm)
   await openLayers(gm)
   p.check(afterReload.length === 0 && (await pressed(gm, 'lines', 'toggleLocked')) === 'true', 'lines are still locked after a reload, and the window shows it', afterReload)
   await toggle(gm, 'lines', 'toggleLocked')
+  await closeLayers(gm)
   await clickAt(gm, { x: 850, y: LINE_Y })
   p.check(JSON.stringify(await selected(gm)) === JSON.stringify([ids.line]), 'unlocked, a click selects the line again', await selected(gm))
 
