@@ -172,7 +172,9 @@ Step 7 is done on `dev` (2026-11-26).
 Added afterwards, on request: a **rotation slider for labels** in the right-click menu (probe
 `dev:rotate`), since a label could only take a line's direction before; and **line thickness**
 through the size slider (probe `dev:thick`), every style scaled as a whole; and **per-object
-colours** from a row in the right-click menu (probe `dev:colors`), null following the scene's colour.
+colours** from a row in the right-click menu (probe `dev:colors`), null following the scene's colour;
+and **area resizing** from an area size slider and ] and [ (probe `dev:areasize`), which scales an area's
+points around its middle, since an area has no size of its own.
 
 ## Set aside
 

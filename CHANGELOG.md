@@ -6,6 +6,9 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Resize areas.** A selected area's right-click menu has an area size slider that scales it
+  around its middle, from a quarter to four times as big; a double-click puts it back. **]** and
+  **[** grow an area by a quarter and shrink it back.
 - **Per-object colours.** Lines, symbols, waypoints, areas and labels can each have a colour of
   their own, picked from a row of colours in the right-click menu or any colour through the
   rainbow swatch. Uncoloured objects follow the scene's content colour as before. The API's

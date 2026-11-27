@@ -112,6 +112,12 @@ thick. The whole style grows: a road's width, a trail's dashes, a river's waves,
 dots, a barrier and its end ticks. A thick line is as easy to click as it looks, and the waypoints
 and labels on it stay where they are.
 
+Areas have their own slider in the same menu, **Area size**: it scales the selected areas around
+their middle, from a quarter to four times as big as they were when you opened the menu, and a
+double-click puts them back. **]** and **[** grow an area by a quarter and shrink it back. To change
+an area's shape instead, move its corners with the adjust tool (hotkey A), or double-click its edge
+with the area tool to add or take away a corner.
+
 ### Colours
 
 The scene's content color (see *Other settings*) colors the whole map, and any line, symbol,
@@ -156,7 +162,7 @@ Controls.
 - **R and H:** reveal and hide the selected objects (select tool)
 - **D:** flip the selected waypoints (select tool)
 - **B and I:** bold and italic for the selected label (text tool)
-- **] and [:** make the selected symbols, waypoints and labels bigger and smaller, and lines thicker and thinner (select and text tools)
+- **] and [:** make the selected symbols, waypoints, labels and areas bigger and smaller, and lines thicker and thinner (select and text tools)
 - **N:** toggle whether adjusting linked points preserves links
 - **Arrow keys:** nudge the selected objects a pixel, ten with **Shift**; linked lines and labels
   follow, and a run of presses is one edit for undo (with nothing selected, they pan the canvas)
