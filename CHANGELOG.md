@@ -6,6 +6,14 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Bring to front, send to back.** The right-click menu moves the selected objects to the top or
+  bottom of their layer (images, areas, lines, then symbols and labels). Symbols with colours of
+  their own now keep their stacking against uncoloured ones.
+- **Areas over lines.** An area can be drawn over the lines (a lake over a road), from its
+  right-click menu; symbols and labels stay above it. The API's area builder takes `over`. Earlier
+  versions draw it under the lines.
+- **Layers window.** A Layers button in the Line Map controls hides or locks a layer of objects
+  while you edit, for you only; players see the whole map.
 - **Solid areas and fill opacity.** Areas have a Solid pattern, an even wash in the area's colour
   (35% opaque by default), and a fill opacity slider in the right-click menu for any pattern. The
   API's area builder takes an `opacity`. A hidden area's pattern is now dimmed for the GM like its

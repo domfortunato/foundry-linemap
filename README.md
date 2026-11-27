@@ -154,6 +154,28 @@ was linked to something left behind is pinned where it was. **Duplicate** in the
 copies the selection beside itself in one step. Pasted objects keep whether they were hidden, and
 one undo takes a paste back.
 
+### Stacking and layers
+
+The map is drawn in layers, bottom to top: images, areas, lines, then symbols, waypoints and labels.
+Within a layer, a newer object is drawn over an older one. **Bring to front** and **Send to back** in
+the right-click menu move the selected objects to the top or bottom of their own layer, keeping their
+order among themselves: one area over another, one road over a river where they cross. They never
+take an object out of its layer.
+
+An area can be drawn over the lines instead, for a lake that covers a road or a fog that hides the
+paths through it: **Draw over lines** in a selected area's right-click menu, and **Draw under lines**
+to put it back. Symbols, waypoints and labels stay above it.
+
+The **Layers** button in the Line Map controls opens a window with a row per layer, each with an eye
+and a lock, for you only, while you edit:
+
+- **The eye** hides the layer from your view, such as all areas while you lay roads under them.
+- **The lock** keeps the layer drawn but out of reach: a click, a box or the adjust tool skips its
+  objects, so you can work on roads without grabbing the areas they cross.
+
+Players always see the whole map, and nothing is saved in the scene: the window remembers your
+choices in this browser.
+
 ### Flipping waypoints
 
 Some waypoints are directional. You can flip their direction by selecting the waypoint using the select tool (hotkey V) and pressing **D**.
@@ -250,7 +272,7 @@ await api.undo();
   A line's `from` and `to`, a label's `on` and a waypoint's `line` take an object's id and link to
   it, so they follow it as it moves. Symbols are `CONFIG.linemap.symbols` keys, line styles
   `CONFIG.linemap.lineStyles` keys and patterns `CONFIG.linemap.patterns` keys. An area takes an
-  `opacity` from 0.05 to 1.
+  `opacity` from 0.05 to 1, and `over: true` to be drawn over the lines.
 - **Hooks:** `linemapReady` (layer, scene) when a scene's map has been drawn, and
   `linemapObjectsChanged` (scene, { changed, deleted, settings, userId }) whenever a map is saved,
   by the API, by the tools, or by another user.

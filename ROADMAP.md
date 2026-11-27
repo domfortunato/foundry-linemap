@@ -175,7 +175,10 @@ through the size slider (probe `dev:thick`), every style scaled as a whole; and 
 colours** from a row in the right-click menu (probe `dev:colors`), null following the scene's colour;
 and **area resizing** from an area size slider and ] and [ (probe `dev:areasize`), which scales an area's
 points around its middle, since an area has no size of its own; and a **solid area fill** with a
-fill opacity slider for any pattern (probe `dev:solid`).
+fill opacity slider for any pattern (probe `dev:solid`); **bring to front and send to back** within
+an object's layer (probe `dev:order`), symbols drawn in runs of one colour so their stacking holds;
+**areas over lines** (probe `dev:over`); and a **Layers window** that hides or locks a layer for the
+user editing, kept in a client setting (probe `dev:groups`).
 
 ## Set aside
 
