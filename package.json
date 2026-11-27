@@ -38,7 +38,8 @@
         "dev:solid": "node tools/dev/e2e-solid.mjs",
         "dev:order": "node tools/dev/e2e-order.mjs",
         "dev:groups": "node tools/dev/e2e-groups.mjs",
-        "dev:over": "node tools/dev/e2e-over.mjs"
+        "dev:over": "node tools/dev/e2e-over.mjs",
+        "dev:terminal": "node tools/dev/e2e-terminal.mjs"
     },
     "private": true,
     "devDependencies": {
