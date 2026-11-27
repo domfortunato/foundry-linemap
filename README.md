@@ -241,6 +241,24 @@ between them say "No route".
 The route shows only on your screen, while the Line Map tools are active, and follows the map as you
 edit it. It is never saved. Hidden objects count, since only the Gamemaster can select.
 
+## Exporting
+
+The **Export map** button in the Line Map controls (Gamemasters only) saves the map as a picture or a
+PDF, for printing, a handout or a forum post:
+
+- **Area:** the whole scene, or **Select an area** and drag a rectangle on the map (Escape cancels).
+- **Format:** PNG, WebP, or PDF. A PDF goes through your browser's print dialog: choose **Save as
+  PDF** and the paper size there. Allow pop-ups for the site if the print window doesn't open.
+- **Size:** 1×, 2× or 4× the scene's pixels. Use 2× or 4× for print; symbols and labels are drawn
+  sharp at that size. The window shows the image's size, and greys out a size bigger than your
+  graphics card can draw.
+- **Background:** transparent, white, or the scene's background picture. A theme's background
+  (parchment, starfield, terminal screen) is part of the map, so it is always in the picture.
+- **Include hidden objects:** off by default, so the picture can go to players. Layers you hide in
+  the Layers window are left out too: hide the labels to export a map without names.
+
+The picture is drawn afresh, without the selection or a travel route.
+
 ## Scripting
 
 Macros and other modules reach the map through `game.modules.get("linemap").api`. Editing needs a
@@ -266,6 +284,10 @@ await api.undo();
   finds the travel route between two symbols or waypoints by id: `{ waypoints, lines, length }`,
   the ids of the waypoints passed and of the lines travelled, in order, and its length in pixels, or
   null when no lines join them.
+- **Exporting:** `exportImage({ rect, scale, background, hidden, type })` resolves to an image Blob
+  of the viewed scene's map: `rect` `{ x, y, width, height }` (the scene by default), `scale` 1, 2
+  or 4, `background` `"transparent"`, `"white"` or `"scene"`, `hidden` true to include hidden
+  objects, `type` `"image/png"` or `"image/webp"`.
 - **Editing:** `add(data)`, `update({ id, ...changes })`, `delete(ids)`, `hide(ids)`, `reveal(ids)` and
   `undo()` and `redo()`. On the scene being viewed, an edit is drawn at once and joins your undo record, so
   Ctrl+Z takes it back, even if the macro ran while another layer was active.

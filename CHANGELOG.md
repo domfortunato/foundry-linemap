@@ -6,6 +6,10 @@ Earlier versions are upstream's: see https://github.com/teroparvinen/foundry-lin
 
 ## Unreleased
 
+- **Export map.** A button in the Line Map controls saves the whole scene, or a dragged area, as
+  PNG, WebP or PDF (through the browser's print dialog), at 1×, 2× or 4×, on a transparent or white
+  background or the scene's picture, with hidden objects left out unless asked for. The API has
+  `exportImage`.
 - **Terminal theme and VT323.** A retro computer-terminal look for sci-fi maps: a Terminal theme
   (phosphor green on a dark screen with scanlines, the sci-fi symbols and lines) and a new label
   font, VT323, after a late-70s terminal's raster font.

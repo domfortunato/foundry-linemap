@@ -179,7 +179,9 @@ fill opacity slider for any pattern (probe `dev:solid`); **bring to front and se
 an object's layer (probe `dev:order`), symbols drawn in runs of one colour so their stacking holds;
 **areas over lines** (probe `dev:over`); and a **Layers window** that hides or locks a layer for the
 user editing, kept in a client setting (probe `dev:groups`); a **Terminal theme** with the VT323
-label font, for a retro computer-terminal look (probe `dev:terminal`).
+label font, for a retro computer-terminal look (probe `dev:terminal`); and **Export map**: the
+scene or a dragged area as PNG, WebP or PDF through the print dialog, drawn afresh at 1×, 2× or 4×
+(probe `dev:export`).
 
 ## Set aside
 
