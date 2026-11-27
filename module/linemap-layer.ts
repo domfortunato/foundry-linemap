@@ -572,6 +572,29 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.redraw();
     }
 
+    /**
+     * Draw objects above (front) or below (back) every other object, as one edit, keeping their order
+     * among themselves. The drawing order only counts within a group: images, areas, lines, then
+     * symbols, waypoints and labels are each drawn above the one before, whatever their order.
+     */
+    reorderObjects(objects: ObjectType[], where: "front" | "back") {
+        const moving = [...objects].sort(LineMapLayer.compareSort);
+        if (!moving.length) return;
+        const set = new Set(moving);
+        const others = this.objects.filter(o => !set.has(o)).map(o => o.sort ?? 0);
+        if (!others.length) return;
+        if (where === "front") {
+            const top = Math.max(...others);
+            moving.forEach((o, i) => { o.sort = top + 1 + i; });
+        } else {
+            const bottom = Math.min(...others);
+            moving.forEach((o, i) => { o.sort = bottom - moving.length + i; });
+        }
+        this.objects.sort(LineMapLayer.compareSort);
+        this.registerHistory();
+        this.redraw();
+    }
+
     /** Make each image cover the Scene, so one can be the map's background. */
     fitImagesToScene(images: MapImage[]) {
         const r = canvas.dimensions.sceneRect;
@@ -888,12 +911,17 @@ export class LineMapLayer extends layers.InteractionLayer {
         }
         this._disposeDrawn();
 
-        // Symbols in colours of their own: a container per colour, each painted by its own filter.
-        const tinted = new Map<string, any>();
+        // Symbols, in drawing order, as runs of one colour (null: the map's), each run a container painted
+        // by its colour's filter: a new run starts at each change of colour, so a symbol brought to front
+        // is drawn above the others whatever their colours.
+        const runs: { color: string | null, container: any }[] = [];
         const layers = {
-            tinted: (color: string) => {
-                if (!tinted.has(color)) tinted.set(color, new PIXI.Container());
-                return tinted.get(color);
+            tinted: (color: string | null) => {
+                const last = runs[runs.length - 1];
+                if (last && last.color === color) return last.container;
+                const container = new PIXI.Container();
+                runs.push({ color, container });
+                return container;
             },
             images: new PIXI.Container(),
             areas: new PIXI.Container(),
@@ -917,14 +945,14 @@ export class LineMapLayer extends layers.InteractionLayer {
         this.selectedSymbolFilter.uniforms.tintColor = this._selectionColor;
         layers.symbols.filters = [this.symbolFilter];
         layers.selectedSymbols.filters = [this.selectedSymbolFilter];
-        for (const [color, container] of tinted) container.filters = [this.tintFilter(color)];
+        for (const { color, container } of runs) container.filters = [color ? this.tintFilter(color) : this.symbolFilter];
         this.haloFilter.uniforms.tintColor = this._haloColor;
         this.hiddenHaloFilter.uniforms.tintColor = this._haloColor;
         if (layers.halos.children.length) layers.halos.filters = [this.haloFilter];
         if (layers.hiddenHalos.children.length) layers.hiddenHalos.filters = [this.hiddenHaloFilter];
         // What is rendered as "symbols": the halos, both tints, then the labels above them.
         const symbols = new PIXI.Container();
-        symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, ...tinted.values(), layers.selectedSymbols, layers.labels);
+        symbols.addChild(layers.halos, layers.hiddenHalos, layers.symbols, ...runs.map(r => r.container), layers.selectedSymbols, layers.labels);
 
         // Areas first: a probe counts a redraw's area outlines in its first container.
         this.drawn = [layers.areas, layers.lines, layers.footprints, symbols, layers.images];

@@ -143,6 +143,16 @@ export class SelectTool extends Tool {
                     label: 'linemap.menu.duplicate',
                     handler: () => this.layer.duplicateSelection()
                 },
+                bringToFront: {
+                    icon: 'fa-angles-up',
+                    label: 'linemap.menu.bringToFront',
+                    handler: () => this.layer.reorderObjects(this.layer.selection, "front")
+                },
+                sendToBack: {
+                    icon: 'fa-angles-down',
+                    label: 'linemap.menu.sendToBack',
+                    handler: () => this.layer.reorderObjects(this.layer.selection, "back")
+                },
                 ...imageOptions,
                 ...linkOptions,
                 left: {

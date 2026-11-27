@@ -24,8 +24,8 @@ export interface ObjectDrawLayers {
     // Symbols in the map colour and in the selection colour: each container is tinted as a whole.
     symbols?: any;
     selectedSymbols?: any;
-    /** The container for symbols in a colour of their own (one per colour, each tinted as a whole). */
-    tinted?: (color: string) => any;
+    /** The container for the next symbol in drawing order, in its own colour or (null) the map's: runs of one colour, each tinted as a whole. */
+    tinted?: (color: string | null) => any;
     labels?: any;
 }
 

@@ -114,7 +114,7 @@ export class Symbol extends ObjectType {
             }
 
             // Tinted by the container it goes in: the selection colour, its own, or the map's.
-            const container = this.isSelected ? layers.selectedSymbols : this.color ? (layers.tinted?.(this.color) ?? layers.symbols) : layers.symbols;
+            const container = this.isSelected ? layers.selectedSymbols : (layers.tinted?.(this.color ?? null) ?? layers.symbols);
             container?.addChild(sprite);
             this.sprite = sprite;
 
