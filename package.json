@@ -33,7 +33,8 @@
         "dev:nudge": "node tools/dev/e2e-nudge.mjs",
         "dev:rotate": "node tools/dev/e2e-rotate.mjs",
         "dev:thick": "node tools/dev/e2e-thick.mjs",
-        "dev:colors": "node tools/dev/e2e-colors.mjs"
+        "dev:colors": "node tools/dev/e2e-colors.mjs",
+        "dev:areasize": "node tools/dev/e2e-areasize.mjs"
     },
     "private": true,
     "devDependencies": {
