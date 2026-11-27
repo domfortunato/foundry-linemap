@@ -1065,6 +1065,9 @@ export class LineMapLayer extends layers.InteractionLayer {
         lineSprite.filters = [this.lineFilter];
         this.lineFilter.uniforms.lineTexture = targets.lines;
         this.lineFilter.uniforms.maskTexture = targets.mask;
+        // The filter finds a pixel's place in the line and mask targets by their size: the canvas's,
+        // or an export's.
+        this.lineFilter.uniforms.screenDimensions = [targets.lines.width, targets.lines.height];
 
         renderer.render(layers.images, { renderTexture: targets.render, clear, transform });
         renderer.render(layers.areas, { renderTexture: targets.render, clear: false, transform });
@@ -1170,6 +1173,7 @@ export class LineMapLayer extends layers.InteractionLayer {
             textures.forEach(t => t.destroy(true));
             this.lineFilter.uniforms.lineTexture = this.lineTexture;
             this.lineFilter.uniforms.maskTexture = this.maskTexture;
+            this.lineFilter.uniforms.screenDimensions = [canvas.dimensions.width, canvas.dimensions.height];
             this.redraw();
         }
     }

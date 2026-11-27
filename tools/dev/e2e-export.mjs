@@ -105,12 +105,22 @@ try {
     pixels: document.querySelector('#linemap-export .linemap-export-pixels')?.textContent?.trim()
   }))
   p.check(picked.checked && /700\D+300/.test(picked.pixels ?? ''), 'dragging an area picks it: the window shows its size', picked)
-  const [download] = await Promise.all([
-    gm.waitForEvent('download', { timeout: scaled(20000) }),
-    gm.locator('#linemap-export [data-action="export"]').first().click()
-  ])
-  const name = download.suggestedFilename()
-  p.check(/\.png$/.test(name), 'Export downloads a PNG named after the scene', name)
+  // The download is a link clicked for the file: watch the link (and any error the window shows).
+  await gm.evaluate(() => {
+    window.__downloads = []
+    window.__errors = []
+    const click = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.download) window.__downloads.push({ name: this.download, href: this.href.slice(0, 5) })
+      return click.call(this)
+    }
+    const error = ui.notifications.error.bind(ui.notifications)
+    ui.notifications.error = (msg, ...rest) => { window.__errors.push(String(msg)); return error(msg, ...rest) }
+  })
+  await gm.locator('#linemap-export [data-action="export"]').first().click()
+  const got = await until(gm, () => window.__downloads.length || window.__errors.length ? { downloads: window.__downloads, errors: window.__errors } : null, null, { timeout: 20000 })
+  p.check(!!got && got.downloads.length === 1 && /\.png$/.test(got.downloads[0].name) && got.downloads[0].href === 'blob:',
+    'Export downloads a PNG named after the scene', got)
 
   // PDF: the image in a window for the print dialog.
   await gm.evaluate(() => {
