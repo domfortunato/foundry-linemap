@@ -34,7 +34,8 @@
         "dev:rotate": "node tools/dev/e2e-rotate.mjs",
         "dev:thick": "node tools/dev/e2e-thick.mjs",
         "dev:colors": "node tools/dev/e2e-colors.mjs",
-        "dev:areasize": "node tools/dev/e2e-areasize.mjs"
+        "dev:areasize": "node tools/dev/e2e-areasize.mjs",
+        "dev:solid": "node tools/dev/e2e-solid.mjs"
     },
     "private": true,
     "devDependencies": {
