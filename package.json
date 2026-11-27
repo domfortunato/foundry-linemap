@@ -36,7 +36,8 @@
         "dev:colors": "node tools/dev/e2e-colors.mjs",
         "dev:areasize": "node tools/dev/e2e-areasize.mjs",
         "dev:solid": "node tools/dev/e2e-solid.mjs",
-        "dev:order": "node tools/dev/e2e-order.mjs"
+        "dev:order": "node tools/dev/e2e-order.mjs",
+        "dev:groups": "node tools/dev/e2e-groups.mjs"
     },
     "private": true,
     "devDependencies": {
